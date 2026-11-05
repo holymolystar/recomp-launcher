@@ -1,0 +1,16 @@
+# Your own data: never commit (settings.json holds your GitHub token)
+settings.json
+cache.json
+playtime.json
+roms.json
+*.keys
+logs/
+backups/
+dumps/
+avatars/
+# Your own game artwork (the launcher draws its own tiles when there's none; game art is copyrighted)
+icons/
+
+# Build output (the installer goes on the GitHub Release instead)
+installer/stage/
+installer/Output/
