@@ -1,5 +1,5 @@
 # Creates the Start Menu shortcut "Recomp Launcher" with the launcher's AppUserModelID (RecompLauncher.App, set by
-# Recomp-Launcher.ps1). The id ties the launcher's window to this shortcut, so the taskbar shows the launcher's icon
+# Recomp Launcher.exe). The id ties the launcher's window to this shortcut, so the taskbar shows the launcher's icon
 # instead of Windows PowerShell's, and pinning it starts Recomp Launcher.exe.
 $src  = Split-Path -Parent $MyInvocation.MyCommand.Path
 $root = Split-Path -Parent $src

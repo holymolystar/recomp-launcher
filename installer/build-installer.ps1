@@ -22,7 +22,7 @@ if (-not $iscc) { throw 'Inno Setup 6 is not installed. Install it with:  winget
 # ---- stage ----
 if (Test-Path $stage) { Remove-Item $stage -Recurse -Force }
 New-Item -ItemType Directory $stage | Out-Null
-$files = 'Recomp Launcher.exe', 'Recomp-Launcher.ps1', 'logo.png',
+$files = 'Recomp Launcher.exe', 'games.json', 'logo.png',
          'recomp-worker.ps1', 'nsp-worker.ps1', 'playtime-worker.ps1', 'uninstall-worker.ps1'
 foreach ($f in $files) {
     $p = Join-Path $root $f

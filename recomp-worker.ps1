@@ -1,4 +1,4 @@
-# Installs or updates one recomp release in the background for Recomp-Launcher.ps1 (Super Mario Odyssey, Wind Waker
+# Installs or updates one recomp release in the background for Recomp Launcher.exe (Super Mario Odyssey, Wind Waker
 # HD, Ratchet & Clank: Tools of Destruction, and the TotK setup download). Every event goes to $Log as one JSON line,
 # in the same format as the TotK Updater's worker.
 #   -Mode install  unpack the release into an empty or new game folder
@@ -47,9 +47,12 @@ try {
         $bk = Join-Path $BackupDir "$stamp-before-$Tag"
         New-Item -ItemType Directory -Force $bk | Out-Null
         foreach ($p in List $Backup) {
-            $src = Join-Path $Game $p
-            if (Test-Path $src) {
-                $dst = Join-Path $bk $p
+            # a path can be outside the game folder (%USERPROFILE%\Games\Hookshot\user\save): kept under its last name
+            $p = [Environment]::ExpandEnvironmentVariables($p)
+            $outside = [IO.Path]::IsPathRooted($p)
+            $src = if ($outside) { $p } else { Join-Path $Game $p }
+            if (Test-Path -LiteralPath $src) {
+                $dst = if ($outside) { Join-Path $bk (Split-Path $p -Leaf) } else { Join-Path $bk $p }
                 New-Item -ItemType Directory -Force (Split-Path -Parent $dst) | Out-Null
                 Copy-Item $src $dst -Recurse -Force
             }

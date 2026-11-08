@@ -1,5 +1,5 @@
 ﻿# Turns a Switch NSP (and, for games that need a newer version, its update NSP) into the exefs and romfs folders the
-# Switch recomps read, for Recomp-Launcher.ps1. Uses the player's own prod.keys and two tools, each downloaded once
+# Switch recomps read, for Recomp Launcher.exe. Uses the player's own prod.keys and two tools, each downloaded once
 # from its GitHub release into tools\ and checked against a pinned SHA-256:
 #   base only:     hactool (SciresM, 1.4.0) extracts exefs + romfs from the base game's program NCA
 #   with update:   nstool (jakcron, 1.9.2) applies the update to the base game while extracting: hactool can't read

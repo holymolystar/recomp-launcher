@@ -1,4 +1,4 @@
-# Counts how long a game is played, for Recomp-Launcher.ps1 (which closes itself when a game starts). Started hidden
+# Counts how long a game is played, for Recomp Launcher.exe (which closes itself when a game starts). Started hidden
 # next to the game, it is built to cost next to nothing while you play:
 #   - records the start at once (for "Recently played")
 #   - while the game starts, looks every 10 seconds for programs running from the game's folder (the game itself, or

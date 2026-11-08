@@ -82,6 +82,15 @@ for ($i = 0; $i -lt $sizes.Count; $i++) {
 foreach ($img in $images) { $w.Write($img) }
 $w.Close()
 
-& $csc /nologo /target:winexe /optimize+ "/win32icon:$ico" /r:System.Windows.Forms.dll `
-    "/out:$(Join-Path $root 'Recomp Launcher.exe')" (Join-Path $src 'Launcher.cs')
+# The launcher itself: a WPF program (src\App), its window layouts embedded in it
+$app = Join-Path $src 'App'
+$fw  = Split-Path -Parent $csc
+$wpf = Join-Path $fw 'WPF'
+$refs = @('System.dll', 'System.Core.dll', 'System.Xml.dll', 'System.Xaml.dll', 'System.Drawing.dll', 'System.Windows.Forms.dll',
+          'System.Web.Extensions.dll', 'Microsoft.CSharp.dll',
+          (Join-Path $wpf 'WindowsBase.dll'), (Join-Path $wpf 'PresentationCore.dll'), (Join-Path $wpf 'PresentationFramework.dll')) |
+        ForEach-Object { "/r:$_" }
+$res = Get-ChildItem $app -Filter *.xaml | ForEach-Object { "/resource:$($_.FullName),$($_.Name)" }
+& $csc /nologo /target:winexe /optimize+ /platform:anycpu /codepage:65001 /nowarn:618,649 "/win32icon:$ico" @refs @res `
+    "/out:$(Join-Path $root 'Recomp Launcher.exe')" (Get-ChildItem $app -Filter *.cs | ForEach-Object { $_.FullName })
 exit $LASTEXITCODE

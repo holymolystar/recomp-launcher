@@ -1,0 +1,29 @@
+<Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Visibility="Collapsed">
+  <Rectangle x:Name="FbDim" Fill="#B0050709"/>
+  <Border Width="780" Height="580" VerticalAlignment="Center" HorizontalAlignment="Center" CornerRadius="18"
+          Background="#11181D" BorderBrush="#26333C" BorderThickness="1" Padding="28,24,28,20">
+    <Border.Effect><DropShadowEffect BlurRadius="60" ShadowDepth="0" Opacity="0.7" Color="Black"/></Border.Effect>
+    <DockPanel>
+      <StackPanel DockPanel.Dock="Top">
+        <TextBlock x:Name="FbKind" FontSize="10.5" FontWeight="Bold" Foreground="#3FB8A0"/>
+        <TextBlock x:Name="FbTitle" FontSize="22" Margin="0,2,0,0" Foreground="#F2EFE6"
+                   FontFamily="Segoe UI Variable Display Semibold, Segoe UI Semibold"/>
+        <Border Background="#0A0E11" CornerRadius="8" Padding="12,8" Margin="0,12,0,0" BorderBrush="#26333C" BorderThickness="1">
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="&#xED25;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="#8A9AA5" VerticalAlignment="Center"/>
+            <TextBlock x:Name="FbPath" FontSize="13" Foreground="#C9CCC8" Margin="10,0,0,0" TextTrimming="CharacterEllipsis" MaxWidth="660"/>
+          </StackPanel>
+        </Border>
+        <TextBlock x:Name="FbCheck" FontSize="12.5" Margin="2,8,0,8" TextWrapping="Wrap"/>
+      </StackPanel>
+      <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+        <Button x:Name="FbUse" Height="40" Padding="18,0" Margin="0,0,8,0" FontSize="13" Content="Use this folder"/>
+        <Button x:Name="FbCancel" Height="40" Padding="18,0" FontSize="13" Content="Cancel"/>
+      </StackPanel>
+      <ScrollViewer x:Name="FbScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+        <StackPanel x:Name="FbList"/>
+      </ScrollViewer>
+    </DockPanel>
+  </Border>
+</Grid>

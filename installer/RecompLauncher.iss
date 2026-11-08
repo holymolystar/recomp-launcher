@@ -4,7 +4,7 @@
 ;
 ; Installs per user into %LOCALAPPDATA%\Programs\Recomp Launcher, so no admin rights are needed and the launcher can
 ; keep writing its settings, logs and backups next to itself as it does now. Works on a clean Windows 10/11 PC:
-; PowerShell 5.1, .NET Framework 4 and WPF are part of Windows. Most games need the Microsoft Visual C++ runtime,
+; .NET Framework 4.8, WPF and PowerShell 5.1 (for the install workers) are part of Windows. Most games need the Microsoft Visual C++ runtime,
 ; so setup offers to download and install it when it's missing (that one step asks for admin).
 
 #ifndef MyAppVersion
@@ -44,11 +44,15 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "Create a &desktop shortcut"; GroupDescription: "Shortcuts:"
 Name: "vcredist"; Description: "Download and install the Microsoft Visual C++ runtime (most games need it)"; GroupDescription: "Needed by games:"; Check: VCRedistMissing
 
+[InstallDelete]
+; the PowerShell launcher of versions before 2.0, replaced by the compiled Recomp Launcher.exe
+Type: files; Name: "{app}\Recomp-Launcher.ps1"
+
 [Files]
 Source: "{#Stage}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-; AppUserModelID matches the one Recomp-Launcher.ps1 sets, so the taskbar shows the launcher's icon, not PowerShell's
+; AppUserModelID matches the one Recomp Launcher.exe sets, so the taskbar groups the window under this shortcut's icon
 Name: "{userprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExe}"; WorkingDir: "{app}"; AppUserModelID: "RecompLauncher.App"
 Name: "{userdesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExe}"; WorkingDir: "{app}"; AppUserModelID: "RecompLauncher.App"; Tasks: desktopicon
 

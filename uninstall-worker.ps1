@@ -1,4 +1,4 @@
-# Uninstalls one game for Recomp-Launcher.ps1: copies the -Saves paths (saves and settings) into -BackupDir first, if
+# Uninstalls one game for Recomp Launcher.exe: copies the -Saves paths (saves and settings) into -BackupDir first, if
 # asked, then deletes the game's folder. Refuses folders that can't be a game's own: a drive root, Windows, Program
 # Files, the user folder itself, or a folder without the game's program (-Exe, a name or pattern) in it. Every event
 # goes to $Log as one JSON line, as in the other workers.
@@ -36,9 +36,12 @@ try {
         New-Item -ItemType Directory -Force $bk | Out-Null
         $n = 0
         foreach ($p in List $Saves) {
-            $src = Join-Path $dir $p
+            # a path can be outside the game folder (%USERPROFILE%\Games\Hookshot\user\save): kept under its last name
+            $p = [Environment]::ExpandEnvironmentVariables($p)
+            $outside = [IO.Path]::IsPathRooted($p)
+            $src = if ($outside) { $p } else { Join-Path $dir $p }
             if (Test-Path -LiteralPath $src) {
-                $dst = Join-Path $bk $p
+                $dst = if ($outside) { Join-Path $bk (Split-Path $p -Leaf) } else { Join-Path $bk $p }
                 New-Item -ItemType Directory -Force (Split-Path -Parent $dst) | Out-Null
                 Copy-Item -LiteralPath $src $dst -Recurse -Force
                 $n++
