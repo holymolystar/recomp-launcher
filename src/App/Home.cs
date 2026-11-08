@@ -282,6 +282,7 @@ partial class Shell {
         homeButtons[2].Text = n > 0 ? "Update all (" + n + ")" : "Check for updates";
         homeButtons[2].Label.Text = homeButtons[2].Text;
         foreach (var g in Games) UpdateHomeTile(g);
+        SetHints();   // the X Update hint follows the picked game's state
         if (view == View.Home)
             // the launcher's own top bar keeps only the window buttons here
             foreach (var name in new[] { "Logo", "SearchPill", "LastCheck", "BtnCheck", "BtnAll", "BtnSettings", "BtnFull" }) ((FrameworkElement)W.FindName(name)).Visibility = Visibility.Collapsed;
@@ -297,6 +298,8 @@ partial class Shell {
         // beside the console glyph in the bottom bar
         var status = (FrameworkElement)((FrameworkElement)N<TextBlock>("StepText").Parent).Parent;
         status.Margin = on ? new Thickness(84, 20, 40, 0) : new Thickness(70, 4, 40, 0);
+        // a narrower status column on Home, so the button hints on the right have room
+        ((Grid)status).ColumnDefinitions[0].Width = new GridLength(on ? 360 : 560);
         if (on) { StopDrift(); homeClockTimer.Start(); TickHomeClock(); }
         else {
             homeClockTimer.Stop();

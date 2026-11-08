@@ -253,15 +253,20 @@ partial class Shell {
             } else if (N<Grid>("SettingsLayer").Visibility == Visibility.Visible) { spec.Add(new[] { "A", "Select" }); spec.Add(new[] { "≡", "Save" }); spec.Add(new[] { "X", "Defaults" }); spec.Add(new[] { "B", "Cancel" }); }
             else if (N<Grid>("NotesLayer").Visibility == Visibility.Visible) { spec.Add(new[] { "LB", "Tabs" }); spec.Add(new[] { "B", "Close" }); }
             else if (view == View.Home) {
+                // every button that does something here, as the other views list theirs
                 bool install = sel != null && sel.State == State.Missing;
+                if (homePage != "game") {
+                    spec.Add(new[] { "RS", homeAll ? "Layout" : "All games" });
+                    if (homeAll) spec.Add(new[] { "LB", "Filter" });
+                    spec.Add(new[] { "≡", "Settings" });
+                }
                 if (sel != null && sel.State == State.Update && homeZone == "tiles" && homePage != "game") spec.Add(new[] { "X", "Update" });
                 if (homePage == "game") spec.Add(new[] { "A", "OK" });
                 else {
                     spec.Add(new[] { "Y", "Game page" });
-                    spec.Add(new[] { "A", homeZone == "buttons" ? "OK" : install ? "Install" : "Start" });
+                    spec.Add(new[] { "A", homeZone == "buttons" && !homeAll ? "OK" : install ? "Install" : "Start" });
                 }
-                if (homeAll) spec.Insert(0, new[] { "RS", "Layout" });
-                if (homePage != "home") spec.Add(new[] { "B", "Back" });
+                if (homePage != "home" || homeZone == "buttons") spec.Add(new[] { "B", "Back" });
             }
             else {
                 bool install = sel != null && sel.State == State.Missing;
