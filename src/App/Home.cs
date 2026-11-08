@@ -157,8 +157,19 @@ partial class Shell {
         h.Shade = new Border { CornerRadius = new CornerRadius(2), Background = Ui.Brush("#090C0F"), Opacity = 0, IsHitTestVisible = false };
         h.BadgeText = new TextBlock { FontSize = 10.5, FontWeight = FontWeights.Bold, Foreground = Ui.Brush("#0A0E11") };
         h.Badge = new Border { CornerRadius = new CornerRadius(3), Padding = new Thickness(7, 2, 7, 3), Margin = new Thickness(8), HorizontalAlignment = HorizontalAlignment.Left,
-            VerticalAlignment = VerticalAlignment.Bottom, Background = Ui.Brush(Ui.Gold), Child = h.BadgeText, Visibility = Visibility.Collapsed, IsHitTestVisible = false };
-        box.Children.Add(h.Sel); box.Children.Add(h.Face); box.Children.Add(h.Shade); box.Children.Add(h.Badge);
+            VerticalAlignment = VerticalAlignment.Top, Background = Ui.Brush(Ui.Gold), Child = h.BadgeText, Visibility = Visibility.Collapsed, IsHitTestVisible = false };
+        // the game's name on the tile itself, over a dark fade at the bottom
+        double fs = Math.Max(10.5, Math.Round(size * 0.07, 1));
+        var capText = new TextBlock { Text = g.Name, FontSize = fs, FontWeight = FontWeights.SemiBold, Foreground = Brushes.White,
+            TextWrapping = TextWrapping.Wrap, TextTrimming = TextTrimming.CharacterEllipsis, MaxHeight = fs * 2.7, LineHeight = fs * 1.25,
+            Effect = new DropShadowEffect { BlurRadius = 4, ShadowDepth = 1, Opacity = 0.7, Color = Colors.Black } };
+        var fade = new LinearGradientBrush { StartPoint = new Point(0, 0), EndPoint = new Point(0, 1) };
+        fade.GradientStops.Add(new GradientStop(Color.FromArgb(0, 0, 0, 0), 0));
+        fade.GradientStops.Add(new GradientStop(Color.FromArgb(0xB8, 0, 0, 0), 0.55));
+        fade.GradientStops.Add(new GradientStop(Color.FromArgb(0xD0, 0, 0, 0), 1));
+        var caption = new Border { VerticalAlignment = VerticalAlignment.Bottom, CornerRadius = new CornerRadius(0, 0, 2, 2), Background = fade,
+            Padding = new Thickness(size * 0.05, fs * 1.6, size * 0.05, size * 0.045), Child = capText, IsHitTestVisible = false };
+        box.Children.Add(h.Sel); box.Children.Add(h.Face); box.Children.Add(caption); box.Children.Add(h.Shade); box.Children.Add(h.Badge);
         var stack = new StackPanel();
         stack.Children.Add(nameHost); stack.Children.Add(box);
         h.Root = new Grid { Margin = named ? new Thickness(0, 0, 9, 14) : new Thickness(0, 0, 16, 18), Cursor = Cursors.Hand, Background = Brushes.Transparent, Tag = g };
@@ -357,7 +368,7 @@ partial class Shell {
     }
     void CloseHomeAll() {
         homePage = "home";
-        filter = "all";   // the home row always shows every game
+        filter = "all";   // the home row ignores filters: it always shows the installed games
         ShowHomePage();
     }
     void ShowHomePage() {

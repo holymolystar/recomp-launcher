@@ -16,6 +16,9 @@ static class Versions {
     // "v0.4.1-alpha.4", "v.0.9.5", "0.3.7+0f65b4e" -> a comparable version; null for names like "low-vram"
     public static Version Parse(string s) {
         if (string.IsNullOrEmpty(s)) return null;
+        // a release named after its date ("2026-10-23-9d9230c2") compares as 2026.10.23
+        var date = Regex.Match(s, @"^v?(\d{4})-(\d{2})-(\d{2})(?!\d)");
+        if (date.Success) return new Version(int.Parse(date.Groups[1].Value), int.Parse(date.Groups[2].Value), int.Parse(date.Groups[3].Value));
         string t = Regex.Replace(s, @"^[^\d]*", "");
         t = Regex.Replace(t, @"[+-].*$", "").TrimEnd('.');
         if (!Regex.IsMatch(t, @"^\d+(\.\d+){0,3}$")) return null;

@@ -480,6 +480,8 @@ partial class Shell {
     }
     bool Shown(Game g) {
         if (g.Hidden) return false;
+        // the home row holds only installed games (and one being installed); the rest are in All games
+        if (view == View.Home && homePage == "home") return g.Inst != null || g.IsBusy;
         string q = N<TextBox>("SearchBox").Text.Trim();
         if (q.Length > 0 && (g.Name + " " + g.Short + " " + g.Source + " " + g.Id).IndexOf(q, StringComparison.CurrentCultureIgnoreCase) < 0) return false;
         switch (filter) {

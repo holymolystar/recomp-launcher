@@ -4,7 +4,7 @@
 # Usage:  powershell -ExecutionPolicy Bypass -File installer\build-installer.ps1 [-Version 1.2.0] [-UpdaterDir <path>]
 param(
     [string]$Version = (Get-Date -Format 'yyyy.M.d'),
-    [string]$UpdaterDir = 'C:\Recomp TOTK Updater'   # where update-worker.ps1 (TotK updates) is copied from
+    [string]$UpdaterDir = 'C:\Games\TOTK Updater'   # where update-worker.ps1 (TotK updates) is copied from
 )
 $ErrorActionPreference = 'Stop'
 $here  = Split-Path -Parent $MyInvocation.MyCommand.Path
