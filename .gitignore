@@ -16,3 +16,7 @@ installer/stage/
 installer/Output/
 
 *.tmp
+
+# The macOS launcher's build output
+mac/.build/
+mac/build/
