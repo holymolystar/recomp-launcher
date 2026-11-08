@@ -1,4 +1,4 @@
-// Recomp Launcher: one console-style window for PC recomps and native ports. Shows the installed and latest release
+﻿// Recomp Launcher: one console-style window for PC recomps and native ports. Shows the installed and latest release
 // of each game, installs a game the first time, plays it, and updates one or all with one click. Works with a
 // keyboard, mouse or any XInput controller.
 // For testing: -Snapshot <png> writes a picture of the window and closes it (-SnapshotDelay ms); -PadScript
@@ -12,7 +12,7 @@ using System.Windows;
 namespace RecompLauncher {
 
 class Args {
-    public string Snapshot, Select, Search, PadScript, View;
+    public string Snapshot, Select, Search, PadScript, View, Theme;
     public int SnapshotDelay = 3000;
     public bool Full, OpenNotes, OpenSettings;
     public static Args Parse(string[] a) {
@@ -27,6 +27,7 @@ class Args {
                 case "search": r.Search = next(); break;
                 case "padscript": r.PadScript = next(); break;
                 case "view": r.View = next(); break;
+                case "theme": r.Theme = next(); break;
                 case "full": r.Full = true; break;
                 case "opennotes": r.OpenNotes = true; break;
                 case "opensettings": r.OpenSettings = true; break;
@@ -57,7 +58,9 @@ static class Program {
             Directory.CreateDirectory(Paths.Logs);
             Catalog.Load(Path.Combine(root, "games.json"));
             Settings.Load(Path.Combine(root, "settings.json"));
+            Theme.Use(Settings.Get("Theme"));
             if (args.View != null) Settings.Set("ViewMode", args.View);
+            if (args.Theme != null) Theme.Use(args.Theme);
             ReleaseCache.Load(Path.Combine(root, "cache.json"));
             Playtime.Path = Path.Combine(root, "playtime.json");
             Roms.Path = Path.Combine(root, "roms.json");

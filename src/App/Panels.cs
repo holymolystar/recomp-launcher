@@ -1,4 +1,4 @@
-// Overlays: What's new / Activity, Settings, Choose your game (with the NSP converter), Uninstall, and the file
+﻿// Overlays: What's new / Activity, Settings, Choose your game (with the NSP converter), Uninstall, and the file
 // browser a controller uses instead of Windows' dialogs.
 using System;
 using System.Collections.Generic;
@@ -196,7 +196,13 @@ partial class Shell {
     }
     void BuildSettings() {
         var rows = N<StackPanel>("SetRows");
-        rows.Children.Add(Heading("OPTIONS", true));
+        rows.Children.Add(Heading("THEME", true));
+        rows.Children.Add(new TextBlock { TextWrapping = TextWrapping.Wrap, FontSize = 11.5, Foreground = Ui.Brush(Ui.Muted), Margin = new Thickness(0, 0, 0, 8),
+            Text = "Pick a look. The launcher reopens with it when you save." });
+        themeGrid = new UniformGrid { Columns = 3 };
+        foreach (var th in Theme.All) themeGrid.Children.Add(ThemeSwatch(th));
+        rows.Children.Add(themeGrid);
+        rows.Children.Add(Heading("OPTIONS", false));
         optClose = NewToggle("Close the launcher when a game starts", "Play time is still counted while you play.");
         optFull = NewToggle("Open in full screen", "F11, the full screen button or View on a controller switch it any time.");
         optStartup = NewToggle("Open when Windows starts", "Adds Recomp Launcher to your Startup folder.");
@@ -265,6 +271,34 @@ partial class Shell {
         N<Button>("BtnSetSave").Click += (s, e) => SaveSettingsPanel();
         N<Button>("BtnSetDefaults").Click += (s, e) => { foreach (var r in folderRows) r.Box.Text = Settings.Default(r.Key); };
     }
+    // ---------- theme picker: a small preview of each theme in its own colours ----------
+    UniformGrid themeGrid; string pickedTheme;
+    Button ThemeSwatch(ThemeDef th) {
+        Func<string, SolidColorBrush> raw = h => { var b = new SolidColorBrush(Theme.Parse(h.TrimStart('#'))); b.Freeze(); return b; };
+        Color bg = Theme.Parse(th.Bg.TrimStart('#')), ink = Theme.Parse(th.Ink.TrimStart('#'));
+        var face = new Grid { Height = 74, ClipToBounds = true };
+        face.Children.Add(new Border { CornerRadius = new CornerRadius(10),
+            Background = new LinearGradientBrush(Theme.Mix(bg, Theme.Parse(th.Accent.TrimStart('#')), 0.28), bg, 35) });
+        // a mini card and two buttons in the theme's accents
+        var mini = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(12, 0, 0, 12), VerticalAlignment = VerticalAlignment.Bottom };
+        mini.Children.Add(new Border { Width = 26, Height = 26, CornerRadius = new CornerRadius(7), Background = new LinearGradientBrush(Theme.Parse(th.Accent.TrimStart('#')), Theme.Parse(th.Accent2.TrimStart('#')), 45) });
+        mini.Children.Add(new Border { Width = 40, Height = 12, CornerRadius = new CornerRadius(6), Margin = new Thickness(10, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, Background = raw(th.Ink) });
+        mini.Children.Add(new Border { Width = 22, Height = 12, CornerRadius = new CornerRadius(6), Margin = new Thickness(6, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, Background = raw(th.Accent2) });
+        face.Children.Add(mini);
+        face.Children.Add(new TextBlock { Text = th.Name, FontSize = 13, FontFamily = Ui.Semi, Foreground = new SolidColorBrush(ink), Margin = new Thickness(12, 9, 0, 0) });
+        var card = new Border { CornerRadius = new CornerRadius(12), BorderThickness = new Thickness(2), Padding = new Thickness(2), Child = face, BorderBrush = Brushes.Transparent };
+        var b2 = new Button { Content = card, Margin = new Thickness(0, 0, 10, 10), Cursor = Cursors.Hand, ToolTip = th.Desc, Tag = th.Id, Focusable = false };
+        b2.Template = (ControlTemplate)XamlReader.Parse("<ControlTemplate xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\" TargetType=\"Button\"><ContentPresenter/></ControlTemplate>");
+        b2.Click += (s, e) => PickTheme(th.Id);
+        return b2;
+    }
+    void PickTheme(string id) {
+        pickedTheme = id;
+        foreach (Button b in themeGrid.Children) {
+            bool on = (string)b.Tag == id;
+            ((Border)b.Content).BorderBrush = on ? Ui.Brush(Ui.Text) : Brushes.Transparent;
+        }
+    }
     void CheckPathLabel(FolderRow r) {
         string dir = Paths.Expand(r.Box.Text.Trim());
         var l = r.Check;
@@ -284,6 +318,7 @@ partial class Shell {
         tokenBox.Password = Settings.Get("GitHubToken");
         tokenCheck.Text = tokenBox.Password.Length > 0 ? "A token is saved." : ""; tokenCheck.Foreground = Ui.Brush(Ui.Muted);
         foreach (var g in Games) SetToggle(showToggles[g.Id], !g.Hidden, true);
+        PickTheme(Theme.Current.Id);
         fb.Visibility = Visibility.Collapsed;
         setStops = SetStops(); MarkSetStop(-1);
         if (padUsed) SelectSetStop(0);
@@ -313,7 +348,16 @@ partial class Shell {
         } catch (Exception e) { Log("Couldn't change the Startup folder: " + e.Message, Ui.Red); }
         foreach (var g in Games) g.Hidden = !showToggles[g.Id].On;
         Settings.Set("Hidden", string.Join(",", Games.Where(g => g.Hidden).Select(g => g.Id)));
+        bool newTheme = pickedTheme != null && pickedTheme != Theme.Current.Id;
+        if (newTheme) Settings.Set("Theme", pickedTheme);
         Settings.Save();
+        // a new theme: the launcher opens again in it (the window is built in its colours)
+        if (newTheme) {
+            Settings.Set("LastGame", sel.Id); Settings.Save();
+            try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(System.Reflection.Assembly.GetExecutingAssembly().Location, "-Select " + sel.Id) { WorkingDirectory = Paths.Root }); } catch { }
+            W.Close();
+            return;
+        }
         SetAutoCheck();
         ApplySettings();
         foreach (var g in Games) { Icons.Load(g); ApplyIcon(g); }
@@ -346,6 +390,7 @@ partial class Shell {
     int setIdx = -1;
     List<FrameworkElement> SetStops() {
         var s = new List<FrameworkElement>();
+        foreach (FrameworkElement b in themeGrid.Children) s.Add(b);
         foreach (var t in new[] { optClose, optFull, optStartup, optAuto }) s.Add(t.Root);
         foreach (FrameworkElement b in showButtons.Children) s.Add(b);
         foreach (FrameworkElement c in showGrid.Children) s.Add(c);

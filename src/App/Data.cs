@@ -1,4 +1,4 @@
-// Data the launcher keeps: the game catalog (games.json), settings.json, cache.json (last known releases),
+﻿// Data the launcher keeps: the game catalog (games.json), settings.json, cache.json (last known releases),
 // playtime.json (written by playtime-worker.ps1) and roms.json (the game files picked before). All JSON files keep
 // the format the PowerShell launcher used, so nothing is lost when switching.
 using System;
@@ -155,7 +155,7 @@ static class Catalog {
                 Id = Json.Str(d, "Id"), Name = Json.Str(d, "Name"), Short = Json.Str(d, "Short") ?? "", Source = Json.Str(d, "Source") ?? "",
                 Exe = Json.Str(d, "Exe"), Proc = Json.Str(d, "Proc"), SettingsKey = Json.Str(d, "SettingsKey"), Launch = Json.Str(d, "Launch"),
                 Repo = Json.Str(d, "Repo"), Asset = Json.Str(d, "Asset"), NotAsset = Json.Str(d, "NotAsset"),
-                Accent = Json.Str(d, "Accent") ?? "#3FB8A0", Accent2 = Json.Str(d, "Accent2") ?? "#D9B45A",
+                Accent = (Json.Str(d, "Accent") ?? "#3fb8a0").ToLowerInvariant(), Accent2 = (Json.Str(d, "Accent2") ?? "#d9b45a").ToLowerInvariant(),   // lower case: never recoloured by a theme
                 Backup = Json.Str(d, "Backup"), Keep = Json.Str(d, "Keep"), Replace = Json.Str(d, "Replace"), FirstRun = Json.Str(d, "FirstRun"),
                 SetupArg = Json.Str(d, "SetupArg"), Rebuild = Json.Str(d, "Rebuild"), Needs = Json.Str(d, "Needs") ?? "",
                 DefaultDir = Json.Str(d, "DefaultDir"), Series = Json.Str(d, "Series") ?? "nintendo",

@@ -1,4 +1,4 @@
-// Card faces: the player's own picture (icons\<id>.png/.jpg), else the game program's icon, else a drawn tile in the
+﻿// Card faces: the player's own picture (icons\<id>.png/.jpg), else the game program's icon, else a drawn tile in the
 // game's colours with a white symbol (or its short name). Pictures are decoded at the size they are shown at.
 using System;
 using System.Collections.Generic;
@@ -13,7 +13,7 @@ namespace RecompLauncher {
 
 static class Ui {
     static readonly Dictionary<string, SolidColorBrush> brushes = new Dictionary<string, SolidColorBrush>();
-    public static Color Col(string hex) { return (Color)ColorConverter.ConvertFromString(hex); }
+    public static Color Col(string hex) { return (Color)ColorConverter.ConvertFromString(Theme.Map(hex)); }
     // frozen, shared brushes: one per colour for the whole app
     public static SolidColorBrush Brush(string hex) {
         SolidColorBrush b;

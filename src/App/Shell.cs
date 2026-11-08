@@ -1,4 +1,4 @@
-// The launcher window: the library in one of four views (row of cards under the game's page, large grid, compact
+﻿// The launcher window: the library in one of four views (row of cards under the game's page, large grid, compact
 // grid, list), search, filters and sort, and the selected game's page and buttons. Panels.cs has the overlays
 // (release notes, settings, choose your game, uninstall, file browser), Jobs.cs installs/updates/plays, Controller.cs
 // the XInput controller.
@@ -28,7 +28,7 @@ enum View { Row, Grid, Compact, List }
 class GameUi {
     // card (row and large grid share it)
     public Grid Tile, Box; public Border Glow, Face, Shade, Sel; public DropShadowEffect GlowFx; public Ellipse Dot;
-    public TextBlock Name, Sub; public Image Icon; public ScaleTransform Scale;
+    public TextBlock Name, Sub; public Image Icon; public ScaleTransform Scale; public TranslateTransform Shine; public UIElement ShineEl;
     // compact card
     public Border CTile; public Image CIcon; public TextBlock CName, CSub; public Ellipse CDot;
     // list row
@@ -51,7 +51,7 @@ partial class Shell {
 
     T N<T>(string name) where T : class { return W.FindName(name) as T; }
     static Stream Res(string name) { return Assembly.GetExecutingAssembly().GetManifestResourceStream(name); }
-    static string ResText(string name) { using (var s = Res(name)) using (var r = new StreamReader(s)) return r.ReadToEnd(); }
+    static string ResText(string name) { using (var s = Res(name)) using (var r = new StreamReader(s)) return Theme.MapXaml(r.ReadToEnd()); }
 
     // ---------- animation helpers ----------
     static Duration Dur(double ms) { return new Duration(TimeSpan.FromMilliseconds(ms)); }
@@ -69,7 +69,7 @@ partial class Shell {
 
     // ---------- start ----------
     public void Run() {
-        W = (Window)XamlReader.Load(Res("MainWindow.xaml"));
+        W = (Window)XamlReader.Parse(ResText("MainWindow.xaml"));
         var logo = Path.Combine(Paths.Root, "logo.png");
         if (File.Exists(logo)) {
             var b = new System.Windows.Media.Imaging.BitmapImage();
@@ -199,14 +199,24 @@ partial class Shell {
                 Name = (TextBlock)t.FindName("Name"), Sub = (TextBlock)t.FindName("Sub"), Icon = (Image)t.FindName("Icon")
             };
             u.Scale = (ScaleTransform)u.Box.RenderTransform;
+            u.ShineEl = (UIElement)t.FindName("Shine");
+            u.Shine = (TranslateTransform)((TransformGroup)u.ShineEl.RenderTransform).Children[1];
             g.Ui = u;
             u.Name.Text = g.Name; u.Sub.Text = "";
             u.GlowFx.Color = Ui.Col(g.Accent); u.Glow.Background = Ui.Brush(g.Accent);
             u.Face.Background = Ui.Gradient(g.Accent, g.Accent2);
             g.Icon = null;
             t.Tag = g;
-            t.MouseEnter += (s, e) => { if (g != sel) u.Shade.BeginAnimation(UIElement.OpacityProperty, Anim(0.1, 150)); };
-            t.MouseLeave += (s, e) => { if (g != sel) u.Shade.BeginAnimation(UIElement.OpacityProperty, Anim(0.35, 250)); };
+            t.MouseEnter += (s, e) => {
+                if (g == sel) return;
+                u.Shade.BeginAnimation(UIElement.OpacityProperty, Anim(0.1, 150));
+                u.Scale.BeginAnimation(ScaleTransform.ScaleXProperty, Anim(1.05, 180)); u.Scale.BeginAnimation(ScaleTransform.ScaleYProperty, Anim(1.05, 180));
+            };
+            t.MouseLeave += (s, e) => {
+                if (g == sel) return;
+                u.Shade.BeginAnimation(UIElement.OpacityProperty, Anim(0.35, 250));
+                u.Scale.BeginAnimation(ScaleTransform.ScaleXProperty, Anim(1, 250)); u.Scale.BeginAnimation(ScaleTransform.ScaleYProperty, Anim(1, 250));
+            };
             t.MouseLeftButtonUp += (s, e) => CardClicked(g, e);
             t.MouseLeftButtonDown += (s, e) => { if (e.ClickCount == 2) { PrimaryAction(g); e.Handled = true; } };
         }
@@ -384,7 +394,7 @@ partial class Shell {
             N<TextBlock>("HeroNote").Visibility = Visibility.Collapsed;
         }
         bool canUpdate = g.State == State.Update && !running;
-        string upText = g.State == State.Update ? (g.Latest.Size > 0 ? string.Format("Update  ({0:N0} MB)", g.Latest.Size / 1048576) : "Update") : g.State == State.Updating ? "Updating..." : "Up to date";
+        string upText = g.State == State.Update ? (g.Latest.Size > 0 ? (g.Latest.Size >= 1048576 ? string.Format("Update  ({0:N0} MB)", g.Latest.Size / 1048576) : string.Format("Update  ({0:N0} KB)", g.Latest.Size / 1024)) : "Update") : g.State == State.Updating ? "Updating..." : "Up to date";
         bool showUpdate = !installMode;
         bool showUninst = g.Inst != null && !installMode && g.State != State.Uninstalling;
         bool folderOk = Directory.Exists(g.Dir);
@@ -537,6 +547,12 @@ partial class Shell {
             double s = on ? 1.12 : 1.0;
             u.Scale.BeginAnimation(ScaleTransform.ScaleXProperty, Anim(s, 320)); u.Scale.BeginAnimation(ScaleTransform.ScaleYProperty, Anim(s, 320));
             u.Sel.BeginAnimation(UIElement.OpacityProperty, Anim(on ? 1 : 0, 250));
+            if (on && prev != null) {
+                u.Shine.BeginAnimation(TranslateTransform.XProperty, Anim(260, 750, -40, EasingMode.EaseInOut));
+                var so = new DoubleAnimationUsingKeyFrames { Duration = Dur(750) };
+                so.KeyFrames.Add(new LinearDoubleKeyFrame(1, KeyTime.FromPercent(0.15))); so.KeyFrames.Add(new LinearDoubleKeyFrame(1, KeyTime.FromPercent(0.7))); so.KeyFrames.Add(new LinearDoubleKeyFrame(0, KeyTime.FromPercent(1)));
+                u.ShineEl.BeginAnimation(UIElement.OpacityProperty, so);
+            }
             // the glow (a blurred shadow) is drawn only for the selected card
             if (on) { u.Glow.Visibility = Visibility.Visible; u.Glow.BeginAnimation(UIElement.OpacityProperty, Anim(0.75, 400)); }
             else if (u.Glow.Visibility == Visibility.Visible) {
@@ -563,6 +579,10 @@ partial class Shell {
         }
         var title = N<TextBlock>("HeroTitle");
         title.Text = g.Name; title.FontSize = g.Name.Length > 26 ? 42 : 56;
+        var ink = Ui.Col(Ui.Text);
+        var tg = new LinearGradientBrush(ink, Theme.Mix(ink, Ui.Col(g.Accent), 0.55), 0); tg.Freeze();
+        title.Foreground = tg;
+        ((DropShadowEffect)W.FindName("PlayGlow")).Color = Theme.Mix(Colors.White, Ui.Col(g.Accent), 0.6);
         N<TextBlock>("HeroSource").Text = g.Source; N<TextBlock>("HeroSource").Foreground = Ui.Brush(g.Accent);
         var src = (ImageSource)g.Icon;
         N<Image>("HeroIcon").Source = src; N<Image>("HeroArt").Source = src; N<Image>("GridIcon").Source = src;

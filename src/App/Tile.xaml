@@ -8,7 +8,19 @@
       <Border.Effect><DropShadowEffect x:Name="GlowFx" BlurRadius="46" ShadowDepth="0" Opacity="0.9"/></Border.Effect>
     </Border>
     <Border x:Name="Face" CornerRadius="30" ClipToBounds="True">
-      <Image x:Name="Icon" RenderOptions.BitmapScalingMode="HighQuality"/>
+      <Grid>
+        <Grid.Clip><RectangleGeometry Rect="0,0,138,138" RadiusX="30" RadiusY="30"/></Grid.Clip>
+        <Image x:Name="Icon" RenderOptions.BitmapScalingMode="HighQuality"/>
+        <!-- a band of light that sweeps across the card when it's picked -->
+        <Rectangle x:Name="Shine" Width="90" Margin="-60,-40" HorizontalAlignment="Left" IsHitTestVisible="False" Opacity="0">
+          <Rectangle.Fill>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+              <GradientStop Color="#00FFFFFF" Offset="0"/><GradientStop Color="#70FFFFFF" Offset="0.5"/><GradientStop Color="#00FFFFFF" Offset="1"/>
+            </LinearGradientBrush>
+          </Rectangle.Fill>
+          <Rectangle.RenderTransform><TransformGroup><SkewTransform AngleX="-20"/><TranslateTransform X="-40"/></TransformGroup></Rectangle.RenderTransform>
+        </Rectangle>
+      </Grid>
     </Border>
     <Border x:Name="Shade" CornerRadius="30" Background="#090C0F" Opacity="0.35" IsHitTestVisible="False"/>
     <Border x:Name="Sel" CornerRadius="36" BorderThickness="3" BorderBrush="#F2EFE6" Margin="-8" Opacity="0"/>
