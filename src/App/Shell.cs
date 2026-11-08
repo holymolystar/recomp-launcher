@@ -34,7 +34,7 @@ class GameUi {
     // list row
     public Border LRow; public Image LIcon; public TextBlock LName, LSource, LInst, LLatest, LStatus, LPlayed, LLast; public Ellipse LDot;
     public bool Pulsing;
-    public HomeTileUi Home;
+    public HomeTileUi Home, HomeAll, HomeSmall; public HomeRowUi HomeRow;
 }
 
 partial class Shell {
@@ -125,7 +125,7 @@ partial class Shell {
 
         var first = Catalog.Find(args.Select ?? Settings.Get("LastGame")) ?? Games[0];
         SetTab("notes");
-        SetView(view, false);
+        SetView(View.Home, false);
         ShowGame(first);
         if (args.Full || (args.Snapshot == null && Settings.Get("Fullscreen") == "True")) SetFullscreen(true);
         // card faces after the first frame, a few at a time, so the window shows at once
@@ -178,7 +178,11 @@ partial class Shell {
         u.Icon.Source = src; u.Icon.Margin = new Thickness(g.IconIsArt ? 0 : 26);
         if (u.CIcon != null) { u.CIcon.Source = src; u.CIcon.Margin = new Thickness(g.IconIsArt ? 0 : 12); }
         if (u.LIcon != null) u.LIcon.Source = src;
-        if (u.Home != null) { u.Home.Icon.Source = src; u.Home.Icon.Margin = new Thickness(g.IconIsArt ? 0 : 52); }
+        if (u.Home != null) { u.Home.Icon.Source = src; u.Home.Icon.Margin = new Thickness(g.IconIsArt ? 0 : HomeTileSize * 0.24); }
+        if (u.HomeSmall != null) { u.HomeSmall.Icon.Source = src; u.HomeSmall.Icon.Margin = new Thickness(g.IconIsArt ? 0 : SmallTileSize * 0.24); }
+        if (u.HomeRow != null) { u.HomeRow.Icon.Source = src; u.HomeRow.Icon.Margin = new Thickness(g.IconIsArt ? 0 : 8); }
+        if (g == sel) UpdateGamePage();
+        if (u.HomeAll != null) { u.HomeAll.Icon.Source = src; u.HomeAll.Icon.Margin = new Thickness(g.IconIsArt ? 0 : AllTileSize * 0.24); }
         if (g == sel) { N<Image>("HeroIcon").Source = src; N<Image>("HeroArt").Source = src; N<Image>("GridIcon").Source = src; }
     }
     void Snapshot(string file) {
@@ -443,13 +447,13 @@ partial class Shell {
             case View.Grid: return N<WrapPanel>("GridTiles");
             case View.Compact: return N<WrapPanel>("CompactTiles");
             case View.List: return N<StackPanel>("ListRows");
-            case View.Home: return homeTiles;
+            case View.Home: return homeAll ? (Panel)homeAllTiles : homeTiles;
             default: return N<StackPanel>("Tiles");
         }
     }
     FrameworkElement ElementOf(Game g) {
         var u = (GameUi)g.Ui;
-        return view == View.Compact ? (FrameworkElement)u.CTile : view == View.List ? (FrameworkElement)u.LRow : view == View.Home ? (FrameworkElement)u.Home.Root : u.Tile;
+        return view == View.Compact ? (FrameworkElement)u.CTile : view == View.List ? (FrameworkElement)u.LRow : view == View.Home ? (homeAll ? AllElement(g) : u.Home.Root) : u.Tile;
     }
     void ApplySort(bool force) {
         var o = Sorted();
@@ -458,8 +462,11 @@ partial class Shell {
         if (!force && panel.Children.Count > 0 && o.SequenceEqual(order)) return;
         order = o;
         foreach (var p in new Panel[] { N<StackPanel>("Tiles"), N<WrapPanel>("GridTiles"), N<WrapPanel>("CompactTiles"), N<StackPanel>("ListRows") }) p.Children.Clear();
-        if (homeTiles != null) homeTiles.Children.Clear();
-        if (view == View.Home) { foreach (var g in o) homeTiles.Children.Add(((GameUi)g.Ui).Home.Root); AddHomeSlots(); order = o; QueueScroll(); return; }
+        if (homeTiles != null) { homeTiles.Children.Clear(); homeAllTiles.Children.Clear(); }
+        if (view == View.Home) {
+            foreach (var g in o) { homeTiles.Children.Add(((GameUi)g.Ui).Home.Root); homeAllTiles.Children.Add(AllElement(g)); }
+            AddHomeSlots(); order = o; QueueScroll(); return;
+        }
         int prev = -1;
         foreach (var g in o) {
             var u = (GameUi)g.Ui;
@@ -545,7 +552,8 @@ partial class Shell {
         SetHints();
         if (save && args.Snapshot == null) { Settings.Set("ViewMode", ViewName(v)); Settings.Save(); }
     }
-    void CycleView(int dir) { SetView((View)(((int)view + dir + 5) % 5), true); }
+    // RS / Ctrl+G: the next All games layout (and All games from the home row)
+    void CycleView(int dir) { if (homeAll) CycleAllLayout(); else if (homePage == "home") OpenHomeAll(null); }
 
     // ---------- selection ----------
     void MarkSelected(Game prev, Game g) {
@@ -704,6 +712,7 @@ partial class Shell {
         chips.Children.Add(pill);
     }
     void UpdateChips() {
+        UpdateHomeFilters();
         var list = Listed();
         foreach (var f in FilterDefs) {
             bool on = f[0] == filter;
@@ -887,7 +896,7 @@ partial class Shell {
             case Key.F5: if (!running && !checking) CheckAll(true); e.Handled = true; break;
             case Key.G: if (ctrl) { CycleView(1); e.Handled = true; } break;
             case Key.D1: case Key.D2: case Key.D3: case Key.D4: case Key.D5:
-                if (ctrl) { SetView((View)(k - Key.D1), true); e.Handled = true; } break;
+                if (ctrl && k <= Key.D3) { OpenHomeAll(null); SetAllLayout(new[] { "big", "small", "list" }[k - Key.D1]); e.Handled = true; } break;
             case Key.F: if (ctrl) { box.Focus(); e.Handled = true; } break;
         }
     }

@@ -14,3 +14,5 @@ icons/
 # Build output (the installer goes on the GitHub Release instead)
 installer/stage/
 installer/Output/
+
+*.tmp

@@ -25,7 +25,10 @@ partial class Shell {
     readonly List<HomeButton> homeButtons = new List<HomeButton>();
     string homeZone = "tiles"; int homeIdx;
     DispatcherTimer homeClockTimer;
-    const double HomeTileSize = 244;
+    const double HomeTileSize = 244, AllTileSize = 168;
+    // the All games page
+    bool homeAll { get { return homePage == "all"; } }
+    Grid homeAllPage; WrapPanel homeAllTiles; ScrollViewer homeAllScroll; StackPanel homeButtonRow, homeFilterPills; TextBlock homeAllName, homeAllState, homeAllCount;
     // raised surfaces (round buttons, empty slots): white on a light theme, a lighter shade on a dark one
     static string Raised { get { return Theme.Current.Light ? "#ffffff" : "#1C252C"; } }   // lower case: not recoloured
     static string Slot { get { return Theme.Current.Light ? "#f7f7f7" : "#11181D"; } }
@@ -47,7 +50,7 @@ partial class Shell {
         homeUpdates = new TextBlock { FontSize = 12.5, FontFamily = Ui.Semi, Foreground = Ui.Brush("#0A0E11"), VerticalAlignment = VerticalAlignment.Center };
         homeUpdatesPill = new Border { CornerRadius = new CornerRadius(12), Padding = new Thickness(11, 3, 11, 4), Background = Ui.Brush(Ui.Gold), Margin = new Thickness(0, 0, 20, 0),
             Child = homeUpdates, Cursor = Cursors.Hand, Visibility = Visibility.Collapsed, VerticalAlignment = VerticalAlignment.Center, ToolTip = "Show the games with updates" };
-        homeUpdatesPill.MouseLeftButtonUp += (s, e) => { SetView(View.Grid, true); SetFilter("updates"); };
+        homeUpdatesPill.MouseLeftButtonUp += (s, e) => OpenHomeAll("updates");
         homeClock = new TextBlock { FontSize = 19, Foreground = Ui.Brush(Ui.Text), VerticalAlignment = VerticalAlignment.Center };
         homeBattery = new TextBlock { FontFamily = Ui.Mdl, FontSize = 17, Foreground = Ui.Brush(Ui.Text), Margin = new Thickness(14, 2, 0, 0), VerticalAlignment = VerticalAlignment.Center };
         right.Children.Add(homeUpdatesPill);
@@ -67,16 +70,16 @@ partial class Shell {
 
         // the round buttons, each icon in its own colour
         var row = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center };
+        homeButtonRow = row;
         Grid.SetRow(row, 4);
+        AddHomeButton(row, "\uE946", "Game page", "#2f8fe0", () => OpenGamePage());
         AddHomeButton(row, "", "What's new", "#e8453c", () => OpenNotes("notes"));
         AddHomeButton(row, "", "Check for updates", "#f4a312", () => {
             int n = Listed().Count(g => g.State == State.Update);
             if (n > 0 && !running) TryAction("Updating", () => StartQueue(Listed().Where(g => g.State == State.Update).ToList()));
             else if (!running && !checking) CheckAll(true);
         });
-        AddHomeButton(row, "", "All games", "#2f8fe0", () => SetView(View.Grid, true));
-        AddHomeButton(row, "", "Game folder", "#2f8fe0", () => OpenFolder(sel.Dir));
-        AddHomeButton(row, "", "Save backups", "#8a57d6", () => OpenFolder(sel.Backups));
+        AddHomeButton(row, "", "All games", "#2f8fe0", () => OpenHomeAll(null));
         AddHomeButton(row, "", "Full screen", "#7d8a93", () => ToggleFullscreen());
         AddHomeButton(row, "", "Settings", "#7d8a93", () => { if (!running) OpenSettings(); });
         AddHomeButton(row, "", "Close", "#7d8a93", () => W.Close());
@@ -90,6 +93,8 @@ partial class Shell {
         Grid.SetRow(console, 6);
         homeLayer.Children.Add(console);
 
+        BuildHomeAll();
+        BuildGamePage();
         homeLayer.Visibility = Visibility.Collapsed;
         N<Grid>("Main").Children.Insert(0, homeLayer);
         foreach (var g in Games) BuildHomeTile(g);
@@ -128,16 +133,24 @@ partial class Shell {
 
     void BuildHomeTile(Game g) {
         var u = (GameUi)g.Ui;
+        u.Home = MakeHomeTile(g, HomeTileSize, true);
+        u.HomeAll = MakeHomeTile(g, AllTileSize, false);
+        u.HomeSmall = MakeHomeTile(g, SmallTileSize, false);
+        u.HomeSmall.Root.Margin = new Thickness(0, 0, 12, 14);
+        u.HomeRow = MakeHomeRow(g);
+    }
+    HomeTileUi MakeHomeTile(Game g, double size, bool named) {
         var h = new HomeTileUi();
         // the name sits above the picked tile and may run past its right edge
         h.Name = new TextBlock { Text = g.Name, FontSize = 17, Foreground = Ui.Brush(Ui.Teal), Opacity = 0, IsHitTestVisible = false };
-        var nameHost = new Canvas { Height = 36 };
+        var nameHost = new Canvas { Height = named ? 36 : 0 };
+        if (!named) h.Name.Visibility = Visibility.Collapsed;   // the All games page names the picked game in its header
         Canvas.SetLeft(h.Name, 4); Canvas.SetTop(h.Name, 2);
         nameHost.Children.Add(h.Name);
-        var box = new Grid { Width = HomeTileSize, Height = HomeTileSize };
+        var box = new Grid { Width = size, Height = size };
         // the frame: a coloured line with a thin gap of background between it and the tile
         h.Sel = new Border { CornerRadius = new CornerRadius(5), BorderThickness = new Thickness(5), BorderBrush = Ui.Brush(Ui.Teal), Margin = new Thickness(-9), Opacity = 0, IsHitTestVisible = false };
-        h.Icon = new Image { Source = (ImageSource)g.Icon, Margin = new Thickness(g.IconIsArt ? 0 : 58), Stretch = Stretch.UniformToFill };
+        h.Icon = new Image { Source = (ImageSource)g.Icon, Margin = new Thickness(g.IconIsArt ? 0 : size * 0.24), Stretch = Stretch.UniformToFill };
         RenderOptions.SetBitmapScalingMode(h.Icon, BitmapScalingMode.HighQuality);
         h.Face = new Border { CornerRadius = new CornerRadius(2), ClipToBounds = true, Background = Ui.Gradient(g.Accent, g.Accent2), Child = h.Icon,
             Effect = new DropShadowEffect { BlurRadius = 10, ShadowDepth = 2, Opacity = Theme.Current.Light ? 0.2 : 0.4, Color = Colors.Black } };
@@ -148,16 +161,17 @@ partial class Shell {
         box.Children.Add(h.Sel); box.Children.Add(h.Face); box.Children.Add(h.Shade); box.Children.Add(h.Badge);
         var stack = new StackPanel();
         stack.Children.Add(nameHost); stack.Children.Add(box);
-        h.Root = new Grid { Margin = new Thickness(0, 0, 9, 14), Cursor = Cursors.Hand, Background = Brushes.Transparent, Tag = g };
+        h.Root = new Grid { Margin = named ? new Thickness(0, 0, 9, 14) : new Thickness(0, 0, 16, 18), Cursor = Cursors.Hand, Background = Brushes.Transparent, Tag = g };
         h.Root.Children.Add(stack);
         h.Root.MouseLeftButtonUp += (s, e) => {
             padUsed = false;
             homeZone = "tiles"; MarkHomeButtons();
             if (g == sel) PrimaryAction(g); else ShowGame(g);
         };
+        h.Root.MouseRightButtonUp += (s, e) => { ShowGame(g); OpenGamePage(); e.Handled = true; };
         h.Root.MouseEnter += (s, e) => { if (g != sel) h.Shade.BeginAnimation(UIElement.OpacityProperty, Anim(ShadeFor(g) * 0.4, 150)); };
         h.Root.MouseLeave += (s, e) => { if (g != sel) h.Shade.BeginAnimation(UIElement.OpacityProperty, Anim(ShadeFor(g), 220)); };
-        u.Home = h;
+        return h;
     }
     // games that aren't installed are shown a little faded
     static double ShadeFor(Game g) { return g.Inst == null ? (Theme.Current.Light ? 0.35 : 0.45) : 0; }
@@ -169,7 +183,11 @@ partial class Shell {
     }
 
     void UpdateHomeTile(Game g) {
-        var h = ((GameUi)g.Ui).Home; if (h == null) return;
+        foreach (var h in new[] { ((GameUi)g.Ui).Home, ((GameUi)g.Ui).HomeAll, ((GameUi)g.Ui).HomeSmall }) UpdateHomeTile(g, h);
+        UpdateHomeRow(g);
+    }
+    void UpdateHomeTile(Game g, HomeTileUi h) {
+        if (h == null) return;
         if (g != sel) h.Shade.Opacity = ShadeFor(g);
         bool gold = g.State == State.Update || g.IsBusy;
         string badge = g.State == State.Update ? "UPDATE" : g.IsBusy ? StatusOf(g).Tile.ToUpper() : null;
@@ -179,8 +197,20 @@ partial class Shell {
     void MarkHome(Game prev, Game g) {
         foreach (var o in prev == null ? Games : (IEnumerable<Game>)new[] { prev, g }) {
             if (o == null) continue;
-            var h = ((GameUi)o.Ui).Home; if (h == null) continue;
-            bool on = o == g;
+            foreach (var h in new[] { ((GameUi)o.Ui).Home, ((GameUi)o.Ui).HomeAll, ((GameUi)o.Ui).HomeSmall }) MarkHomeTile(o, h, o == g);
+            MarkHomeRow(o, o == g);
+        }
+        if (homeAllName != null && g != null) {
+            homeAllName.Text = g.Name;
+            var st = StatusOf(g);
+            homeAllState.Text = st.Text + (g.Inst != null ? "  \u2022  " + g.Inst.Label : "") + (g.Latest != null && g.State == State.Update ? "  \u2192  " + g.Latest.Tag : "");
+        }
+        if (homePage == "game") UpdateGamePage();
+        ScrollHome();
+    }
+    void MarkHomeTile(Game o, HomeTileUi h, bool on) {
+        {
+            if (h == null) return;
             h.Name.BeginAnimation(UIElement.OpacityProperty, Anim(on ? 1 : 0, on ? 160 : 100));
             if (on) {
                 // the frame breathes while the game is picked; quieter while the buttons have the focus
@@ -192,28 +222,38 @@ partial class Shell {
                 h.Shade.BeginAnimation(UIElement.OpacityProperty, Anim(ShadeFor(o), 200));
             }
         }
-        ScrollHome();
     }
     // keeps the picked tile in view, with room for part of the next one on each side
     void ScrollHome() {
         if (view != View.Home || sel == null) return;
         W.Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() => {
+            if (homeAll) { var el = AllElement(sel); if (homeAllTiles.IsAncestorOf(el)) el.BringIntoView(new Rect(-10, -60, el.ActualWidth + 30, el.ActualHeight + 100)); return; }
+            if (homePage != "home") return;
             var h = ((GameUi)sel.Ui).Home; if (h == null || !homeTiles.IsAncestorOf(h.Root)) return;
             double x = h.Root.TransformToAncestor(homeTiles).Transform(new Point(0, 0)).X + homeTiles.Margin.Left;
-            double vw = homeScroll.ViewportWidth, cur = homeScroll.HorizontalOffset, pad = HomeTileSize * 0.45, target = cur;
+            // measured from where the row is heading, not where it is mid-glide
+            double vw = homeScroll.ViewportWidth, cur = homeScrollTo ?? homeScroll.HorizontalOffset, pad = HomeTileSize * 0.45, target = cur;
             if (x - pad < cur) target = x - pad;
             else if (x + HomeTileSize + pad > cur + vw) target = x + HomeTileSize + pad - vw;
             target = Math.Max(0, Math.Min(target, homeScroll.ScrollableWidth));
-            if (Math.Abs(target - cur) < 1) return;
-            var t = new DispatcherTimer(DispatcherPriority.Render) { Interval = TimeSpan.FromMilliseconds(15) };
-            t.Tick += (s, e) => {
-                double c = homeScroll.HorizontalOffset, n = c + (target - c) * 0.25;
-                if (Math.Abs(target - n) < 0.5) { n = target; t.Stop(); }
-                homeScroll.ScrollToHorizontalOffset(n);
-            };
-            t.Start();
+            if (Math.Abs(target - homeScroll.HorizontalOffset) < 1) { homeScrollTo = null; return; }
+            homeScrollTo = target;
+            // one glide at a time: a new target replaces the old one (two glides fought each other before)
+            if (homeScrollTimer == null) {
+                homeScrollTimer = new DispatcherTimer(DispatcherPriority.Render) { Interval = TimeSpan.FromMilliseconds(15) };
+                homeScrollTimer.Tick += (s, e) => {
+                    if (homeScrollTo == null || homeScroll.Visibility != Visibility.Visible) { homeScrollTo = null; homeScrollTimer.Stop(); return; }
+                    double to = Math.Max(0, Math.Min(homeScrollTo.Value, homeScroll.ScrollableWidth));
+                    double c = homeScroll.HorizontalOffset, n = c + (to - c) * 0.25;
+                    if (Math.Abs(to - n) < 0.5 || ++homeScrollTicks > 120) { n = to; homeScrollTo = null; homeScrollTimer.Stop(); }
+                    homeScroll.ScrollToHorizontalOffset(n);
+                };
+            }
+            homeScrollTicks = 0;
+            homeScrollTimer.Start();
         }));
     }
+    double? homeScrollTo; DispatcherTimer homeScrollTimer; int homeScrollTicks;
     void MarkHomeButtons() {
         for (int i = 0; i < homeButtons.Count; i++) {
             var hb = homeButtons[i]; bool on = homeZone == "buttons" && i == homeIdx;
@@ -228,8 +268,8 @@ partial class Shell {
         int n = Listed().Count(g => g.State == State.Update);
         homeUpdatesPill.Visibility = n > 0 ? Visibility.Visible : Visibility.Collapsed;
         homeUpdates.Text = n == 1 ? "1 update" : n + " updates";
-        homeButtons[1].Text = n > 0 ? "Update all (" + n + ")" : "Check for updates";
-        homeButtons[1].Label.Text = homeButtons[1].Text;
+        homeButtons[2].Text = n > 0 ? "Update all (" + n + ")" : "Check for updates";
+        homeButtons[2].Label.Text = homeButtons[2].Text;
         foreach (var g in Games) UpdateHomeTile(g);
         if (view == View.Home)
             // the launcher's own top bar keeps only the window buttons here
@@ -253,10 +293,105 @@ partial class Shell {
             if (W.IsActive) StartDrift();
         }
         homeZone = "tiles"; MarkHomeButtons();
+        if (on) UpdateHomeChrome(); else if (homePage != "home") { homePage = "home"; ShowHomePage(); }
+    }
+
+    // ---------- All games: every game as a grid of tiles, with filters, on the home screen ----------
+    void BuildHomeAll() {
+        homeAllPage = new Grid { Visibility = Visibility.Collapsed };
+        Grid.SetRow(homeAllPage, 1); Grid.SetRowSpan(homeAllPage, 5);
+        homeAllPage.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        homeAllPage.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+        var head = new Grid { Margin = new Thickness(60, 0, 60, 0) };
+        var left = new StackPanel();
+        var titleRow = new StackPanel { Orientation = Orientation.Horizontal };
+        titleRow.Children.Add(new TextBlock { Text = "All games", FontSize = 26, FontFamily = Ui.Semi, Foreground = Ui.Brush(Ui.Text) });
+        homeAllCount = new TextBlock { FontSize = 14, Foreground = Ui.Brush(Ui.Muted), Margin = new Thickness(14, 0, 0, 3), VerticalAlignment = VerticalAlignment.Bottom };
+        titleRow.Children.Add(homeAllCount);
+        left.Children.Add(titleRow);
+        var picked = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 8, 0, 0) };
+        homeAllName = new TextBlock { FontSize = 16, Foreground = Ui.Brush(Ui.Teal), VerticalAlignment = VerticalAlignment.Center };
+        homeAllState = new TextBlock { FontSize = 13, Foreground = Ui.Brush(Ui.Muted), Margin = new Thickness(14, 1, 0, 0), VerticalAlignment = VerticalAlignment.Center };
+        picked.Children.Add(homeAllName); picked.Children.Add(homeAllState);
+        left.Children.Add(picked);
+        head.Children.Add(left);
+        homeFilterPills = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(0, 4, 0, 0) };
+        foreach (var f in FilterDefs) {
+            string id = f[0];
+            var pill = new Border { CornerRadius = new CornerRadius(16), Height = 32, Padding = new Thickness(16, 0, 16, 0), Margin = new Thickness(8, 0, 0, 0), Cursor = Cursors.Hand, Tag = id,
+                Child = new TextBlock { FontSize = 13, FontFamily = Ui.Semi, VerticalAlignment = VerticalAlignment.Center },
+                Effect = new DropShadowEffect { BlurRadius = 8, ShadowDepth = 1, Opacity = Theme.Current.Light ? 0.15 : 0.3 } };
+            pill.MouseLeftButtonUp += (s, e) => SetFilter(id);
+            homeFilterPills.Children.Add(pill);
+        }
+        homeFilterPills.Children.Add(new TextBlock { Text = "LB / RB", FontSize = 11, Foreground = Ui.Brush(Ui.Dim), Margin = new Thickness(12, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center });
+        BuildLayoutPills(homeFilterPills);
+        head.Children.Add(homeFilterPills);
+        var line = new Border { Height = 1, Background = Ui.Brush("#33424D"), VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(-34, 0, -34, -14) };
+        head.Children.Add(line);
+        homeAllPage.Children.Add(head);
+        homeAllTiles = new WrapPanel { Margin = new Thickness(60, 34, 44, 20) };
+        homeAllScroll = new ScrollViewer { HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Focusable = false, Content = homeAllTiles };
+        Grid.SetRow(homeAllScroll, 1);
+        homeAllScroll.SizeChanged += (s, e) => SizeListRows();
+        homeAllPage.Children.Add(homeAllScroll);
+        homeLayer.Children.Add(homeAllPage);
+    }
+    void UpdateHomeFilters() {
+        if (homeFilterPills == null) return;
+        var list = Listed();
+        foreach (var c in homeFilterPills.Children.OfType<Border>()) {
+            string id = (string)c.Tag; bool on = id == filter;
+            int n = id == "installed" ? list.Count(g => g.Inst != null) : id == "updates" ? list.Count(g => g.State == State.Update) : id == "new" ? list.Count(g => g.Inst == null) : list.Count;
+            var t = (TextBlock)c.Child;
+            t.Text = FilterDefs.First(f => f[0] == id)[1] + (id == "all" ? "" : "  " + n);
+            c.Background = Ui.Brush(on ? Ui.Teal : Raised);
+            t.Foreground = Ui.Brush(on ? (Theme.Current.Light ? "#ffffff" : "#0A0E11") : Ui.Text);
+        }
+        if (homeAllCount != null) { int shown = list.Count(Shown); homeAllCount.Text = shown == list.Count ? list.Count + " games" : shown + " of " + list.Count; }
+    }
+    void OpenHomeAll(string filterId) {
+        homePage = "all";
+        if (filterId != null) filter = filterId;
+        ShowHomePage();
+    }
+    void CloseHomeAll() {
+        homePage = "home";
+        filter = "all";   // the home row always shows every game
+        ShowHomePage();
+    }
+    void ShowHomePage() {
+        if (homeAllPage == null) return;
+        homeAllPage.Visibility = homePage == "all" ? Visibility.Visible : Visibility.Collapsed;
+        gamePage.Visibility = homePage == "game" ? Visibility.Visible : Visibility.Collapsed;
+        homeScroll.Visibility = homePage == "home" ? Visibility.Visible : Visibility.Collapsed;
+        homeButtonRow.Visibility = homePage == "home" ? Visibility.Visible : Visibility.Collapsed;
+        if (homePage == "game") UpdateGamePage();
+        SizeListRows();
+        homeZone = "tiles";
+        ApplySort(true);
+        UpdateChips();
+        ApplyFilter();
+        MarkHome(null, sel);
+        MarkHomeButtons();
+        var fade = homePage == "all" ? (UIElement)homeAllPage : homePage == "game" ? (UIElement)gamePage : homeScroll;
+        fade.BeginAnimation(UIElement.OpacityProperty, Anim(1, 220, 0));
     }
 
     // keyboard and controller on the home screen; true when handled
     bool HomeMove(string dir) {
+        if (homePage == "game") return GamePageMove(dir);
+        if (dir == "info") { OpenGamePage(); return true; }
+        if (homeAll) {
+            if (dir == "left") StepGame(-1);
+            else if (dir == "right") StepGame(1);
+            else if (dir == "up") { if (allLayout == "list") StepGame(-1); else MoveVertical(-1); }
+            else if (dir == "down") { if (allLayout == "list") StepGame(1); else MoveVertical(1); }
+            else if (dir == "ok") { if (sel != null) PrimaryAction(sel); }
+            else if (dir == "back") CloseHomeAll();
+            else return false;
+            return true;
+        }
         if (homeZone == "tiles") {
             if (dir == "left") StepGame(-1);
             else if (dir == "right") StepGame(1);
@@ -280,7 +415,9 @@ partial class Shell {
             case Key.Up: return HomeMove("up");
             case Key.Down: return HomeMove("down");
             case Key.Enter: case Key.Space: return HomeMove("ok");
-            case Key.Back: return homeZone == "buttons" && HomeMove("back");
+            case Key.Back: return (homePage != "home" || homeZone == "buttons") && HomeMove("back");
+            case Key.Escape: return homePage != "home" && HomeMove("back");
+            case Key.I: case Key.Apps: return HomeMove("info");
             default: return false;
         }
     }

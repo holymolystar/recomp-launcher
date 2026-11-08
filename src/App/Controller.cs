@@ -22,7 +22,7 @@ namespace RecompLauncher {
 partial class Shell {
     DispatcherTimer padTimer;
     bool padActive = true, padOn;
-    int padPrev;
+    int padPrev, stickDir;
     readonly Dictionary<int, DateTime> padHeld = new Dictionary<int, DateTime>();
     string zone = "cards";
     int focusIdx;
@@ -50,9 +50,15 @@ partial class Shell {
         if (!ok || !padActive) { padPrev = 0; return; }
         int b = st.Buttons;
         // the left stick works like the d-pad
-        const int dead = 16000;
-        if (st.LY > dead) b |= Pad.Up; else if (st.LY < -dead) b |= Pad.Down;
-        if (st.LX < -dead) b |= Pad.Left; else if (st.LX > dead) b |= Pad.Right;
+        // a worn or resting stick doesn't move the selection: it counts once pushed past 24000 (of 32767), and
+        // keeps counting until it's back under 12000; only its stronger direction counts
+        const int press = 24000, release = 12000;
+        int ax = Math.Abs((int)st.LX), ay = Math.Abs((int)st.LY);
+        int was = stickDir, now2 = 0;
+        if (ay >= ax) { if (st.LY > ((was & Pad.Up) != 0 ? release : press)) now2 = Pad.Up; else if (st.LY < -((was & Pad.Down) != 0 ? release : press)) now2 = Pad.Down; }
+        else { if (st.LX < -((was & Pad.Left) != 0 ? release : press)) now2 = Pad.Left; else if (st.LX > ((was & Pad.Right) != 0 ? release : press)) now2 = Pad.Right; }
+        stickDir = now2;
+        b |= now2;
         int pressed = b & ~padPrev;
         foreach (int bit in new[] { Pad.Up, Pad.Down, Pad.Left, Pad.Right }) {
             if ((pressed & bit) != 0) padHeld[bit] = now.AddMilliseconds(400);
@@ -60,7 +66,7 @@ partial class Shell {
         }
         padPrev = b;
         // right stick: scroll
-        if (Math.Abs((int)st.RY) > dead) ScrollBy(-st.RY / 32768.0 * 24);
+        if (Math.Abs((int)st.RY) > press) ScrollBy(-st.RY / 32768.0 * 24);
         if (pressed == 0) return;
         if (!padUsed) { padUsed = true; SetHints(); }
         foreach (int bit in new[] { Pad.Up, Pad.Down, Pad.Left, Pad.Right, Pad.A, Pad.B, Pad.X, Pad.Y, Pad.LB, Pad.RB, Pad.LS, Pad.RS, Pad.Start, Pad.Back })
@@ -192,7 +198,7 @@ partial class Shell {
         }
         // main screen
         if (view == View.Home) {
-            string d = bit == Pad.Left ? "left" : bit == Pad.Right ? "right" : bit == Pad.Up ? "up" : bit == Pad.Down ? "down" : bit == Pad.A ? "ok" : bit == Pad.B ? "back" : null;
+            string d = bit == Pad.Left ? "left" : bit == Pad.Right ? "right" : bit == Pad.Up ? "up" : bit == Pad.Down ? "down" : bit == Pad.A ? "ok" : bit == Pad.B ? "back" : bit == Pad.Y ? "info" : null;
             if (d != null && HomeMove(d)) { SetHints(); return; }
         }
         switch (bit) {
@@ -248,8 +254,14 @@ partial class Shell {
             else if (N<Grid>("NotesLayer").Visibility == Visibility.Visible) { spec.Add(new[] { "LB", "Tabs" }); spec.Add(new[] { "B", "Close" }); }
             else if (view == View.Home) {
                 bool install = sel != null && sel.State == State.Missing;
-                if (sel != null && sel.State == State.Update && homeZone == "tiles") spec.Add(new[] { "X", "Update" });
-                spec.Add(new[] { "A", homeZone == "buttons" ? "OK" : install ? "Install" : "Start" });
+                if (sel != null && sel.State == State.Update && homeZone == "tiles" && homePage != "game") spec.Add(new[] { "X", "Update" });
+                if (homePage == "game") spec.Add(new[] { "A", "OK" });
+                else {
+                    spec.Add(new[] { "Y", "Game page" });
+                    spec.Add(new[] { "A", homeZone == "buttons" ? "OK" : install ? "Install" : "Start" });
+                }
+                if (homeAll) spec.Insert(0, new[] { "RS", "Layout" });
+                if (homePage != "home") spec.Add(new[] { "B", "Back" });
             }
             else {
                 bool install = sel != null && sel.State == State.Missing;

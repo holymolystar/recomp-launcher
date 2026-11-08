@@ -4,18 +4,19 @@ One console-style window for PC recomps and native ports: shows the installed an
 installs a game the first time, plays it, and updates one or all with one click. Works with a keyboard, mouse or any
 XInput controller.
 
-## Library views
+## Home screen
 
-Switch with the four buttons next to the sort chip, Ctrl+G (or Ctrl+1 to Ctrl+4), or RS on a controller:
+The launcher opens on a console-style home screen: your games as a row of big square tiles, round buttons below
+(Game page, What's new, Update all, All games, Full screen, Settings, Close), the clock top right.
 
-| View | What it shows |
-|---|---|
-| Row | The selected game's page, with one row of cards below it |
-| Large grid | Big cards filling the window |
-| Compact grid | Small cards: the whole library at a glance |
-| List | One line per game: source, installed and latest version, status, play time, last played. Click a heading to sort |
+- **All games**: every game, with filters (All / Installed / Updates / Not installed, or LB / RB) and three
+  layouts: big tiles, small tiles and a list (the layout buttons, RS, Ctrl+G or Ctrl+1 to Ctrl+3).
+- **Game page**: one game's installed and latest version, status and play time, with Start / Install, Update,
+  What's new, its folder, its save backups and Uninstall. Open it with Y, right-click, I or the menu key.
+- Arrow keys / d-pad move, Enter / A starts the game (or installs it), Esc / B goes back. Clicking the picked tile
+  again starts it.
 
-Double-click a game (or press Enter / A) to play it, or to install it when it isn't installed yet.
+Pick a theme in Settings: Midnight, Neon, Aurora, Ember, Sakura, Daylight (light), Graphite or Abyss.
 
 ## Update checks
 
