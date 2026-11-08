@@ -1,4 +1,4 @@
-// Any XInput controller (Xbox, or others through Steam Input) while the window is in front.
+﻿// Any XInput controller (Xbox, or others through Steam Input) while the window is in front.
 // Main screen: three rows to move between: the library, the game's buttons, the top bar.
 //   A plays or installs (or presses the focused button), X updates, Y What's new, B goes back (buttons -> library,
 //   then clears search and filter), LB / RB filter, LS sort, RS next view, Menu Settings, View full screen,
@@ -123,7 +123,7 @@ partial class Shell {
     }
     void PlaceRing() {
         var ring = N<Border>("FocusRing");
-        if (!padUsed || zone == "cards" || N<Grid>("NotesLayer").Visibility == Visibility.Visible || AnyDialog()) { HideRing(); return; }
+        if (!padUsed || zone == "cards" || view == View.Home || N<Grid>("NotesLayer").Visibility == Visibility.Visible || AnyDialog()) { HideRing(); return; }
         var l = ZoneButtons(zone); if (l.Count == 0) { HideRing(); return; }
         var b = l[Math.Min(focusIdx, l.Count - 1)];
         var main = N<Grid>("Main");
@@ -191,6 +191,10 @@ partial class Shell {
             return;
         }
         // main screen
+        if (view == View.Home) {
+            string d = bit == Pad.Left ? "left" : bit == Pad.Right ? "right" : bit == Pad.Up ? "up" : bit == Pad.Down ? "down" : bit == Pad.A ? "ok" : bit == Pad.B ? "back" : null;
+            if (d != null && HomeMove(d)) { SetHints(); return; }
+        }
         switch (bit) {
             case Pad.Left: if (zone == "cards") StepGame(-1); else MoveFocus(-1); break;
             case Pad.Right: if (zone == "cards") StepGame(1); else MoveFocus(1); break;
@@ -233,7 +237,7 @@ partial class Shell {
     string hintsShown = "";
     void SetHints() {
         var spec = new List<string[]>();
-        if (padUsed) {
+        if (padUsed || view == View.Home) {
             if (N<Grid>("UninstLayer").Visibility == Visibility.Visible) { spec.Add(new[] { "A", "Uninstall" }); spec.Add(new[] { "B", "Cancel" }); }
             else if (FbVisible()) { spec.Add(new[] { "A", "Open" }); spec.Add(new[] { "B", "Back" }); if (fbDir != null && FbFolders()) spec.Add(new[] { "X", "Use this folder" }); spec.Add(new[] { "Y", "Close" }); }
             else if (N<Grid>("RomLayer").Visibility == Visibility.Visible) {
@@ -242,9 +246,14 @@ partial class Shell {
                 spec.Add(new[] { "B", "Close" });
             } else if (N<Grid>("SettingsLayer").Visibility == Visibility.Visible) { spec.Add(new[] { "A", "Select" }); spec.Add(new[] { "≡", "Save" }); spec.Add(new[] { "X", "Defaults" }); spec.Add(new[] { "B", "Cancel" }); }
             else if (N<Grid>("NotesLayer").Visibility == Visibility.Visible) { spec.Add(new[] { "LB", "Tabs" }); spec.Add(new[] { "B", "Close" }); }
+            else if (view == View.Home) {
+                bool install = sel != null && sel.State == State.Missing;
+                if (sel != null && sel.State == State.Update && homeZone == "tiles") spec.Add(new[] { "X", "Update" });
+                spec.Add(new[] { "A", homeZone == "buttons" ? "OK" : install ? "Install" : "Start" });
+            }
             else {
                 bool install = sel != null && sel.State == State.Missing;
-                spec.Add(new[] { "A", zone == "cards" ? (install ? "Install" : "Play") : "Select" });
+                spec.Add(new[] { "A", view == View.Home && homeZone == "buttons" ? "OK" : zone == "cards" ? (install ? "Install" : "Play") : "Select" });
                 if (sel != null && sel.State == State.Update) spec.Add(new[] { "X", "Update" });
                 spec.Add(new[] { "Y", "What's new" });
                 spec.Add(new[] { "RS", "View" });

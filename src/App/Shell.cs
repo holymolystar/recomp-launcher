@@ -22,7 +22,7 @@ using Path = System.IO.Path;
 
 namespace RecompLauncher {
 
-enum View { Row, Grid, Compact, List }
+enum View { Row, Grid, Compact, List, Home }
 
 // A game's elements in each view
 class GameUi {
@@ -34,6 +34,7 @@ class GameUi {
     // list row
     public Border LRow; public Image LIcon; public TextBlock LName, LSource, LInst, LLatest, LStatus, LPlayed, LLast; public Ellipse LDot;
     public bool Pulsing;
+    public HomeTileUi Home;
 }
 
 partial class Shell {
@@ -102,9 +103,9 @@ partial class Shell {
         }
     }
     static View ParseView(string v) {
-        switch (v) { case "grid": return View.Grid; case "compact": return View.Compact; case "list": return View.List; default: return View.Row; }
+        switch (v) { case "grid": return View.Grid; case "compact": return View.Compact; case "list": return View.List; case "home": return View.Home; default: return View.Row; }
     }
-    static string ViewName(View v) { return v == View.Grid ? "grid" : v == View.Compact ? "compact" : v == View.List ? "list" : "row"; }
+    static string ViewName(View v) { return v == View.Grid ? "grid" : v == View.Compact ? "compact" : v == View.List ? "list" : v == View.Home ? "home" : "row"; }
 
     void Started() {
         var root = N<Border>("Root");
@@ -144,7 +145,7 @@ partial class Shell {
     }
     bool drifting;
     void StartDrift() {
-        if (drifting || args.Snapshot != null) return;
+        if (drifting || args.Snapshot != null || view == View.Home) return;
         drifting = true;
         Func<double, double, AnimationTimeline> d = (to, ms) => {
             var a = Anim(to, ms, null, EasingMode.EaseInOut); a.AutoReverse = true; a.RepeatBehavior = RepeatBehavior.Forever;
@@ -177,6 +178,7 @@ partial class Shell {
         u.Icon.Source = src; u.Icon.Margin = new Thickness(g.IconIsArt ? 0 : 26);
         if (u.CIcon != null) { u.CIcon.Source = src; u.CIcon.Margin = new Thickness(g.IconIsArt ? 0 : 12); }
         if (u.LIcon != null) u.LIcon.Source = src;
+        if (u.Home != null) { u.Home.Icon.Source = src; u.Home.Icon.Margin = new Thickness(g.IconIsArt ? 0 : 52); }
         if (g == sel) { N<Image>("HeroIcon").Source = src; N<Image>("HeroArt").Source = src; N<Image>("GridIcon").Source = src; }
     }
     void Snapshot(string file) {
@@ -361,6 +363,7 @@ partial class Shell {
         all.Visibility = n > 0 || running ? Visibility.Visible : Visibility.Collapsed;
         N<TextBlock>("BtnAllText").Text = n > 1 ? "Update all  (" + n + ")" : "Update all";
         UpdateChips();
+        UpdateHomeChrome();
         ApplySort(false);
         ApplyFilter();
     }
@@ -440,12 +443,13 @@ partial class Shell {
             case View.Grid: return N<WrapPanel>("GridTiles");
             case View.Compact: return N<WrapPanel>("CompactTiles");
             case View.List: return N<StackPanel>("ListRows");
+            case View.Home: return homeTiles;
             default: return N<StackPanel>("Tiles");
         }
     }
     FrameworkElement ElementOf(Game g) {
         var u = (GameUi)g.Ui;
-        return view == View.Compact ? (FrameworkElement)u.CTile : view == View.List ? (FrameworkElement)u.LRow : u.Tile;
+        return view == View.Compact ? (FrameworkElement)u.CTile : view == View.List ? (FrameworkElement)u.LRow : view == View.Home ? (FrameworkElement)u.Home.Root : u.Tile;
     }
     void ApplySort(bool force) {
         var o = Sorted();
@@ -454,6 +458,8 @@ partial class Shell {
         if (!force && panel.Children.Count > 0 && o.SequenceEqual(order)) return;
         order = o;
         foreach (var p in new Panel[] { N<StackPanel>("Tiles"), N<WrapPanel>("GridTiles"), N<WrapPanel>("CompactTiles"), N<StackPanel>("ListRows") }) p.Children.Clear();
+        if (homeTiles != null) homeTiles.Children.Clear();
+        if (view == View.Home) { foreach (var g in o) homeTiles.Children.Add(((GameUi)g.Ui).Home.Root); AddHomeSlots(); order = o; QueueScroll(); return; }
         int prev = -1;
         foreach (var g in o) {
             var u = (GameUi)g.Ui;
@@ -514,6 +520,7 @@ partial class Shell {
         view = v;
         if (v == View.Compact) BuildCompact();
         if (v == View.List) BuildList();
+        if (v == View.Home) BuildHome();
         bool row = v == View.Row;
         var lib = (FrameworkElement)N<ScrollViewer>("TileScroll").Parent;
         Grid.SetRow(lib, row ? 2 : 1); Grid.SetRowSpan(lib, row ? 1 : 2);
@@ -522,7 +529,8 @@ partial class Shell {
         N<ScrollViewer>("GridScroll").Visibility = v == View.Grid ? Visibility.Visible : Visibility.Collapsed;
         N<ScrollViewer>("CompactScroll").Visibility = v == View.Compact ? Visibility.Visible : Visibility.Collapsed;
         N<Grid>("ListView").Visibility = v == View.List ? Visibility.Visible : Visibility.Collapsed;
-        N<Grid>("GridInfo").Visibility = row ? Visibility.Collapsed : Visibility.Visible;
+        N<Grid>("GridInfo").Visibility = row || v == View.Home ? Visibility.Collapsed : Visibility.Visible;
+        SetHomeMode(v == View.Home);
         foreach (var kv in viewButtons) {
             bool on = kv.Key == v;
             kv.Value.Background = Ui.Brush(on ? "#F2EFE6" : "#00000000");
@@ -537,7 +545,7 @@ partial class Shell {
         SetHints();
         if (save && args.Snapshot == null) { Settings.Set("ViewMode", ViewName(v)); Settings.Save(); }
     }
-    void CycleView(int dir) { SetView((View)(((int)view + dir + 4) % 4), true); }
+    void CycleView(int dir) { SetView((View)(((int)view + dir + 5) % 5), true); }
 
     // ---------- selection ----------
     void MarkSelected(Game prev, Game g) {
@@ -565,6 +573,7 @@ partial class Shell {
             if (u.CTile != null) { u.CTile.BorderBrush = on ? Ui.Brush("#F2EFE6") : Brushes.Transparent; u.CTile.Background = on ? Ui.Brush("#1FFFFFFF") : Brushes.Transparent; }
             if (u.LRow != null) { u.LRow.Background = on ? Ui.Brush("#1CFFFFFF") : Brushes.Transparent; u.LRow.BorderBrush = on ? Ui.Brush(o.Accent) : Brushes.Transparent; }
         }
+        if (view == View.Home) MarkHome(prev, g);
     }
     void ShowGame(Game g) {
         var prev = sel; sel = g;
@@ -634,6 +643,7 @@ partial class Shell {
         var g = sel; if (g == null) return;
         var el = ElementOf(g);
         if (el.Visibility != Visibility.Visible) return;
+        if (view == View.Home) { ScrollHome(); return; }
         if (view != View.Row) { el.BringIntoView(); return; }
         var sv = N<ScrollViewer>("TileScroll"); var tiles = N<StackPanel>("Tiles");
         if (sv.ViewportWidth <= 0 || !tiles.IsAncestorOf(el)) return;
@@ -679,7 +689,7 @@ partial class Shell {
         chips.Children.Add(sortChip);
         // view switch: four buttons in one pill
         var vs = new StackPanel { Orientation = Orientation.Horizontal };
-        var defs = new[] { new object[] { View.Row, "", "Row and game page" }, new object[] { View.Grid, "", "Large grid" },
+        var defs = new[] { new object[] { View.Home, "\uE80F", "Home screen" }, new object[] { View.Row, "", "Row and game page" }, new object[] { View.Grid, "", "Large grid" },
                            new object[] { View.Compact, "", "Compact grid" }, new object[] { View.List, "", "List" } };
         foreach (var d in defs) {
             var v = (View)d[0];
@@ -863,6 +873,7 @@ partial class Shell {
             return;
         }
         bool ctrl = Keyboard.Modifiers == ModifierKeys.Control;
+        if (view == View.Home && !notes && !ctrl && HomeKey(k)) { e.Handled = true; return; }
         switch (k) {
             case Key.F11: ToggleFullscreen(); e.Handled = true; break;
             case Key.Escape: if (notes) CloseNotes(); else if (isFull) ToggleFullscreen(); e.Handled = true; break;
@@ -875,7 +886,7 @@ partial class Shell {
             case Key.Enter: if (!notes && sel != null) { PrimaryAction(sel); e.Handled = true; } break;
             case Key.F5: if (!running && !checking) CheckAll(true); e.Handled = true; break;
             case Key.G: if (ctrl) { CycleView(1); e.Handled = true; } break;
-            case Key.D1: case Key.D2: case Key.D3: case Key.D4:
+            case Key.D1: case Key.D2: case Key.D3: case Key.D4: case Key.D5:
                 if (ctrl) { SetView((View)(k - Key.D1), true); e.Handled = true; } break;
             case Key.F: if (ctrl) { box.Focus(); e.Handled = true; } break;
         }

@@ -1,4 +1,4 @@
-// Themes. The launcher is drawn in one base palette (Midnight); a theme recolours it as the window is built:
+﻿// Themes. The launcher is drawn in one base palette (Midnight); a theme recolours it as the window is built:
 // every neutral shade (backgrounds, lines, text) is placed at the same spot between the theme's background and its
 // ink, and the two accent families (teal, gold) become the theme's accents. Colours in the window layouts (.xaml)
 // and in code go through the same map. Game colours are kept in lower case in the catalog, so they never match it.
@@ -13,6 +13,7 @@ namespace RecompLauncher {
 
 class ThemeDef {
     public string Id, Name, Desc, Bg, Ink, Accent, Accent2;
+    public bool Light { get { var c = Theme.Parse(Bg.TrimStart('#')); return 0.2126 * c.R + 0.7152 * c.G + 0.0722 * c.B > 128; } }
     public ThemeDef(string id, string name, string desc, string bg, string ink, string accent, string accent2) {
         Id = id; Name = name; Desc = desc; Bg = bg; Ink = ink; Accent = accent; Accent2 = accent2;
     }
@@ -25,6 +26,8 @@ static class Theme {
         new ThemeDef("aurora", "Aurora", "Northern lights green and violet", "#03110E", "#EAFFF6", "#4DF5B0", "#B08CFF"),
         new ThemeDef("ember", "Ember", "Warm charcoal, orange and amber", "#120806", "#FFF1E6", "#FF7A3D", "#FFC94D"),
         new ThemeDef("sakura", "Sakura", "Plum night with pink and sky blue", "#140A11", "#FFEFF5", "#FF8FB8", "#8FD3FF"),
+        new ThemeDef("daylight", "Daylight", "Light grey and white, cyan and red: a console home screen", "#EBEBEB", "#2D2D2D", "#0AB4DC", "#F0453A"),
+        new ThemeDef("graphite", "Graphite", "Dark grey with cyan and red: a console home screen at night", "#2D2D2D", "#F2F2F2", "#1CC6EE", "#F0453A"),
         new ThemeDef("abyss", "Abyss", "Pure black for OLED screens, ice blue", "#000000", "#F5F5F5", "#6EC1FF", "#E6E6E6"),
     };
     public static ThemeDef Current = All[0];
@@ -45,7 +48,7 @@ static class Theme {
         foreach (var n in Neutrals) {
             double t = (Lum(Parse(n)) - l0) / (l1 - l0);
             // darker than the base background (dim overlays): darker than the theme's background too
-            Color c = t < 0 ? Mix(bg, Colors.Black, Math.Min(1, -t * 4)) : Mix(bg, ink, t);
+            Color c = t < 0 ? (Current.Light ? Mix(ink, Colors.Black, 0.4) : Mix(bg, Colors.Black, Math.Min(1, -t * 4))) : Mix(bg, ink, t);
             map[n] = Hex(c);
         }
         Color a = Parse(Current.Accent.TrimStart('#')), a2 = Parse(Current.Accent2.TrimStart('#'));
