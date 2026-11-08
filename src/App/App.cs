@@ -14,7 +14,7 @@ namespace RecompLauncher {
 class Args {
     public string Snapshot, Select, Search, PadScript, View, Theme;
     public int SnapshotDelay = 3000;
-    public bool Full, OpenNotes, OpenSettings;
+    public bool Full, OpenNotes, OpenSettings, DrawnIcons;
     public static Args Parse(string[] a) {
         var r = new Args();
         for (int i = 0; i < a.Length; i++) {
@@ -31,6 +31,7 @@ class Args {
                 case "full": r.Full = true; break;
                 case "opennotes": r.OpenNotes = true; break;
                 case "opensettings": r.OpenSettings = true; break;
+                case "drawnicons": r.DrawnIcons = true; break;
             }
         }
         return r;
@@ -61,6 +62,7 @@ static class Program {
             Theme.Use(Settings.Get("Theme"));
             if (args.View != null) Settings.Set("ViewMode", args.View);
             if (args.Theme != null) Theme.Use(args.Theme);
+            Icons.DrawnOnly = args.DrawnIcons;
             ReleaseCache.Load(Path.Combine(root, "cache.json"));
             Playtime.Path = Path.Combine(root, "playtime.json");
             Roms.Path = Path.Combine(root, "roms.json");

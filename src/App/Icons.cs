@@ -62,7 +62,10 @@ static class Icons {
         bmp.Render(dv); bmp.Freeze(); return bmp;
     }
     // icon for a game: (image, whether it is a whole card face)
+    // -DrawnIcons (for screenshots to publish): every game gets its drawn tile, no pictures or program icons
+    public static bool DrawnOnly;
     public static void Load(Game g) {
+        if (DrawnOnly) { g.Icon = Drawn(g); g.IconIsArt = true; return; }
         var c = Custom(g);
         if (c != null) { g.Icon = c; g.IconIsArt = true; return; }
         var e = ExeIcon(Engine.ResolveExe(g), 256);

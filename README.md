@@ -4,6 +4,8 @@ One console-style window for PC recomps and native ports: shows the installed an
 installs a game the first time, plays it, and updates one or all with one click. Works with a keyboard, mouse or any
 XInput controller.
 
+![Recomp Launcher's home screen in the Daylight theme](docs/screenshots/home-daylight.png)
+
 ## Home screen
 
 The launcher opens on a console-style home screen: your games as a row of big square tiles, round buttons below
@@ -18,6 +20,18 @@ The launcher opens on a console-style home screen: your games as a row of big sq
 
 Pick a theme in Settings: Midnight, Neon, Aurora, Ember, Sakura, Daylight (light), Graphite or Abyss.
 
+## Screenshots
+
+| | |
+|---|---|
+| ![Home screen, Midnight theme](docs/screenshots/home-midnight.png) | ![All games as big tiles, Graphite theme](docs/screenshots/all-games.png) |
+| Home screen (Midnight) | All games, big tiles (Graphite) |
+| ![All games as a list, Neon theme](docs/screenshots/list.png) | ![A game's page, Daylight theme](docs/screenshots/game-page.png) |
+| All games, list (Neon) | Game page (Daylight) |
+| ![Home screen, Ember theme](docs/screenshots/home-ember.png) | |
+| Home screen (Ember) | |
+
+The tiles in these pictures are the launcher's own drawn ones. Put your own pictures in `icons\` to use them instead.
 ## Update checks
 
 At start (and every 3 hours, or with the Check button / F5) the launcher asks GitHub for the latest release of the

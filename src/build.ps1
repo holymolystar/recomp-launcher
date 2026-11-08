@@ -1,3 +1,5 @@
+# -Out: build to another file name (for example while the launcher is open)
+param([string]$Out = '')
 # Builds "Recomp Launcher.exe" one folder up with the C# compiler that ships with Windows (.NET Framework 4).
 # Also draws the launcher's logo (a recompile loop around a play button): logo.png next to the exe for the
 # window, and launcher.ico (256 to 16 px) for the exe.
@@ -92,5 +94,5 @@ $refs = @('System.dll', 'System.Core.dll', 'System.Xml.dll', 'System.Xaml.dll', 
         ForEach-Object { "/r:$_" }
 $res = Get-ChildItem $app -Filter *.xaml | ForEach-Object { "/resource:$($_.FullName),$($_.Name)" }
 & $csc /nologo /target:winexe /optimize+ /platform:anycpu /codepage:65001 /nowarn:618,649 "/win32icon:$ico" @refs @res `
-    "/out:$(Join-Path $root 'Recomp Launcher.exe')" (Get-ChildItem $app -Filter *.cs | ForEach-Object { $_.FullName })
+    "/out:$(if ($Out) { $Out } else { Join-Path $root 'Recomp Launcher.exe' })" (Get-ChildItem $app -Filter *.cs | ForEach-Object { $_.FullName })
 exit $LASTEXITCODE
