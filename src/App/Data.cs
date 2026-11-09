@@ -195,7 +195,7 @@ static class Settings {
     static Dictionary<string, object> values = new Dictionary<string, object>();
     static readonly Dictionary<string, string> Defaults = new Dictionary<string, string> {
         { "TotkUpdaterDir", @"C:\Games\TOTK Updater" }, { "Fullscreen", "" }, { "LastGame", "totk" }, { "SortMode", "default" },
-        { "CloseOnPlay", "on" }, { "AutoCheck", "on" }, { "GitHubToken", "" }, { "ViewMode", "home" }, { "Hidden", "" }
+        { "CloseOnPlay", "on" }, { "AutoCheck", "on" }, { "GitHubToken", "" }, { "ViewMode", "home" }, { "Hidden", "" }, { "SoundVolume", "50" }
     };
     public static void Load(string path) {
         Path = path;

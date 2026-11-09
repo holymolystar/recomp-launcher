@@ -61,6 +61,7 @@ partial class Shell {
         homeAllTiles.BeginAnimation(UIElement.OpacityProperty, Anim(1, 200, 0));
     }
     void CycleAllLayout() {
+        Sound.Play(Sfx.Move);
         var ids = new[] { "big", "small", "list" };
         SetAllLayout(ids[(Array.IndexOf(ids, allLayout) + 1) % 3]);
     }
@@ -232,20 +233,23 @@ partial class Shell {
     }
     void OpenGamePage() {
         if (sel == null || homeLayer == null) return;
+        if (homePage != "game") Sound.Play(Sfx.Open);
         gameBack = homePage == "game" ? gameBack : homePage;
         homePage = "game";
         gpIdx = 0;
         ShowHomePage();
     }
-    void CloseGamePage() { homePage = gameBack; ShowHomePage(); }
+    void CloseGamePage() { Sound.Play(Sfx.Back); homePage = gameBack; ShowHomePage(); }
     bool GamePageMove(string dir) {
         var vis = Enumerable.Range(0, gpButtons.Count).Where(i => gpButtons[i].Root.Visibility == Visibility.Visible && gpButtons[i].Enabled).ToList();
         int at = vis.IndexOf(gpIdx); if (at < 0) at = 0;
+        int was = gpIdx;
         if (dir == "left" || dir == "up") { if (vis.Count > 0) gpIdx = vis[Math.Max(0, at - 1)]; }
         else if (dir == "right" || dir == "down") { if (vis.Count > 0) gpIdx = vis[Math.Min(vis.Count - 1, at + 1)]; }
-        else if (dir == "ok") { if (gpIdx < gpButtons.Count && gpButtons[gpIdx].Enabled) gpButtons[gpIdx].Do(); return true; }
+        else if (dir == "ok") { if (gpIdx < gpButtons.Count && gpButtons[gpIdx].Enabled) { Sound.Play(Sfx.Select); gpButtons[gpIdx].Do(); } else Sound.Play(Sfx.Bump); return true; }
         else if (dir == "back") { CloseGamePage(); return true; }
         else return false;
+        Sound.Play(gpIdx != was ? Sfx.Move : Sfx.Bump);
         MarkPageButtons();
         return true;
     }

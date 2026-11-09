@@ -1,4 +1,4 @@
-// Update checks, installs, updates, NSP conversion, uninstall and Play.
+﻿// Update checks, installs, updates, NSP conversion, uninstall and Play.
 // Checks: only games that are installed are looked up (in parallel, in the background), and a release found in the
 // last 20 minutes is used instead of asking again. A game that isn't installed is looked up only when it's needed:
 // Install, or its release notes.
@@ -417,7 +417,15 @@ partial class Shell {
         W.Topmost = false;
         var root = N<System.Windows.Controls.Border>("Root");
         var a = Anim(0, 300, null, System.Windows.Media.Animation.EasingMode.EaseIn);
-        a.Completed += (s, e) => W.Close();
+        // the start sound rings out before the launcher goes
+        a.Completed += (s, e) => {
+            var wait = Sound.BusyUntil - DateTime.Now;
+            if (wait.TotalMilliseconds <= 0) { W.Close(); return; }
+            W.Hide();
+            var t = new System.Windows.Threading.DispatcherTimer { Interval = wait };
+            t.Tick += (s2, e2) => { t.Stop(); W.Close(); };
+            t.Start();
+        };
         root.BeginAnimation(UIElement.OpacityProperty, a);
         var rs = (System.Windows.Media.ScaleTransform)root.RenderTransform;
         rs.BeginAnimation(System.Windows.Media.ScaleTransform.ScaleXProperty, Anim(0.97, 300, null, System.Windows.Media.Animation.EasingMode.EaseIn));

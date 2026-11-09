@@ -125,7 +125,7 @@ partial class Shell {
         hb.Circle.MouseEnter += (s, e) => { if (!(homeZone == "buttons" && homeIdx == idx)) ShowButtonLabel(hb, true); };
         hb.Circle.MouseLeave += (s, e) => { if (!(homeZone == "buttons" && homeIdx == idx)) ShowButtonLabel(hb, false); };
         hb.Circle.MouseLeftButtonDown += (s, e) => { var st = (ScaleTransform)hb.Circle.RenderTransform; st.BeginAnimation(ScaleTransform.ScaleXProperty, Anim(0.9, 90)); st.BeginAnimation(ScaleTransform.ScaleYProperty, Anim(0.9, 90)); };
-        hb.Circle.MouseLeftButtonUp += (s, e) => { var st = (ScaleTransform)hb.Circle.RenderTransform; st.BeginAnimation(ScaleTransform.ScaleXProperty, Anim(1, 160)); st.BeginAnimation(ScaleTransform.ScaleYProperty, Anim(1, 160)); hb.Do(); };
+        hb.Circle.MouseLeftButtonUp += (s, e) => { Sound.Play(Sfx.Select); var st = (ScaleTransform)hb.Circle.RenderTransform; st.BeginAnimation(ScaleTransform.ScaleXProperty, Anim(1, 160)); st.BeginAnimation(ScaleTransform.ScaleYProperty, Anim(1, 160)); hb.Do(); };
         homeButtons.Add(hb);
         row.Children.Add(stack);
     }
@@ -177,7 +177,7 @@ partial class Shell {
         h.Root.MouseLeftButtonUp += (s, e) => {
             padUsed = false;
             homeZone = "tiles"; MarkHomeButtons();
-            if (g == sel) PrimaryAction(g); else ShowGame(g);
+            if (g == sel) PrimaryAction(g); else { Sound.Play(Sfx.Move); ShowGame(g); }
         };
         h.Root.MouseRightButtonUp += (s, e) => { ShowGame(g); OpenGamePage(); e.Handled = true; };
         h.Root.MouseEnter += (s, e) => { if (g != sel) h.Shade.BeginAnimation(UIElement.OpacityProperty, Anim(ShadeFor(g) * 0.4, 150)); };
@@ -365,11 +365,13 @@ partial class Shell {
         if (homeAllCount != null) { int shown = list.Count(Shown); homeAllCount.Text = shown == list.Count ? list.Count + " games" : shown + " of " + list.Count; }
     }
     void OpenHomeAll(string filterId) {
+        if (homePage != "all") Sound.Play(Sfx.Open);
         homePage = "all";
         if (filterId != null) filter = filterId;
         ShowHomePage();
     }
     void CloseHomeAll() {
+        Sound.Play(Sfx.Back);
         homePage = "home";
         filter = "all";   // the home row ignores filters: it always shows the installed games
         ShowHomePage();
@@ -409,15 +411,20 @@ partial class Shell {
         if (homeZone == "tiles") {
             if (dir == "left") StepGame(-1);
             else if (dir == "right") StepGame(1);
-            else if (dir == "down") { homeZone = "buttons"; homeIdx = Math.Min(homeIdx, homeButtons.Count - 1); MarkHomeButtons(); }
+            else if (dir == "down") { Sound.Play(Sfx.Move); homeZone = "buttons"; homeIdx = Math.Min(homeIdx, homeButtons.Count - 1); MarkHomeButtons(); }
+            else if (dir == "up") Sound.Play(Sfx.Bump);
             else if (dir == "ok") { if (sel != null) PrimaryAction(sel); }
             else return false;
         } else {
+            int was = homeIdx;
             if (dir == "left") homeIdx = Math.Max(0, homeIdx - 1);
             else if (dir == "right") homeIdx = Math.Min(homeButtons.Count - 1, homeIdx + 1);
-            else if (dir == "up" || dir == "back") homeZone = "tiles";
-            else if (dir == "ok") { homeButtons[homeIdx].Do(); return true; }
+            else if (dir == "up") { Sound.Play(Sfx.Move); homeZone = "tiles"; }
+            else if (dir == "back") { Sound.Play(Sfx.Back); homeZone = "tiles"; }
+            else if (dir == "down") Sound.Play(Sfx.Bump);
+            else if (dir == "ok") { Sound.Play(Sfx.Select); homeButtons[homeIdx].Do(); return true; }
             else return false;
+            if (dir == "left" || dir == "right") Sound.Play(homeIdx != was ? Sfx.Move : Sfx.Bump);
             MarkHomeButtons();
         }
         return true;

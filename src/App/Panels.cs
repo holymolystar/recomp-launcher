@@ -121,6 +121,7 @@ partial class Shell {
         if (which != null) SetTab(which);
         var layer = N<Grid>("NotesLayer");
         if (layer.Visibility == Visibility.Visible) return;
+        Sound.Play(Sfx.Open);
         layer.Visibility = Visibility.Visible;
         layer.BeginAnimation(UIElement.OpacityProperty, Anim(1, 200, 0));
         var panel = N<Border>("NotesPanel");
@@ -130,6 +131,7 @@ partial class Shell {
     void CloseNotes() {
         var layer = N<Grid>("NotesLayer");
         if (layer.Visibility != Visibility.Visible) return;
+        Sound.Play(Sfx.Back);
         var a = Anim(0, 200, null, EasingMode.EaseIn);
         a.Completed += (s, e) => { layer.Visibility = Visibility.Collapsed; SetHints(); QueueRing(); };
         layer.BeginAnimation(UIElement.OpacityProperty, a);
@@ -140,6 +142,7 @@ partial class Shell {
     // ---------- overlay cards ----------
     void ShowCard(string layer, string card) {
         var l = N<Grid>(layer);
+        if (l.Visibility != Visibility.Visible) Sound.Play(Sfx.Open);
         l.Visibility = Visibility.Visible;
         l.BeginAnimation(UIElement.OpacityProperty, Anim(1, 220, 0));
         var tg = (TransformGroup)N<Border>(card).RenderTransform;
@@ -150,6 +153,7 @@ partial class Shell {
     }
     void HideCard(string layer, string card) {
         var l = N<Grid>(layer);
+        Sound.Play(Sfx.Back);
         var a = Anim(0, 180, null, EasingMode.EaseIn);
         a.Completed += (s, e) => { l.Visibility = Visibility.Collapsed; SetHints(); QueueRing(); };
         l.BeginAnimation(UIElement.OpacityProperty, a);
@@ -181,6 +185,7 @@ partial class Shell {
         t.On = on;
         t.Track.Background = Ui.Brush(on ? Ui.Teal : "#2A3640");
         ((TranslateTransform)t.Knob.RenderTransform).BeginAnimation(TranslateTransform.XProperty, Anim(on ? 20 : 0, now ? 0 : 180));
+        if (!now) Sound.Play(on ? Sfx.ToggleOn : Sfx.ToggleOff);
         if (t.Changed != null && !now) t.Changed();
     }
 
@@ -208,6 +213,7 @@ partial class Shell {
         optStartup = NewToggle("Open when Windows starts", "Adds Recomp Launcher to your Startup folder.");
         optAuto = NewToggle("Check for updates every 3 hours", "While the launcher is open. Only installed games are checked.");
         foreach (var t in new[] { optClose, optFull, optStartup, optAuto }) rows.Children.Add(t.Root);
+        rows.Children.Add(VolumeRow());
 
         rows.Children.Add(Heading("GITHUB TOKEN (OPTIONAL)", false));
         rows.Children.Add(new TextBlock { TextWrapping = TextWrapping.Wrap, FontSize = 11.5, Foreground = Ui.Brush(Ui.Muted), Margin = new Thickness(0, 0, 0, 8),
@@ -271,6 +277,35 @@ partial class Shell {
         N<Button>("BtnSetSave").Click += (s, e) => SaveSettingsPanel();
         N<Button>("BtnSetDefaults").Click += (s, e) => { foreach (var r in folderRows) r.Box.Text = Settings.Default(r.Key); };
     }
+    // ---------- sound volume: Off and four levels, each one plays a chime at its loudness when picked ----------
+    StackPanel volumeButtons; int pickedVolume = 50;
+    FrameworkElement VolumeRow() {
+        var row = new Grid { Margin = new Thickness(0, 6, 0, 6) };
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 16, 0) };
+        text.Children.Add(new TextBlock { Text = "Sounds", FontSize = 13, FontFamily = Ui.Semi });
+        text.Children.Add(new TextBlock { Text = "Little clicks and chimes as you move around and start games. No music.", FontSize = 11.5, Foreground = Ui.Brush(Ui.Muted), TextWrapping = TextWrapping.Wrap });
+        volumeButtons = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+        foreach (int v in Sound.Levels) {
+            var b = MakeButton(v == 0 ? "Off" : v + "%", 30); b.FontSize = 12; b.Padding = new Thickness(11, 0, 11, 0); b.Margin = new Thickness(6, 0, 0, 0); b.Tag = v;
+            int level = v;
+            b.Click += (s, e) => { PickVolume(level); Sound.Play(Sfx.Select, level); };
+            volumeButtons.Children.Add(b);
+        }
+        Grid.SetColumn(volumeButtons, 1);
+        row.Children.Add(text); row.Children.Add(volumeButtons);
+        return row;
+    }
+    void PickVolume(int v) {
+        // the nearest level, for a value typed into settings.json by hand
+        pickedVolume = Sound.Levels.OrderBy(l => Math.Abs(l - v)).First();
+        foreach (Button b in volumeButtons.Children) {
+            bool on = (int)b.Tag == pickedVolume;
+            if (on) { b.Background = Ui.Brush(Ui.Teal); b.Foreground = Ui.Brush(Theme.Current.Light ? "#ffffff" : "#0A0E11"); }
+            else { b.ClearValue(Control.BackgroundProperty); b.ClearValue(Control.ForegroundProperty); }
+        }
+    }
     // ---------- theme picker: a small preview of each theme in its own colours ----------
     UniformGrid themeGrid; string pickedTheme;
     Button ThemeSwatch(ThemeDef th) {
@@ -315,6 +350,7 @@ partial class Shell {
         SetToggle(optFull, Settings.Get("Fullscreen") == "True", true);
         SetToggle(optStartup, File.Exists(StartupLink), true);
         SetToggle(optAuto, Settings.On("AutoCheck"), true);
+        PickVolume(Sound.Volume);
         tokenBox.Password = Settings.Get("GitHubToken");
         tokenCheck.Text = tokenBox.Password.Length > 0 ? "A token is saved." : ""; tokenCheck.Foreground = Ui.Brush(Ui.Muted);
         foreach (var g in Games) SetToggle(showToggles[g.Id], !g.Hidden, true);
@@ -336,9 +372,11 @@ partial class Shell {
         }
     }
     void SaveSettingsPanel() {
+        Sound.Play(Sfx.Select, pickedVolume);
         foreach (var r in folderRows) Settings.Set(r.Key, r.Box.Text.Trim().TrimEnd('\\'));
         Settings.Set("CloseOnPlay", optClose.On ? "on" : "off");
         Settings.Set("AutoCheck", optAuto.On ? "on" : "off");
+        Sound.Volume = pickedVolume; Settings.Set("SoundVolume", pickedVolume.ToString());
         Settings.Set("Fullscreen", optFull.On ? "True" : "");
         if (optFull.On != isFull) SetFullscreen(optFull.On);
         Settings.Set("GitHubToken", tokenBox.Password.Trim());
@@ -392,6 +430,7 @@ partial class Shell {
         var s = new List<FrameworkElement>();
         foreach (FrameworkElement b in themeGrid.Children) s.Add(b);
         foreach (var t in new[] { optClose, optFull, optStartup, optAuto }) s.Add(t.Root);
+        foreach (FrameworkElement b in volumeButtons.Children) s.Add(b);
         foreach (FrameworkElement b in showButtons.Children) s.Add(b);
         foreach (FrameworkElement c in showGrid.Children) s.Add(c);
         foreach (var r in folderRows) s.Add(r.Btn);
@@ -408,7 +447,9 @@ partial class Shell {
     }
     void SelectSetStop(int i) {
         if (setStops.Count == 0) return;
+        int was = setIdx;
         setIdx = Math.Max(0, Math.Min(setStops.Count - 1, i));
+        if (was >= 0) Sound.Play(setIdx != was ? Sfx.Move : Sfx.Bump);
         MarkSetStop(setIdx);
         setStops[setIdx].BringIntoView();
     }
@@ -718,7 +759,9 @@ partial class Shell {
     }
     void SelectFb(int i) {
         if (fbRows.Count == 0) return;
+        int was = fbIdx;
         fbIdx = Math.Max(0, Math.Min(fbRows.Count - 1, i));
+        if (fbIdx != was) Sound.Play(Sfx.Move);
         for (int k = 0; k < fbRows.Count; k++) fbRows[k].Background = Ui.Brush(k == fbIdx ? "#203039" : "#00000000");
         fbRows[fbIdx].BringIntoView();
     }

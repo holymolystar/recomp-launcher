@@ -509,6 +509,7 @@ partial class Shell {
     }
     void SetFilter(string id) { filter = id; UpdateChips(); ApplyFilter(); QueueScroll(); }
     void CycleFilter(int dir) {
+        Sound.Play(Sfx.Move);
         var ids = new[] { "all", "installed", "updates", "new" };
         int i = (Array.IndexOf(ids, filter) + dir + ids.Length) % ids.Length;
         SetFilter(ids[i]);
@@ -520,6 +521,7 @@ partial class Shell {
         var a = Anim(1, 260, 0.9); st.BeginAnimation(ScaleTransform.ScaleXProperty, a); st.BeginAnimation(ScaleTransform.ScaleYProperty, a);
     }
     void CycleSort() {
+        Sound.Play(Sfx.Move);
         var ids = new[] { "default", "installed", "recent", "name" };
         SetSort(ids[(Array.IndexOf(ids, sort) + 1) % ids.Length]);
     }
@@ -627,7 +629,7 @@ partial class Shell {
         var list = ShownGames(); if (list.Count == 0) return;
         int i = list.IndexOf(sel);
         int j = i < 0 ? 0 : Math.Max(0, Math.Min(list.Count - 1, i + dir));
-        if (list[j] != sel) ShowGame(list[j]);
+        if (list[j] != sel) { Sound.Play(Sfx.Move); ShowGame(list[j]); } else Sound.Play(Sfx.Bump);
     }
     // grid views: up / down go to the nearest card in the row above or below; list: the next row
     void MoveVertical(int dir) {
@@ -643,7 +645,7 @@ partial class Shell {
             if (bestRow == null || Math.Abs(dy) < Math.Abs(bestRow.Value) - 20) { bestRow = dy; bestDx = double.MaxValue; best = null; }
             if (Math.Abs(dy - bestRow.Value) <= 20) { double dx = Math.Abs(p.X - p0.X); if (dx < bestDx) { bestDx = dx; best = o; } }
         }
-        if (best != null) ShowGame(best);
+        if (best != null) { Sound.Play(Sfx.Move); ShowGame(best); } else Sound.Play(Sfx.Bump);
     }
 
     // ---------- the row glides so the selected card is in the middle ----------
@@ -751,7 +753,7 @@ partial class Shell {
         }
         QueueScroll(); QueueRing();
     }
-    void ToggleFullscreen() { SetFullscreen(!isFull); Settings.Set("Fullscreen", isFull ? "True" : ""); Settings.Save(); }
+    void ToggleFullscreen() { Sound.Play(Sfx.Select); SetFullscreen(!isFull); Settings.Set("Fullscreen", isFull ? "True" : ""); Settings.Save(); }
 
     // ---------- progress and status line ----------
     bool indet;
@@ -779,8 +781,9 @@ partial class Shell {
     // ---------- events ----------
     void PrimaryAction(Game g) {
         if (g != sel) ShowGame(g);
-        if (g.State == State.Missing) TryAction("Installing " + g.Name, () => StartInstall(g));
-        else if (!g.IsBusy) TryAction("Starting " + g.Name, () => StartGame(g));
+        if (g.State == State.Missing) { Sound.Play(Sfx.Select); TryAction("Installing " + g.Name, () => StartInstall(g)); }
+        else if (!g.IsBusy) { Sound.Play(Sfx.Launch); TryAction("Starting " + g.Name, () => StartGame(g)); }
+        else Sound.Play(Sfx.Bump);
     }
     void TryAction(string what, Action a) {
         try { a(); }
