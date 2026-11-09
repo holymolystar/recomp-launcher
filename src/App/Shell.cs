@@ -151,6 +151,8 @@ partial class Shell {
         if (args.OpenSettings) OpenSettings();
         if (args.OpenNotes) OpenNotes("notes");
         if (args.PadScript != null) PlayPadScript(args.PadScript);
+        if (args.Snapshot == null && args.PadScript == null && Settings.Get("StartAnim") != "off") PlayBootAnim();
+        if (args.Snapshot == null) ApplyRemote();
         // more than one profile: ask who's playing, as a console does
         if (args.Snapshot == null && args.PadScript == null && Profiles.All.Count > 1) W.Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(OpenPlayers));
         if (args.Snapshot != null) {
@@ -959,7 +961,7 @@ partial class Shell {
         }
     }
     bool AnyDialog() {
-        return OskOpen || ColOpen || FriendsOpen || CreatorOpen || PlayersOpen || ProfileOpen || N<Grid>("SettingsLayer").Visibility == Visibility.Visible || N<Grid>("RomLayer").Visibility == Visibility.Visible ||
+        return OskOpen || ColOpen || FriendsOpen || AchievementsOpen || CreatorOpen || PlayersOpen || ProfileOpen || N<Grid>("SettingsLayer").Visibility == Visibility.Visible || N<Grid>("RomLayer").Visibility == Visibility.Visible ||
                N<Grid>("UninstLayer").Visibility == Visibility.Visible;
     }
     void OnKey(object s, KeyEventArgs e) {
@@ -967,6 +969,7 @@ partial class Shell {
         bool notes = N<Grid>("NotesLayer").Visibility == Visibility.Visible;
         if (padUsed) { padUsed = false; HideRing(); SetHints(); }
         if (OskOpen) { if (OskKeyDown(k)) e.Handled = true; return; }
+        if (AchievementsOpen) { int ab = k == Key.Up ? Pad.Up : k == Key.Down ? Pad.Down : k == Key.Escape || k == Key.Enter || k == Key.Back ? Pad.B : 0; if (ab != 0) { AchievementsPad(ab); e.Handled = true; } return; }
         if (FriendsOpen) { if (k == Key.Escape || k == Key.Enter || k == Key.Back) { CloseFriends(); e.Handled = true; } return; }
         if (ColOpen) {
             if (k == Key.Escape) { CloseCollections(); e.Handled = true; return; }

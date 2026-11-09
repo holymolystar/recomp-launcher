@@ -240,7 +240,31 @@ partial class Shell {
         SetStep(g.StoreName + " is opening " + g.Name + "'s install. The launcher shows it here once it's installed.", Ui.Teal);
         WatchStoreInstall(g);
     }
+    // games that run in ScummVM (the Humongous games on Steam: Putt-Putt, Freddi Fish, Pajama Sam, Spy Fox...): turn on
+    // its controller support before each start (the stick moves the pointer, A clicks, B right-clicks). Steam rewrites
+    // the file when it changes the game's language or checks its files, so it's done every time.
+    // Settings > Controller > ScummVM games.
+    static void PrepareScummVm(Game g) {
+        if (Settings.Get("PadScummVm") == "off" || string.IsNullOrEmpty(g.Dir) || !Directory.Exists(g.Dir)) return;
+        try {
+            foreach (var dir in new[] { g.Dir, Path.Combine(g.Dir, "ScummVM_Windows") }.Where(Directory.Exists)) {
+                if (!File.Exists(Path.Combine(dir, "scummvm.exe"))) continue;
+                foreach (var ini in Directory.GetFiles(dir, "scummvm*.ini")) {
+                    var lines = File.ReadAllLines(ini).ToList();
+                    int sec = lines.FindIndex(l => l.Trim().Equals("[scummvm]", StringComparison.OrdinalIgnoreCase));
+                    if (sec < 0) { lines.Insert(0, "[scummvm]"); sec = 0; }
+                    int end = lines.FindIndex(sec + 1, l => l.TrimStart().StartsWith("["));
+                    if (end < 0) end = lines.Count;
+                    int at = lines.FindIndex(sec + 1, end - sec - 1, l => l.TrimStart().StartsWith("joystick_num=", StringComparison.OrdinalIgnoreCase));
+                    if (at >= 0 && lines[at].Trim() == "joystick_num=0") continue;
+                    if (at >= 0) lines[at] = "joystick_num=0"; else lines.Insert(sec + 1, "joystick_num=0");
+                    File.WriteAllLines(ini, lines);
+                }
+            }
+        } catch { }
+    }
     void StoreStart(Game g) {
+        PrepareScummVm(g);
         if (g.Steam != null) { SteamStart(g); return; }
         if (g.Store == "epic") Stores.Open(EpicGames.Uri(g, "launch"));
         else {

@@ -55,6 +55,19 @@ static class Pad {
     [StructLayout(LayoutKind.Sequential)] struct Vibration { public ushort Left, Right; }
     [DllImport("xinput1_4.dll", EntryPoint = "XInputSetState")] static extern int Set14(int user, ref Vibration v);
     [DllImport("xinput9_1_0.dll", EntryPoint = "XInputSetState")] static extern int Set910(int user, ref Vibration v);
+    // the battery of the Xbox controller that answered last: false when it has none to tell (wired, or not connected)
+    [StructLayout(LayoutKind.Sequential)] struct BatteryInfo { public byte Type, Level; }
+    [DllImport("xinput1_4.dll", EntryPoint = "XInputGetBatteryInformation")] static extern int Bat14(int user, byte devType, out BatteryInfo b);
+    public static bool Battery(out int percent) {
+        percent = -1;
+        if (last < 0 || none || legacy) return false;
+        try {
+            BatteryInfo b;
+            if (Bat14(last, 0, out b) != 0 || b.Type == 0 || b.Type == 1 || b.Type == 0xFF) return false;   // disconnected, wired, unknown
+            percent = b.Level == 0 ? 5 : b.Level == 1 ? 25 : b.Level == 2 ? 60 : 100;
+            return true;
+        } catch { return false; }
+    }
     static System.Threading.Timer rumbleOff;
     // a short buzz on the controller that answered last (Xbox controllers, and others through Steam Input)
     public static void Rumble(double strength, int ms) {

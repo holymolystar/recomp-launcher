@@ -26,6 +26,7 @@ partial class Shell {
     // a game was started: follow it until it closes
     void WatchGame(Game g) {
         playing = g; playingSince = DateTime.Now; playingSeen = false;
+        DiscordStatus.Playing(g, playingSince);
         if (gameWatch == null) {
             gameWatch = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromSeconds(3) };
             gameWatch.Tick += (s, e) => {
@@ -41,6 +42,7 @@ partial class Shell {
         var g = playing;
         playing = null;
         gameWatch.Stop();
+        DiscordStatus.Clear();
         CloseOverlay(false);
         if (inTray) ComeBack(g);
         else if (g != null) { UpdateViews(); }

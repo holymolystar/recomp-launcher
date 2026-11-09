@@ -205,6 +205,7 @@ partial class Shell {
         AddPageButton("", "Collections", () => { if (sel != null) OpenCollections(sel); });
         AddPageButton("", "Language", () => { if (sel != null && sel.Steam != null) SteamLanguage(sel); });
         AddPageButton("\uED1A", "Hide", () => { if (sel != null) HideGame(sel); });
+        AddPageButton("\uE9F9", "Achievements", () => { if (sel != null) OpenAchievements(sel); });
         right.Children.Add(gpButtonRow);
         gamePage.Children.Add(right);
         homeLayer.Children.Add(gamePage);
@@ -280,6 +281,8 @@ partial class Shell {
         string lang = g.Steam != null && g.Inst != null && g.Languages.Length > 0 ? SteamGames.Language(g) : null;
         SetPageButton(8, "\uE774", "Language: " + (lang ?? "?"), lang != null, lang != null);
         SetPageButton(9, "\uED1A", "Hide", true, true);
+        bool hasAch = ss != null && ss.AchTotal > 0;
+        SetPageButton(10, "\uE9F9", hasAch ? "Achievements  (" + ss.Achieved + " / " + ss.AchTotal + ")" : "Achievements", hasAch, hasAch);
         if (g.ByStore) {
             SetPageButton(0, missing ? "\uE896" : "\uE768", missing ? "Install with " + (g.Store == "epic" ? "Epic" : g.StoreName) : "Start", playOk, true);
             SetPageButton(1, "", "", false, false);

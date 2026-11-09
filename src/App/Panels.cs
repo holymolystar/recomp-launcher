@@ -236,7 +236,14 @@ partial class Shell {
 
     // ---------- settings ----------
     Toggle optFull, optStartup, optAuto;
-    PasswordBox tokenBox, steamKeyBox; TextBlock tokenCheck;
+    PasswordBox tokenBox, steamKeyBox; TextBlock tokenCheck, remoteInfo; TextBox discordBox;
+    void FillRemoteInfo() {
+        remoteInfo.Inlines.Clear();
+        remoteInfo.Inlines.Add(new System.Windows.Documents.Run("On your phone, open  "));
+        remoteInfo.Inlines.Add(new System.Windows.Documents.Run(RemoteAddress()) { FontFamily = Ui.Semi, Foreground = Ui.Brush(Ui.Teal) });
+        remoteInfo.Inlines.Add(new System.Windows.Documents.Run("   PIN  "));
+        remoteInfo.Inlines.Add(new System.Windows.Documents.Run(RemotePin()) { FontFamily = Ui.Semi, Foreground = Ui.Brush(Ui.Teal) });
+    }
     readonly Dictionary<string, Toggle> showToggles = new Dictionary<string, Toggle>();
     readonly List<FolderRow> folderRows = new List<FolderRow>();
     StackPanel showButtons; UniformGrid showGrid;
@@ -256,6 +263,8 @@ partial class Shell {
         optStartup = NewToggle("Open when Windows starts", "Adds Recomp Launcher to your Startup folder.");
         optAuto = NewToggle("Check for updates every 3 hours", "While the launcher is open. Only installed games are checked.");
         foreach (var t in new[] { optFull, optStartup, optAuto }) rows.Children.Add(t.Root);
+        rows.Children.Add(ChoiceRow("StartAnim", "Start-up animation", "The logo and a short chime as the launcher opens (about a second; a click or any key skips it).", 0,
+            new[] { "on", "off" }, new[] { "On", "Off" }));
         rows.Children.Add(ChoiceRow("TvMode", "Big screen (TV) mode", "Everything a quarter bigger, to read from across the room. Automatic: in full screen.", 0,
             new[] { "off", "auto", "on" }, new[] { "Off", "Automatic", "On" }));
         rows.Children.Add(ChoiceRow("SteamLibrary", "Steam games", "Your library: every game you own on Steam gets a tile in All games (installed ones on Home too), installed and started through Steam. Changes show the next time the launcher opens.", 0,
@@ -295,6 +304,27 @@ partial class Shell {
         kl.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); kl.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         Grid.SetColumn(keySite, 1); kl.Children.Add(steamKeyBox); kl.Children.Add(keySite);
         rows.Children.Add(kl);
+
+        rows = SetSection("Phone remote", "\uE8EA", "Start and close games from your phone, on the same Wi-Fi.");
+        rows.Children.Add(ChoiceRow("PhoneRemote", "Phone remote", "A page for your phone's browser: your installed games, tap one to start it on the PC, or close the game that's running. Windows asks once whether the launcher may use the network: allow it on private networks.", 1,
+            new[] { "on", "off" }, new[] { "On", "Off" }));
+        remoteInfo = new TextBlock { FontSize = 13, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 10, 0, 8) };
+        rows.Children.Add(remoteInfo);
+        var newPin = MakeButton("New PIN", 34); newPin.HorizontalAlignment = HorizontalAlignment.Left;
+        newPin.Click += (s, e) => { NewRemotePin(); FillRemoteInfo(); Sound.Play(Sfx.Select); };
+        rows.Children.Add(newPin);
+
+        rows = SetSection("Discord", "\uE8BD", "Optional: show what you play on your Discord profile.");
+        rows.Children.Add(new TextBlock { TextWrapping = TextWrapping.Wrap, FontSize = 11.5, Foreground = Ui.Brush(Ui.Muted), Margin = new Thickness(0, 0, 0, 8),
+            Text = "While a game from the launcher runs, Discord shows \"Playing Recomp Launcher\" with the game's name, for how long, and its picture. Discord needs an application of your own for this: at discord.com/developers/applications press New Application, name it Recomp Launcher (that name is what Discord shows), create it, and copy its Application ID here. Discord has to be open on this PC." });
+        discordBox = new TextBox { Height = 38, FontSize = 13, Padding = new Thickness(10, 0, 10, 0), VerticalContentAlignment = VerticalAlignment.Center,
+            Background = Ui.Brush("#0A0E11"), Foreground = Ui.Brush(Ui.Text), BorderBrush = Ui.Brush("#26333C"), CaretBrush = Ui.Brush(Ui.Text) };
+        var dSite = MakeButton("Open Discord");
+        dSite.Click += (s, e) => Stores.Open("https://discord.com/developers/applications");
+        var dl = new Grid();
+        dl.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); dl.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        Grid.SetColumn(dSite, 1); dl.Children.Add(discordBox); dl.Children.Add(dSite);
+        rows.Children.Add(dl);
 
         rows = SetSection("Library", "\uE8F1", "Which games show up in the launcher.");
         rows.Children.Add(new TextBlock { TextWrapping = TextWrapping.Wrap, FontSize = 11.5, Foreground = Ui.Brush(Ui.Muted), Margin = new Thickness(0, 0, 0, 6),
@@ -426,6 +456,8 @@ partial class Shell {
         PickVolume(Sound.Volume);
         tokenBox.Password = Settings.Get("GitHubToken");
         steamKeyBox.Password = Settings.Get("SteamApiKey");
+        discordBox.Text = Settings.Get("DiscordAppId");
+        FillRemoteInfo();
         tokenCheck.Text = tokenBox.Password.Length > 0 ? "A token is saved." : ""; tokenCheck.Foreground = Ui.Brush(Ui.Muted);
         foreach (var g in Games) SetToggle(showToggles[g.Id], !g.Hidden, true);
         PickTheme(Theme.Current.Id);
@@ -457,6 +489,8 @@ partial class Shell {
         Settings.Set("Fullscreen", optFull.On ? "True" : "");
         if (optFull.On != isFull) SetFullscreen(optFull.On);
         Settings.Set("GitHubToken", tokenBox.Password.Trim());
+        Settings.Set("DiscordAppId", new string(discordBox.Text.Where(char.IsDigit).ToArray()));
+        W.Dispatcher.BeginInvoke(new Action(ApplyRemote));   // after the choices below are saved too
         if (Settings.Get("SteamApiKey") != steamKeyBox.Password.Trim()) { Settings.Set("SteamApiKey", steamKeyBox.Password.Trim()); frLast = null; frAt = DateTime.MinValue; }
         try {
             if (optStartup.On && !File.Exists(StartupLink)) MakeShortcut(StartupLink);
@@ -614,6 +648,8 @@ partial class Shell {
         rows.Children.Add(ChoiceRow("PadStick", "Stick sensitivity", "High moves with a small push; Low ignores a worn stick that drifts.", 1,
             new[] { "low", "normal", "high" }, new[] { "Low", "Normal", "High" }));
         rows.Children.Add(ChoiceRow("PadMenu", "In-game menu", "The Xbox, PS or Home button (or View and Menu together) opens a menu over the game: resume, go to the launcher, or close the game. Needs the launcher to stay open or wait in the tray.", 0,
+            new[] { "on", "off" }, new[] { "On", "Off" }));
+        rows.Children.Add(ChoiceRow("PadScummVm", "ScummVM games", "Putt-Putt, Freddi Fish, Pajama Sam, Spy Fox and other games that run in ScummVM: the launcher turns on their controller support each time they start. The left stick moves the pointer, A clicks, B right-clicks.", 0,
             new[] { "on", "off" }, new[] { "On", "Off" }));
         optRumble = NewToggle("Vibration", "A short buzz when a game starts (Xbox controllers, and others through Steam Input).");
         rows.Children.Add(optRumble.Root);

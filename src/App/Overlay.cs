@@ -149,6 +149,8 @@ partial class Shell {
             if ((ps.BatteryChargeStatus & System.Windows.Forms.BatteryChargeStatus.NoSystemBattery) == 0 && ps.BatteryChargeStatus != System.Windows.Forms.BatteryChargeStatus.Unknown)
                 battery = "   " + Math.Round(ps.BatteryLifePercent * 100) + "%";
         } catch { }
+        bool padChg; int pad = PadBatteryPercent(out padChg);
+        if (pad >= 0) battery += "   \U0001F3AE " + (padChg ? "charging" : pad + "%");
         ovClock.Text = DateTime.Now.ToString("HH:mm") + battery;
         // a close that didn't take: offer to force it
         if (ovCloseStep == 2 && (DateTime.Now - ovCloseAt).TotalSeconds > 5 && Engine.IsRunning(g)) {

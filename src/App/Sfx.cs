@@ -1,4 +1,4 @@
-// Little interface sounds, console style: a soft tick when the selection moves, a two-note chime to pick, the same
+﻿// Little interface sounds, console style: a soft tick when the selection moves, a two-note chime to pick, the same
 // going down to go back, a short rising run to open a page, a bright arpeggio when a game starts. No music, and no
 // sound files: every sound is drawn here as a few soft bell tones and played from memory. The volume (Settings:
 // SoundVolume, 0 to 100) scales them; 0 is off.
@@ -9,7 +9,7 @@ using System.Media;
 
 namespace RecompLauncher {
 
-enum Sfx { Move, Bump, Select, Back, Open, ToggleOn, ToggleOff, Launch }
+enum Sfx { Move, Bump, Select, Back, Open, ToggleOn, ToggleOff, Launch, Boot }
 
 static class Sound {
     internal const int Rate = 44100;
@@ -59,6 +59,12 @@ static class Sound {
             case Sfx.Open:      b = Buf(300); Bell(b, 0, 784, 0.20, 40, 0.25); Bell(b, 40, 1046.5, 0.22, 40, 0.25); Bell(b, 80, 1568, 0.24, 90, 0.25); break;
             case Sfx.ToggleOn:  b = Buf(120); Bell(b, 0, 1760, 0.24, 30, 0.2); break;
             case Sfx.ToggleOff: b = Buf(120); Bell(b, 0, 1174.7, 0.24, 30, 0.2); break;
+            case Sfx.Boot:      // start-up: a soft low C, then G5 C6 E6 G6 rising and ringing out together
+                b = Buf(1500);
+                Bell(b, 0, 261.6, 0.20, 600, 0.15); Bell(b, 0, 392, 0.10, 500, 0.1);
+                double[] up = { 783.99, 1046.5, 1318.5, 1568 };
+                for (int i = 0; i < up.Length; i++) { Bell(b, 120 + i * 85, up[i], 0.17, 520 - i * 40, 0.25); Bell(b, 120 + i * 85, up[i] * 1.004, 0.06, 420, 0.15); }
+                break;
             default: // Launch: C6 E6 G6 C7, the last one rings out
                 b = Buf(800);
                 double[] notes = { 1046.5, 1318.5, 1568, 2093 };

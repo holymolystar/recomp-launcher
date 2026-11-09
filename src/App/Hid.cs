@@ -149,9 +149,24 @@ static class HidPads {
         }
     }
     static short Axis8(byte v, bool flip) { int x = (v - 128) * 256; if (flip) x = -x; return (short)Math.Max(-32768, Math.Min(32767, x)); }
+    // the battery from the latest report (percent, charging), -1 when the controller doesn't say
+    static int battery = -1; static bool charging;
+    public static bool Battery(out int percent, out bool isCharging) {
+        lock (gate) { percent = battery; isCharging = charging; return battery >= 0 && (DateTime.Now - latestAt).TotalSeconds < 10; }
+    }
+    // DualShock 4: a byte with the level (0-10) and whether the cable is in; DualSense: level (0-10) and charge state
+    static void PsBattery(byte[] b, int n, int at, bool dualSense) {
+        if (at >= n) return;
+        int v = b[at];
+        if (dualSense) { battery = Math.Min(100, (v & 0x0F) * 10 + 5); charging = (v >> 4) == 1; if ((v >> 4) == 2) battery = 100; }
+        else { bool cable = (v & 0x10) != 0; battery = Math.Min(100, (v & 0x0F) * (cable ? 9 : 10) + 5); charging = cable && (v & 0x0F) < 11; }
+    }
     static bool ParsePlayStation(byte[] b, int n, ushort pid, out Pad.State s) {
         s = new Pad.State();
         bool dualSense = pid == 0x0CE6 || pid == 0x0DF2;
+        if (b[0] == 0x01 && n >= 64) PsBattery(b, n, dualSense ? 53 : 30, dualSense);
+        else if (b[0] == 0x11 && !dualSense) PsBattery(b, n, 32, false);
+        else if (b[0] == 0x31 && dualSense) PsBattery(b, n, 54, true);
         int o;   // where the sticks start
         if (b[0] == 0x01 && n >= 10) {
             // USB, or Bluetooth's short report: DualSense over USB has its triggers before the buttons
@@ -199,7 +214,9 @@ static class HidPads {
         s = new Pad.State();
         int btn = 0;
         if (b[0] == 0x30 && n >= 12) {
-            // full report: right buttons, shared, left buttons, then two 12-bit sticks
+            // full report: the battery (high nibble of byte 2: 8 full ... 0 empty, +1 charging), right buttons, shared,
+            // left buttons, then two 12-bit sticks
+            int bat = b[2] >> 4; battery = Math.Min(100, (bat & 0x0E) * 100 / 8); charging = (bat & 1) != 0;
             int r = b[3], m = b[4], l = b[5];
             if ((r & 0x04) != 0) btn |= Pad.A;   // B, at the bottom
             if ((r & 0x08) != 0) btn |= Pad.B;   // A, on the right

@@ -51,6 +51,9 @@ partial class Shell {
         homeClock = new TextBlock { FontSize = 19, Foreground = Ui.Brush(Ui.Text), VerticalAlignment = VerticalAlignment.Center };
         homeBattery = new TextBlock { FontFamily = Ui.Mdl, FontSize = 17, Foreground = Ui.Brush(Ui.Text), Margin = new Thickness(14, 2, 0, 0), VerticalAlignment = VerticalAlignment.Center };
         right.Children.Add(homeUpdatesPill);
+        // a wireless controller's battery, left of the clock
+        homePadBattery = new TextBlock { FontSize = 13, Foreground = Ui.Brush(Ui.Text), Margin = new Thickness(0, 0, 18, 0), VerticalAlignment = VerticalAlignment.Center, Visibility = Visibility.Collapsed, ToolTip = "Controller battery" };
+        right.Children.Add(homePadBattery);
         right.Children.Add(homeClock);
         right.Children.Add(new TextBlock { Text = "", FontFamily = Ui.Mdl, FontSize = 17, Foreground = Ui.Brush(Ui.Text), Margin = new Thickness(16, 2, 0, 0), VerticalAlignment = VerticalAlignment.Center });
         right.Children.Add(homeBattery);
@@ -99,8 +102,34 @@ partial class Shell {
         N<Grid>("Main").Children.Insert(0, homeLayer);
         foreach (var g in Games) BuildHomeTile(g);
     }
+    // the controller's battery: Xbox controllers say empty / low / medium / full, PlayStation and Switch Pro a level;
+    // when it gets low the launcher says so once (and again after it has been charged)
+    TextBlock homePadBattery; bool padLowSaid;
+    public int PadBatteryPercent(out bool isCharging) {
+        int p; isCharging = false;
+        if (HidPads.Battery(out p, out isCharging)) return p;
+        return Pad.Battery(out p) ? p : -1;
+    }
+    void TickPadBattery() {
+        bool chg; int p = PadBatteryPercent(out chg);
+        if (p < 0) { homePadBattery.Visibility = Visibility.Collapsed; return; }
+        homePadBattery.Visibility = Visibility.Visible;
+        homePadBattery.Inlines.Clear();
+        homePadBattery.Inlines.Add(new System.Windows.Documents.Run(" ") { FontFamily = Ui.Mdl, FontSize = 16, BaselineAlignment = BaselineAlignment.Center });
+        int level = Math.Max(0, Math.Min(9, p / 10));
+        homePadBattery.Inlines.Add(new System.Windows.Documents.Run(((char)((chg ? 0xE85A : 0xE850) + level)).ToString()) { FontFamily = Ui.Mdl, FontSize = 16, BaselineAlignment = BaselineAlignment.Center,
+            Foreground = Ui.Brush(p <= 25 && !chg ? "#e8453c" : Ui.Text) });
+        if (p <= 25 && !chg) homePadBattery.Inlines.Add(new System.Windows.Documents.Run(" " + p + "%") { Foreground = Ui.Brush("#e8453c") });
+        if (p <= 25 && !chg && !padLowSaid) {
+            padLowSaid = true;
+            SetStep("Your controller's battery is low (about " + p + "%): charge it soon.", Ui.Gold);
+            Notify("Controller battery low", "About " + p + "% left: charge it soon.");
+        }
+        if (p > 40 || chg) padLowSaid = false;
+    }
     void TickHomeClock() {
         homeClock.Text = DateTime.Now.ToString("HH:mm");
+        try { TickPadBattery(); } catch { }
         try {
             var ps = System.Windows.Forms.SystemInformation.PowerStatus;
             if ((ps.BatteryChargeStatus & System.Windows.Forms.BatteryChargeStatus.NoSystemBattery) != 0 || ps.BatteryChargeStatus == System.Windows.Forms.BatteryChargeStatus.Unknown) { homeBattery.Visibility = Visibility.Collapsed; return; }

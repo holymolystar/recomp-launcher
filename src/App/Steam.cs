@@ -97,6 +97,7 @@ static class SteamGames {
             return best != null ? best.DirectoryName : null;
         } catch { return null; }
     }
+    public static string UserConfig() { if (userConfig == null) userConfig = UserConfigDir(); return userConfig; }
     public class Stats { public int Minutes; public DateTime Last = DateTime.MinValue; public int Achieved, AchTotal; }
     public static Stats StatsOf(Game g) {
         if (g.Steam == null || Root.Length == 0) return null;

@@ -39,6 +39,21 @@ The launcher also shows your games from the PC stores, each store in a group of 
 - **Friends** on Home: your Steam friends who are online and what they play. It needs a Steam Web API key of your
   own (Settings > Steam friends; made at steamcommunity.com/dev/apikey).
 
+- **Achievements** on a Steam game's page: each one with its icon, when you unlocked it and how rare it is (all of
+  them with the Steam Web API key, else the part Steam keeps on this PC).
+
+## Phone remote, Discord and more
+
+- **Phone remote** (Settings > Phone remote): open the address it shows on your phone (same Wi-Fi), type the PIN, and
+  start or close games on the PC from there.
+- **Discord** (Settings > Discord): shows what you play on your Discord profile; it needs the Application ID of a
+  Discord application of your own named Recomp Launcher.
+- **Controller battery** by the clock and in the in-game menu (Xbox, PlayStation and Switch Pro controllers), with a
+  note when it gets low.
+- **ScummVM games** (Putt-Putt, Freddi Fish, Pajama Sam, Spy Fox...) get their controller support switched on each
+  time they start: the stick moves the pointer, A clicks, B right-clicks.
+- A short **start-up animation** (Settings > General can turn it off).
+
 ## In-game menu
 
 While a game started from the launcher runs, the Xbox, PS or Home button (or View + Menu together) opens a menu
