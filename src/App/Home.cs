@@ -40,11 +40,8 @@ partial class Shell {
         foreach (var h in new[] { new GridLength(84), new GridLength(0.55, GridUnitType.Star), GridLength.Auto, new GridLength(46), GridLength.Auto, new GridLength(1, GridUnitType.Star), new GridLength(62) })
             homeLayer.RowDefinitions.Add(new RowDefinition { Height = h });
 
-        // top left: the launcher's picture in a round frame
-        var avatar = new Border { Width = 48, Height = 48, CornerRadius = new CornerRadius(24), BorderThickness = new Thickness(3), BorderBrush = Ui.Brush(Raised),
-            Background = Ui.Brush(Raised), HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(36, 10, 0, 0),
-            Child = new Image { Source = N<Image>("LogoImg").Source }, ToolTip = "Recomp Launcher", Effect = new DropShadowEffect { BlurRadius = 8, ShadowDepth = 1, Opacity = 0.25 } };
-        homeLayer.Children.Add(avatar);
+        // top left: your picture in a round frame, and your name (Personalise, in Profile.cs)
+        homeLayer.Children.Add(BuildHomeAvatar());
         // top right: updates waiting, clock, Wi-Fi, battery (laptops)
         var right = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 10, 112, 0) };
         homeUpdates = new TextBlock { FontSize = 12.5, FontFamily = Ui.Semi, Foreground = Ui.Brush("#0A0E11"), VerticalAlignment = VerticalAlignment.Center };

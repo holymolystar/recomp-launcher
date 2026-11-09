@@ -408,6 +408,15 @@ partial class Shell {
         // play time watches the folder the game runs from
         string playDir = Paths.Under(file, g.Dir) ? g.Dir : Path.GetDirectoryName(file);
         bool hidden = file.EndsWith(".bat", StringComparison.OrdinalIgnoreCase) && !g.Console;
+        // the current profile's saves go in place first (not while the game is already running)
+        if (!Engine.IsRunning(g)) {
+            try { Profiles.PrepareSaves(g); }
+            catch (Exception e) {
+                SetStep("Couldn't put " + Profiles.DisplayName(Profiles.Current) + "'s saves in place for " + g.Name + ", so it wasn't started: " + e.Message, Ui.Red);
+                Log("Save switch for " + g.Name + " failed: " + e, Ui.Red);
+                return;
+            }
+        }
         Engine.Start(file, args, playDir, hidden);
         SetStep("Starting " + g.Name + "...", Ui.Teal);
         Engine.StartPlaytime(g, playDir);

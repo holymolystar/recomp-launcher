@@ -8,6 +8,7 @@ logs/
 backups/
 dumps/
 avatars/
+profiles/
 # Your own game artwork (the launcher draws its own tiles when there's none; game art is copyrighted)
 icons/
 

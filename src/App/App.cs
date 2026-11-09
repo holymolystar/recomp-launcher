@@ -60,6 +60,7 @@ static class Program {
             Catalog.Load(Path.Combine(root, "games.json"));
             Settings.Load(Path.Combine(root, "settings.json"));
             Theme.Use(Settings.Get("Theme"));
+            Profiles.Load();
             int vol; if (int.TryParse(Settings.Get("SoundVolume"), out vol)) Sound.Volume = vol;
             if (args.View != null) Settings.Set("ViewMode", args.View);
             if (args.Theme != null) Theme.Use(args.Theme);

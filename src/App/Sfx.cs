@@ -12,7 +12,7 @@ namespace RecompLauncher {
 enum Sfx { Move, Bump, Select, Back, Open, ToggleOn, ToggleOff, Launch }
 
 static class Sound {
-    const int Rate = 44100;
+    internal const int Rate = 44100;
     static int volume = 60;
     static readonly Dictionary<string, SoundPlayer> cache = new Dictionary<string, SoundPlayer>();
     static DateTime last = DateTime.MinValue;
@@ -74,7 +74,7 @@ static class Sound {
     }
     static float[] Buf(int ms) { return new float[Rate * ms / 1000]; }
     // a soft bell: a sine with a little octave and fifth above it, a 3 ms rise and an exponential fade (tau in ms)
-    static void Bell(float[] b, int atMs, double f, double amp, double tauMs, double bright) {
+    internal static void Bell(float[] b, int atMs, double f, double amp, double tauMs, double bright) {
         int start = Rate * atMs / 1000;
         double tau = tauMs / 1000.0, rise = 0.003;
         for (int i = start; i < b.Length; i++) {
@@ -86,7 +86,7 @@ static class Sound {
         }
     }
     // 16-bit mono WAV, with a short fade at the very end and a soft limit
-    static byte[] Wave(float[] b, double gain) {
+    internal static byte[] Wave(float[] b, double gain) {
         var ms = new MemoryStream();
         var w = new BinaryWriter(ms);
         int n = b.Length, fade = Rate / 200;

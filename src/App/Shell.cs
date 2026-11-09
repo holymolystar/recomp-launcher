@@ -137,6 +137,8 @@ partial class Shell {
         if (args.OpenSettings) OpenSettings();
         if (args.OpenNotes) OpenNotes("notes");
         if (args.PadScript != null) PlayPadScript(args.PadScript);
+        // more than one profile: ask who's playing, as a console does
+        if (args.Snapshot == null && args.PadScript == null && Profiles.All.Count > 1) W.Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(OpenPlayers));
         if (args.Snapshot != null) {
             var t = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(args.SnapshotDelay) };
             t.Tick += (s, e) => { t.Stop(); Snapshot(args.Snapshot); W.Close(); };
@@ -182,6 +184,7 @@ partial class Shell {
         if (u.HomeSmall != null) { u.HomeSmall.Icon.Source = src; u.HomeSmall.Icon.Margin = new Thickness(g.IconIsArt ? 0 : SmallTileSize * 0.24); }
         if (u.HomeRow != null) { u.HomeRow.Icon.Source = src; u.HomeRow.Icon.Margin = new Thickness(g.IconIsArt ? 0 : 8); }
         if (g == sel) UpdateGamePage();
+        if (Profiles.Get("Avatar") == "game:" + g.Id) ApplyAvatar();
         if (u.HomeAll != null) { u.HomeAll.Icon.Source = src; u.HomeAll.Icon.Margin = new Thickness(g.IconIsArt ? 0 : AllTileSize * 0.24); }
         if (g == sel) { N<Image>("HeroIcon").Source = src; N<Image>("HeroArt").Source = src; N<Image>("GridIcon").Source = src; }
     }
@@ -859,20 +862,24 @@ partial class Shell {
         var root = N<Border>("Root");
         root.SizeChanged += (s, e) => {
             double k = Math.Max(1.0, root.ActualHeight / 800.0);
-            foreach (var n in new[] { "Main", "NotesLayer", "SettingsLayer", "RomLayer", "UninstLayer" }) ((FrameworkElement)W.FindName(n)).LayoutTransform = new ScaleTransform(k, k);
+            foreach (var n in new[] { "Main", "NotesLayer", "SettingsLayer", "RomLayer", "UninstLayer", "ProfileLayer", "PlayersLayer", "CreatorLayer" }) {
+                var el = W.FindName(n) as FrameworkElement;
+                if (el != null) el.LayoutTransform = new ScaleTransform(k, k);
+            }
             N<Border>("RomCard").MaxHeight = Math.Max(300, root.ActualHeight / k - 40);
             var art = N<Image>("HeroArt"); art.Width = root.ActualHeight * 0.85; art.Height = art.Width;
             QueueScroll();
         };
     }
     bool AnyDialog() {
-        return N<Grid>("SettingsLayer").Visibility == Visibility.Visible || N<Grid>("RomLayer").Visibility == Visibility.Visible ||
+        return CreatorOpen || PlayersOpen || ProfileOpen || N<Grid>("SettingsLayer").Visibility == Visibility.Visible || N<Grid>("RomLayer").Visibility == Visibility.Visible ||
                N<Grid>("UninstLayer").Visibility == Visibility.Visible;
     }
     void OnKey(object s, KeyEventArgs e) {
         var k = e.Key; var box = N<TextBox>("SearchBox");
         bool notes = N<Grid>("NotesLayer").Visibility == Visibility.Visible;
         if (padUsed) { padUsed = false; HideRing(); SetHints(); }
+        if (CreatorOpen) { if (!(Keyboard.FocusedElement is TextBox) && CreatorKey(k)) e.Handled = true; return; }
         if (N<Grid>("UninstLayer").Visibility == Visibility.Visible) { if (k == Key.Escape) { CloseUninstall(); e.Handled = true; } return; }
         if (FbVisible()) { if (FbKey(k)) e.Handled = true; return; }
         if (N<Grid>("RomLayer").Visibility == Visibility.Visible) {
@@ -881,6 +888,20 @@ partial class Shell {
             return;
         }
         if (N<Grid>("SettingsLayer").Visibility == Visibility.Visible) { if (k == Key.Escape) { CloseSettings(); e.Handled = true; } return; }
+        if (PlayersOpen) {
+            if (k == Key.Escape) { ClosePlayers(); e.Handled = true; return; }
+            int pb = k == Key.Left ? Pad.Left : k == Key.Right ? Pad.Right : k == Key.Up ? Pad.Up : k == Key.Down ? Pad.Down : k == Key.Enter || k == Key.Space ? Pad.A : 0;
+            if (pb != 0) { PlayersPad(pb); SetHints(); e.Handled = true; }
+            return;
+        }
+        if (ProfileOpen) {
+            if (k == Key.Escape) { CloseProfile(); e.Handled = true; }
+            else if (!(Keyboard.FocusedElement is TextBox)) {
+                int bit = k == Key.Left ? Pad.Left : k == Key.Right ? Pad.Right : k == Key.Up ? Pad.Up : k == Key.Down ? Pad.Down : k == Key.Enter || k == Key.Space ? Pad.A : 0;
+                if (bit != 0) { ProfilePad(bit); SetHints(); e.Handled = true; }
+            }
+            return;
+        }
         if (box.IsKeyboardFocused) {
             if (k == Key.Escape) { if (box.Text.Length > 0) box.Text = ""; else Keyboard.ClearFocus(); e.Handled = true; }
             else if (k == Key.Enter || k == Key.Down) { Keyboard.ClearFocus(); e.Handled = true; }

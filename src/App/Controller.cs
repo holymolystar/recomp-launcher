@@ -150,6 +150,7 @@ partial class Shell {
     }
 
     void PadPress(int bit) {
+        if (CreatorOpen) { CreatorPad(bit); return; }
         // overlays first
         if (N<Grid>("UninstLayer").Visibility == Visibility.Visible) {
             if (bit == Pad.A) Press(N<Button>("BtnUninstGo"));
@@ -196,8 +197,11 @@ partial class Shell {
             else if (bit == Pad.Up) ScrollBy(-80); else if (bit == Pad.Down) ScrollBy(80);
             return;
         }
+        if (PlayersOpen) { PlayersPad(bit); SetHints(); return; }
+        if (ProfileOpen) { ProfilePad(bit); SetHints(); return; }
         // main screen
         if (view == View.Home) {
+            if (bit == Pad.LB && homePage == "home") { OpenPlayers(); SetHints(); return; }
             string d = bit == Pad.Left ? "left" : bit == Pad.Right ? "right" : bit == Pad.Up ? "up" : bit == Pad.Down ? "down" : bit == Pad.A ? "ok" : bit == Pad.B ? "back" : bit == Pad.Y ? "info" : null;
             if (d != null && HomeMove(d)) { SetHints(); return; }
         }
@@ -243,7 +247,7 @@ partial class Shell {
     string hintsShown = "";
     void SetHints() {
         var spec = new List<string[]>();
-        if (padUsed || view == View.Home) {
+        if (!CreatorOpen && (padUsed || view == View.Home)) {
             if (N<Grid>("UninstLayer").Visibility == Visibility.Visible) { spec.Add(new[] { "A", "Uninstall" }); spec.Add(new[] { "B", "Cancel" }); }
             else if (FbVisible()) { spec.Add(new[] { "A", "Open" }); spec.Add(new[] { "B", "Back" }); if (fbDir != null && FbFolders()) spec.Add(new[] { "X", "Use this folder" }); spec.Add(new[] { "Y", "Close" }); }
             else if (N<Grid>("RomLayer").Visibility == Visibility.Visible) {
@@ -252,12 +256,14 @@ partial class Shell {
                 spec.Add(new[] { "B", "Close" });
             } else if (N<Grid>("SettingsLayer").Visibility == Visibility.Visible) { spec.Add(new[] { "A", "Select" }); spec.Add(new[] { "≡", "Save" }); spec.Add(new[] { "X", "Defaults" }); spec.Add(new[] { "B", "Cancel" }); }
             else if (N<Grid>("NotesLayer").Visibility == Visibility.Visible) { spec.Add(new[] { "LB", "Tabs" }); spec.Add(new[] { "B", "Close" }); }
+            else if (PlayersOpen) { spec.Add(new[] { "A", plIdx < Profiles.All.Count ? "Play as" : plIdx == Profiles.All.Count ? "New profile" : "Select" }); spec.Add(new[] { "X", "Edit" }); spec.Add(new[] { "B", "Close" }); }
+            else if (ProfileOpen) { spec.Add(new[] { "A", "Select" }); spec.Add(new[] { "B", "Close" }); }
             else if (view == View.Home) {
                 // every button that does something here, as the other views list theirs
                 bool install = sel != null && sel.State == State.Missing;
                 if (homePage != "game") {
                     spec.Add(new[] { "RS", homeAll ? "Layout" : "All games" });
-                    if (homeAll) spec.Add(new[] { "LB", "Filter" });
+                    spec.Add(new[] { "LB", homeAll ? "Filter" : "Profiles" });
                     spec.Add(new[] { "≡", "Settings" });
                 }
                 if (sel != null && sel.State == State.Update && homeZone == "tiles" && homePage != "game") spec.Add(new[] { "X", "Update" });
