@@ -1,4 +1,4 @@
-// While a game runs: the launcher follows it (by its process name, games.json Proc, every 3 seconds; a game that never
+﻿// While a game runs: the launcher follows it (by its process name, games.json Proc, every 3 seconds; a game that never
 // shows up, under another name or because it failed to start, counts as closed after 90 seconds), so the in-game menu
 // (Overlay.cs) knows what's playing, and the launcher can come back when it closes.
 //
@@ -32,7 +32,7 @@ partial class Shell {
                 if (playing == null) { gameWatch.Stop(); return; }
                 bool runs = Engine.IsRunning(playing);
                 if (runs) playingSeen = true;
-                if ((playingSeen && !runs) || (!playingSeen && (DateTime.Now - playingSince).TotalSeconds > 90)) GameClosed();
+                if ((playingSeen && !runs) || (!playingSeen && (DateTime.Now - playingSince).TotalSeconds > (playing.ByStore ? 240 : 90))) GameClosed();
             };
         }
         gameWatch.Start();

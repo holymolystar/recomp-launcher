@@ -28,7 +28,7 @@ partial class Shell {
     const double HomeTileSize = 244, AllTileSize = 168;
     // the All games page
     bool homeAll { get { return homePage == "all"; } }
-    Grid homeAllPage; WrapPanel homeAllTiles; ScrollViewer homeAllScroll; StackPanel homeButtonRow, homeFilterPills; TextBlock homeAllName, homeAllState, homeAllCount;
+    Grid homeAllPage; WrapPanel homeAllTiles; ScrollViewer homeAllScroll; StackPanel homeButtonRow, homeFilterPills, homeStorePills; TextBlock homeAllName, homeAllState, homeAllCount;
     // raised surfaces (round buttons, empty slots): white on a light theme, a lighter shade on a dark one
     static string Raised { get { return Theme.Current.Light ? "#ffffff" : "#1C252C"; } }   // lower case: not recoloured
     static string Slot { get { return Theme.Current.Light ? "#f7f7f7" : "#11181D"; } }
@@ -77,6 +77,7 @@ partial class Shell {
             else if (!running && !checking) CheckAll(true);
         });
         AddHomeButton(row, "", "All games", "#2f8fe0", () => OpenHomeAll(null));
+        AddHomeButton(row, "\uE716", "Friends", "#8fc93a", () => OpenFriends());
         AddHomeButton(row, "", "Full screen", "#7d8a93", () => ToggleFullscreen());
         AddHomeButton(row, "", "Settings", "#7d8a93", () => { if (!running) OpenSettings(); });
         AddHomeButton(row, "", "Close", "#7d8a93", () => W.Close());
@@ -345,13 +346,16 @@ partial class Shell {
         homeFilterPills.Children.Add(new TextBlock { Text = "LB / RB", FontSize = 11, Foreground = Ui.Brush(Ui.Dim), Margin = new Thickness(12, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center });
         BuildLayoutPills(homeFilterPills);
         head.Children.Add(homeFilterPills);
+        // the stores' pills, on a row of their own under the others
+        homeStorePills = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(0, 46, 52, 0) };
+        head.Children.Add(homeStorePills);
         var line = new Border { Height = 1, Background = Ui.Brush("#33424D"), VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(-34, 0, -34, -14) };
         head.Children.Add(line);
         homeAllPage.Children.Add(head);
         homeAllTiles = new WrapPanel { Margin = new Thickness(60, 34, 44, 20) };
         homeAllScroll = new ScrollViewer { HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Focusable = false, Content = homeAllTiles };
         Grid.SetRow(homeAllScroll, 1);
-        homeAllScroll.SizeChanged += (s, e) => SizeListRows();
+        homeAllScroll.SizeChanged += (s, e) => { SizeListRows(); UpdateAllHeaders(); };
         homeAllPage.Children.Add(homeAllScroll);
         homeLayer.Children.Add(homeAllPage);
     }
@@ -362,6 +366,7 @@ partial class Shell {
         if (ids == pillIds) return;
         pillIds = ids;
         foreach (var old in homeFilterPills.Children.OfType<Border>().ToList()) if (old.Tag is string) homeFilterPills.Children.Remove(old);
+        homeStorePills.Children.Clear();
         int at = homeFilterPills.Children.IndexOf(homeLayoutPills) + 1;   // after the layout buttons
         foreach (var f in defs) {
             string id = f[0];
@@ -369,7 +374,8 @@ partial class Shell {
                 Child = new TextBlock { FontSize = 13, FontFamily = Ui.Semi, VerticalAlignment = VerticalAlignment.Center },
                 Effect = new DropShadowEffect { BlurRadius = 8, ShadowDepth = 1, Opacity = Theme.Current.Light ? 0.15 : 0.3 } };
             pill.MouseLeftButtonUp += (s, e) => SetFilter(id);
-            homeFilterPills.Children.Insert(at++, pill);
+            if (id.StartsWith("store:")) homeStorePills.Children.Add(pill);
+            else homeFilterPills.Children.Insert(at++, pill);
         }
     }
     void UpdateHomeFilters() {
@@ -377,7 +383,8 @@ partial class Shell {
         RebuildHomePills();
         if (!HomeFilters().Any(f => f[0] == filter)) filter = "all";
         var list = Listed();
-        foreach (var c in homeFilterPills.Children.OfType<Border>()) {
+        foreach (var c in homeFilterPills.Children.OfType<Border>().Concat(homeStorePills.Children.OfType<Border>())) {
+            if (!(c.Tag is string)) continue;
             string id = (string)c.Tag; bool on = id == filter;
             int n = list.Count(g => InFilter(g, id));
             var t = (TextBlock)c.Child;
@@ -386,6 +393,7 @@ partial class Shell {
             c.Background = Ui.Brush(on ? Ui.Teal : Raised);
             t.Foreground = Ui.Brush(on ? (Theme.Current.Light ? "#ffffff" : "#0A0E11") : Ui.Text);
         }
+        UpdateAllHeaders();
         if (homeAllCount != null) { int shown = list.Count(Shown); homeAllCount.Text = shown == list.Count ? list.Count + " games" : shown + " of " + list.Count; ShowSearch(); }
     }
     void OpenHomeAll(string filterId) {

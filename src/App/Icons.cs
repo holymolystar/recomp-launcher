@@ -68,6 +68,7 @@ static class Icons {
         if (DrawnOnly) { g.Icon = Drawn(g); g.IconIsArt = true; return; }
         var c = Custom(g);
         if (c != null) { g.Icon = c; g.IconIsArt = true; return; }
+        if (g.ByStore) { var s = Stores.Art(g); if (s != null) { g.Icon = s; g.IconIsArt = true; return; } if (g.Store != null) { g.Icon = Drawn(g); g.IconIsArt = true; return; } }
         var e = ExeIcon(Engine.ResolveExe(g), 256);
         if (e != null) { g.Icon = e; g.IconIsArt = false; return; }
         g.Icon = Drawn(g); g.IconIsArt = true;

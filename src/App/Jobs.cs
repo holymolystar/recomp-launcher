@@ -51,6 +51,7 @@ partial class Shell {
         foreach (var g in Games) {
             if (g.IsBusy) continue;
             g.Inst = Engine.GetInstalled(g);
+            if (g.ByStore) { g.State = g.Inst == null ? State.Missing : State.Current; g.Latest = Stores.Note(g); continue; }
             if (g.Inst == null) { g.State = State.Missing; g.Latest = ReleaseCache.Get(g.Id); continue; }
             var c = ReleaseCache.Get(g.Id);
             if (!force && c != null && (DateTime.Now - c.CheckedAt).TotalMinutes < CacheMinutes) { SetLatest(g, c); continue; }

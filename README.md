@@ -23,6 +23,30 @@ Pick a theme in Settings: Midnight, Neon, Aurora, Ember, Sakura, Daylight (light
 Little console-style sounds play as you move around, pick and start games (no music). Set their volume, or turn
 them off, in Settings.
 
+## Steam, Epic Games and GOG
+
+The launcher also shows your games from the PC stores, each store in a group of its own, with the store's artwork:
+
+- **Steam**: your whole library (from Steam's own files on this PC, no login or key). Installed games show on Home
+  too; the rest have **Install with Steam**. Start, Uninstall and updates go through Steam. A game's page shows what
+  Steam counted (play time, when you last played, achievements), its size and its wide artwork behind the page.
+- **Epic Games**: your library from the Epic Games Launcher's cache; Install and Start hand over to the Epic Games
+  Launcher.
+- **GOG**: the GOG games installed on this PC (GOG Galaxy's own library isn't read).
+- All games has a pill for each store (Recomps, Steam, Epic Games, GOG) and a **Continue playing** row on top.
+- **Hide** on a game page takes a game off the list; Settings > Library brings it back.
+- Settings > General picks how much of each store shows (your library, installed games, or none).
+- **Friends** on Home: your Steam friends who are online and what they play. It needs a Steam Web API key of your
+  own (Settings > Steam friends; made at steamcommunity.com/dev/apikey).
+
+## In-game menu
+
+While a game started from the launcher runs, the Xbox, PS or Home button (or View + Menu together) opens a menu
+over it: Resume, Go to the launcher, or Close the game. Over a game in exclusive full screen the menu steps the
+game aside (minimised) and Resume brings it back. To use the Xbox button with Steam running, turn off "Guide button
+focuses Steam" in Steam > Settings > Controller. Settings > General > When a game starts can also close the
+launcher, or have it wait in the tray and come back when the game closes.
+
 ## Profiles
 
 Several people can share the launcher, each with their own picture, name and **saves**. Click the picture at the

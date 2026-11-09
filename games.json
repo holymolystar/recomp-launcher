@@ -7,7 +7,9 @@
   "zelda": 0,
   "sega": 4,
   "mario": 1,
-  "lego": 7
+  "lego": 7,
+  "xbox": 8,
+  "steam": 9
  },
  "Order": [
   "botw",
@@ -60,7 +62,14 @@
   "iss",
   "uncharted",
   "legoisland",
-  "legoland"
+  "legoland",
+  "haloce",
+  "halo2",
+  "scda",
+  "puttrace",
+  "subnautica",
+  "subnauticabz",
+  "subnautica2"
  ],
  "Games": [
   {
@@ -1816,6 +1825,144 @@
      "LEGOLAND CD, .iso or .bin"
     ]
    }
+  },
+  {
+   "Id": "haloce",
+   "Name": "Halo: Combat Evolved",
+   "Short": "HCE",
+   "Source": "HALO OG  •  GITHUB",
+   "Exe": "halo.exe",
+   "Proc": "halo",
+   "SettingsKey": "HaloCeDir",
+   "Repo": "pfista/halo-og",
+   "Asset": "halo-windows-release.zip",
+   "Pre": true,
+   "Accent": "#4E8F3A",
+   "Accent2": "#C9A227",
+   "Keep": "config.toml",
+   "FirstRun": "halo.exe",
+   "Needs": "Your own original Xbox Halo: Combat Evolved disc image (.iso or .xiso; USA NTSC for the community maps). PC, Custom Edition, Anniversary and MCC files don't work. Put the image in the game folder next to halo.exe: the first start imports it into the maps folder. OpenGL 4.5 needed. Testing builds (pre-releases).",
+   "DefaultDir": "C:\\Games\\HaloCE",
+   "Series": "xbox",
+   "SettingsLabel": "Halo: Combat Evolved (Halo OG)",
+   "CheckFile": "halo.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     "Original Xbox disc image (.iso / .xiso)"
+    ]
+   }
+  },
+  {
+   "Id": "halo2",
+   "Name": "Halo 2",
+   "Short": "H2",
+   "Source": "OPEN HALO 2  •  GITHUB",
+   "Exe": "OpenHalo2.exe",
+   "Proc": "halo2_recomp",
+   "SettingsKey": "Halo2Dir",
+   "Repo": "andrewnakas/openhalo2",
+   "Asset": "OpenHalo2-*-win64.zip",
+   "Accent": "#3F7A4A",
+   "Accent2": "#7FB8D9",
+   "Keep": "halo2.ini",
+   "FirstRun": "OpenHalo2.exe",
+   "Needs": "Your own original Xbox Halo 2, the retail disc: a Redump .iso or XISO, or the default.xbe of a copy you extracted. On the first start it imports the disc and builds the game from it once (10 to 30 minutes, about 10 GB free; without Visual Studio it downloads Microsoft's C++ build files, 85 MB). OpenGL 3.3 needed. Always start it from OpenHalo2.exe.",
+   "DefaultDir": "C:\\Games\\Halo2",
+   "Series": "xbox",
+   "SettingsLabel": "Halo 2 (Open Halo 2)",
+   "CheckFile": "OpenHalo2.exe",
+   "Saves": "save;halo2.ini",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     "Original Xbox disc (.iso / XISO)",
+     "or default.xbe"
+    ]
+   }
+  },
+  {
+   "Id": "scda",
+   "Name": "Splinter Cell: Double Agent",
+   "Short": "SCDA",
+   "Source": "SCDA XBE RECOMP  •  GITHUB",
+   "Exe": "SCDA.exe",
+   "Proc": "SCDA*",
+   "SettingsKey": "ScdaDir",
+   "Repo": "TGP482/SCDA-XBERecomp",
+   "Asset": "SCDA-XBERecomp.zip",
+   "Accent": "#2FAF5E",
+   "Accent2": "#1F3A2E",
+   "FirstRun": "SCDA.exe",
+   "Needs": "Your own original Xbox Splinter Cell: Double Agent: a disc image (.iso) or its extracted files. Put them in the assets folder inside the game folder; the first start compiles the game for your PC once. Co-op and Versus (SCDA_Versus.exe) over LAN or by IP. Settings: F10 in the game.",
+   "DefaultDir": "C:\\Games\\SCDA",
+   "Series": "xbox",
+   "SettingsLabel": "Splinter Cell: Double Agent",
+   "CheckFile": "SCDA.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     "Original Xbox disc image or game files, in the assets folder"
+    ]
+   }
+  },
+  {
+   "Id": "puttrace",
+   "Name": "Putt-Putt Enters the Race",
+   "Short": "PP",
+   "Source": "STEAM  •  HUMONGOUS",
+   "Steam": "294680",
+   "Exe": "ScummVM_Windows\\scummvm.exe",
+   "Proc": "scummvm",
+   "Accent": "#E8452C",
+   "Accent2": "#F2C230",
+   "Languages": [
+    "English",
+    "French",
+    "German",
+    "Dutch"
+   ],
+   "Needs": "Putt-Putt Enters the Race on Steam: the launcher asks Steam to install it, and Steam keeps it up to date. It runs in ScummVM; a controller works as the mouse (stick moves, A clicks). Language: English, French, German or Dutch, all with voices.",
+   "Series": "steam"
+  },
+  {
+   "Id": "subnautica",
+   "Name": "Subnautica",
+   "Short": "SN",
+   "Source": "STEAM  •  UNKNOWN WORLDS",
+   "Steam": "264710",
+   "Exe": "Subnautica.exe",
+   "Proc": "Subnautica",
+   "Accent": "#1E88C8",
+   "Accent2": "#F2A33A",
+   "Needs": "Subnautica on Steam: the launcher asks Steam to install it (about 9 GB), and Steam keeps it up to date.",
+   "Series": "steam"
+  },
+  {
+   "Id": "subnauticabz",
+   "Name": "Subnautica: Below Zero",
+   "Short": "BZ",
+   "Source": "STEAM  •  UNKNOWN WORLDS",
+   "Steam": "848450",
+   "Exe": "SubnauticaZero.exe",
+   "Proc": "SubnauticaZero",
+   "Accent": "#5FC2E8",
+   "Accent2": "#E8F4FA",
+   "Needs": "Subnautica: Below Zero on Steam: the launcher asks Steam to install it (about 10 GB), and Steam keeps it up to date.",
+   "Series": "steam"
+  },
+  {
+   "Id": "subnautica2",
+   "Name": "Subnautica 2",
+   "Short": "SN2",
+   "Source": "STEAM  •  UNKNOWN WORLDS",
+   "Steam": "1962700",
+   "Exe": "Subnautica2.exe",
+   "Proc": "Subnautica2*",
+   "Accent": "#2B6DE0",
+   "Accent2": "#4FD1C5",
+   "Needs": "Subnautica 2 on Steam (Early Access): the launcher asks Steam to install it, and Steam keeps it up to date.",
+   "Series": "steam"
   }
  ]
 }

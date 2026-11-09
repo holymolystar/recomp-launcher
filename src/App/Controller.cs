@@ -205,6 +205,11 @@ partial class Shell {
         if (OverlayOpen) { OverlayPad(bit); return; }
         if (OskOpen) { OskPad(bit); return; }
         if (ColOpen) { ColPad(bit); SetHints(); return; }
+        if (FriendsOpen) {
+            if (bit == Pad.A && Settings.Get("SteamApiKey").Trim().Length == 0) Stores.Open("https://steamcommunity.com/dev/apikey");
+            else if (bit == Pad.B || bit == Pad.A || bit == Pad.Start) CloseFriends();
+            SetHints(); return;
+        }
         if (CreatorOpen) { CreatorPad(bit); return; }
         // overlays first
         if (N<Grid>("UninstLayer").Visibility == Visibility.Visible) {
@@ -327,6 +332,7 @@ partial class Shell {
             }
             else if (OskOpen) { }
             else if (ColOpen) { spec.Add(new[] { "A", "Select" }); spec.Add(new[] { "B", "Done" }); }
+            else if (FriendsOpen) { spec.Add(new[] { "B", "Done" }); }
             else if (PlayersOpen) { spec.Add(new[] { "A", plIdx < Profiles.All.Count ? "Play as" : plIdx == Profiles.All.Count ? "New profile" : "Select" }); spec.Add(new[] { "X", "Edit" }); spec.Add(new[] { "B", "Close" }); }
             else if (ProfileOpen) { spec.Add(new[] { "A", "Select" }); spec.Add(new[] { "B", "Close" }); }
             else if (view == View.Home) {

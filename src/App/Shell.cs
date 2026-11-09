@@ -97,7 +97,8 @@ partial class Shell {
     }
     void ApplySettings() {
         foreach (var g in Games) {
-            g.Dir = Paths.Expand(Settings.Get(g.SettingsKey));
+            // a Steam game is wherever Steam put it
+            g.Dir = g.Steam != null ? (SteamGames.InstallDir(g) ?? "") : g.Store != null ? "" : Paths.Expand(Settings.Get(g.SettingsKey));
             g.Worker = Path.Combine(Paths.Root, "recomp-worker.ps1");
             g.Backups = Path.Combine(Paths.Backups, g.Id);
         }
@@ -138,6 +139,8 @@ partial class Shell {
         ShowGame(first);
         if (args.Full || (args.Snapshot == null && Settings.Get("Fullscreen") == "True")) SetFullscreen(true);
         // card faces after the first frame, a few at a time, so the window shows at once
+        Stores.HeroReady = g => W.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => { if (sel == g && homePage == "game") { gpHeroFor = null; UpdateGamePage(); } }));
+        Stores.ArtReady = g => W.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => { Icons.Load(g); ApplyIcon(g); }));
         LoadIconsLater(Games.ToList());
         CheckAll(false);
         if (args.Snapshot == null) CheckLauncher(false);
@@ -411,7 +414,7 @@ partial class Shell {
             N<TextBlock>("HeroNote").Text = "You need: " + g.Needs;
             N<TextBlock>("HeroNote").Visibility = Visibility.Visible;
         } else {
-            playOk = File.Exists(Engine.PlayFile(g, out dummy, false)) && g.State != State.Updating && g.State != State.Uninstalling;
+            playOk = g.ByStore ? g.Inst != null : File.Exists(Engine.PlayFile(g, out dummy, false)) && g.State != State.Updating && g.State != State.Uninstalling;
             N<TextBlock>("HeroNote").Visibility = Visibility.Collapsed;
         }
         bool canUpdate = g.State == State.Update && !running;
@@ -481,7 +484,17 @@ partial class Shell {
             // the home row: favourites first, then the games played most recently ("continue playing"), then the rest
             var row = Games.OrderByDescending(g => Profiles.IsFav(g.Id)).ThenByDescending(g => Playtime.Last(g.Id)).ThenBy(Catalog.SeriesOf).ThenBy(g => g.Rank).ToList();
             foreach (var g in row) homeTiles.Children.Add(((GameUi)g.Ui).Home.Root);
-            foreach (var g in o) homeAllTiles.Children.Add(AllElement(g));
+            // All games: the games played last first, under "Continue playing" (in the launcher, or Steam's own count)
+            var recent = o.Where(g => LastPlayedAny(g) > DateTime.MinValue).OrderByDescending(LastPlayedAny).Take(6).ToList();
+            allHeaders.Clear();
+            if (recent.Count >= 2) {
+                homeAllTiles.Children.Add(AllHeader("Continue playing"));
+                foreach (var g in recent) homeAllTiles.Children.Add(AllElement(g));
+                homeAllTiles.Children.Add(AllHeader("All games"));
+                o = recent.Concat(o.Except(recent)).ToList();
+                foreach (var g in o.Skip(recent.Count)) homeAllTiles.Children.Add(AllElement(g));
+            } else foreach (var g in o) homeAllTiles.Children.Add(AllElement(g));
+            UpdateAllHeaders();
             AddHomeSlots(); order = homePage == "home" ? row : o; QueueScroll(); return;
         }
         int prev = -1;
@@ -503,12 +516,32 @@ partial class Shell {
         if (q.Length > 0 && (g.Name + " " + g.Short).IndexOf(q, StringComparison.CurrentCultureIgnoreCase) < 0) return false;
         return InFilter(g, filter);
     }
+    // when a game was last played: in the launcher, or (a Steam game) in Steam
+    static DateTime LastPlayedAny(Game g) {
+        var a = Playtime.Last(g.Id);
+        if (g.Steam != null) { var s = SteamGames.StatsOf(g); if (s != null && s.Last > a) a = s.Last; }
+        return a;
+    }
+    readonly List<FrameworkElement> allHeaders = new List<FrameworkElement>();
+    FrameworkElement AllHeader(string text) {
+        var t = new TextBlock { Text = text, FontSize = 15, FontFamily = Ui.Semi, Foreground = Ui.Brush(Ui.Muted), Margin = new Thickness(4, allHeaders.Count == 0 ? 0 : 14, 0, 10) };
+        allHeaders.Add(t);
+        return t;
+    }
+    // the headers show with the whole library (no filter, no search), as wide as the page so each starts a line
+    void UpdateAllHeaders() {
+        bool on = filter == "all" && N<TextBox>("SearchBox").Text.Trim().Length == 0;
+        double w = homeAllScroll != null && homeAllScroll.ViewportWidth > 0 ? homeAllScroll.ViewportWidth - 110 : 1000;
+        foreach (var h in allHeaders) { h.Visibility = on ? Visibility.Visible : Visibility.Collapsed; h.Width = Math.Max(200, w); }
+    }
+    static string StoreOf(Game g) { return g.Steam != null ? "steam" : g.Store ?? "recomp"; }
     bool InFilter(Game g, string f) {
         switch (f) {
             case "installed": return g.Inst != null;
             case "updates": return g.State == State.Update || g.State == State.Updating;
             case "new": return g.Inst == null;
             case "fav": return Profiles.IsFav(g.Id);
+            case "store:recomp": case "store:steam": case "store:epic": case "store:gog": return StoreOf(g) == f.Substring(6);
             default: return f.StartsWith("col:") ? Profiles.InCollection(f.Substring(4)).Contains(g.Id) : true;
         }
     }
@@ -517,6 +550,10 @@ partial class Shell {
         var l = FilterDefs.ToList();
         if (Profiles.Current.Favs.Count > 0) l.Add(new[] { "fav", "\u2605 Favourites" });
         foreach (var c in Profiles.CollectionNames()) l.Add(new[] { "col:" + c, c });
+        // the stores, when there are games from more than one place (a second row of pills)
+        var stores = new[] { new[] { "store:recomp", "Recomps" }, new[] { "store:steam", "Steam" }, new[] { "store:epic", "Epic Games" }, new[] { "store:gog", "GOG" } }
+            .Where(s => Games.Any(g => !g.Hidden && StoreOf(g) == s[0].Substring(6))).ToList();
+        if (stores.Count > 1) l.AddRange(stores);
         return l;
     }
     // the profile changed: its favourites, collections and play time
@@ -817,6 +854,11 @@ partial class Shell {
     // ---------- events ----------
     void PrimaryAction(Game g) {
         if (g != sel) ShowGame(g);
+        if (g.ByStore) {
+            if (g.Inst == null) StoreInstall(g);
+            else { Sound.Play(Sfx.Launch); if (padUsed && Settings.On("PadRumble")) Pad.Rumble(0.45, 160); StoreStart(g); }
+            return;
+        }
         if (g.State == State.Missing) { Sound.Play(Sfx.Select); TryAction("Installing " + g.Name, () => StartInstall(g)); }
         else if (!g.IsBusy) { Sound.Play(Sfx.Launch); if (padUsed && Settings.On("PadRumble")) Pad.Rumble(0.45, 160); TryAction("Starting " + g.Name, () => StartGame(g)); }
         else Sound.Play(Sfx.Bump);
@@ -917,7 +959,7 @@ partial class Shell {
         }
     }
     bool AnyDialog() {
-        return OskOpen || ColOpen || CreatorOpen || PlayersOpen || ProfileOpen || N<Grid>("SettingsLayer").Visibility == Visibility.Visible || N<Grid>("RomLayer").Visibility == Visibility.Visible ||
+        return OskOpen || ColOpen || FriendsOpen || CreatorOpen || PlayersOpen || ProfileOpen || N<Grid>("SettingsLayer").Visibility == Visibility.Visible || N<Grid>("RomLayer").Visibility == Visibility.Visible ||
                N<Grid>("UninstLayer").Visibility == Visibility.Visible;
     }
     void OnKey(object s, KeyEventArgs e) {
@@ -925,6 +967,7 @@ partial class Shell {
         bool notes = N<Grid>("NotesLayer").Visibility == Visibility.Visible;
         if (padUsed) { padUsed = false; HideRing(); SetHints(); }
         if (OskOpen) { if (OskKeyDown(k)) e.Handled = true; return; }
+        if (FriendsOpen) { if (k == Key.Escape || k == Key.Enter || k == Key.Back) { CloseFriends(); e.Handled = true; } return; }
         if (ColOpen) {
             if (k == Key.Escape) { CloseCollections(); e.Handled = true; return; }
             int cb = k == Key.Up ? Pad.Up : k == Key.Down ? Pad.Down : k == Key.Left ? Pad.Left : k == Key.Right ? Pad.Right : k == Key.Enter || k == Key.Space ? Pad.A : 0;

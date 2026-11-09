@@ -236,7 +236,7 @@ partial class Shell {
 
     // ---------- settings ----------
     Toggle optFull, optStartup, optAuto;
-    PasswordBox tokenBox; TextBlock tokenCheck;
+    PasswordBox tokenBox, steamKeyBox; TextBlock tokenCheck;
     readonly Dictionary<string, Toggle> showToggles = new Dictionary<string, Toggle>();
     readonly List<FolderRow> folderRows = new List<FolderRow>();
     StackPanel showButtons; UniformGrid showGrid;
@@ -258,6 +258,10 @@ partial class Shell {
         foreach (var t in new[] { optFull, optStartup, optAuto }) rows.Children.Add(t.Root);
         rows.Children.Add(ChoiceRow("TvMode", "Big screen (TV) mode", "Everything a quarter bigger, to read from across the room. Automatic: in full screen.", 0,
             new[] { "off", "auto", "on" }, new[] { "Off", "Automatic", "On" }));
+        rows.Children.Add(ChoiceRow("SteamLibrary", "Steam games", "Your library: every game you own on Steam gets a tile in All games (installed ones on Home too), installed and started through Steam. Changes show the next time the launcher opens.", 0,
+            new[] { "library", "installed", "listed" }, new[] { "Your library", "Installed", "Only the launcher's" }));
+        rows.Children.Add(ChoiceRow("OtherStores", "Epic Games and GOG", "Your Epic Games library and your installed GOG games, each in a group of their own, installed and started through their store. Changes show the next time the launcher opens.", 0,
+            new[] { "on", "off" }, new[] { "Show", "Hide" }));
         rows.Children.Add(LauncherUpdateRow());
         rows = SetSection("Sound", "\uE767", "Little sounds as you move around, and the character creator's tune.");
         rows.Children.Add(VolumeRow());
@@ -280,6 +284,18 @@ partial class Shell {
         tokenCheck = new TextBlock { FontSize = 11.5, Margin = new Thickness(2, 6, 0, 0), TextWrapping = TextWrapping.Wrap };
         rows.Children.Add(tokenCheck);
 
+        rows = SetSection("Steam friends", "", "Optional: who's online, on the Friends button on Home.");
+        rows.Children.Add(new TextBlock { TextWrapping = TextWrapping.Wrap, FontSize = 11.5, Foreground = Ui.Brush(Ui.Muted), Margin = new Thickness(0, 0, 0, 8),
+            Text = "Steam shares who's online with a Web API key of your own. Sign in at steamcommunity.com/dev/apikey, type any domain name (localhost is fine), agree, and copy the key here. It only reads what your profile and your friends' profiles show; keep it to yourself like a password." });
+        steamKeyBox = new PasswordBox { Height = 38, FontSize = 13, Padding = new Thickness(10, 0, 10, 0), VerticalContentAlignment = VerticalAlignment.Center,
+            Background = Ui.Brush("#0A0E11"), Foreground = Ui.Brush(Ui.Text), BorderBrush = Ui.Brush("#26333C"), CaretBrush = Ui.Brush(Ui.Text) };
+        var keySite = MakeButton("Open Steam");
+        keySite.Click += (s, e) => Stores.Open("https://steamcommunity.com/dev/apikey");
+        var kl = new Grid();
+        kl.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); kl.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        Grid.SetColumn(keySite, 1); kl.Children.Add(steamKeyBox); kl.Children.Add(keySite);
+        rows.Children.Add(kl);
+
         rows = SetSection("Library", "\uE8F1", "Which games show up in the launcher.");
         rows.Children.Add(new TextBlock { TextWrapping = TextWrapping.Wrap, FontSize = 11.5, Foreground = Ui.Brush(Ui.Muted), Margin = new Thickness(0, 0, 0, 6),
             Text = "Turn a game off to hide it from the library. Nothing is uninstalled: turn it back on any time." });
@@ -300,6 +316,7 @@ partial class Shell {
         rows = SetSection("Game folders", "\uE8B7", "Where each game is (or will be) installed.");
         var defs = new List<FolderRow>();
         foreach (var g in Games.OrderBy(Catalog.SeriesOf).ThenBy(x => x.Rank)) {
+            if (g.ByStore) continue;   // the store decides where its games go
             defs.Add(new FolderRow { G = g, Key = g.SettingsKey, Label = g.SettingsLabel, File = g.CheckFile, New = true });
             if (g.Id == "totk") defs.Add(new FolderRow { Key = "TotkUpdaterDir", Label = "TotK Updater (installs TotK updates)", File = "update-worker.ps1", New = false });
         }
@@ -408,6 +425,7 @@ partial class Shell {
         SetToggle(optAuto, Settings.On("AutoCheck"), true);
         PickVolume(Sound.Volume);
         tokenBox.Password = Settings.Get("GitHubToken");
+        steamKeyBox.Password = Settings.Get("SteamApiKey");
         tokenCheck.Text = tokenBox.Password.Length > 0 ? "A token is saved." : ""; tokenCheck.Foreground = Ui.Brush(Ui.Muted);
         foreach (var g in Games) SetToggle(showToggles[g.Id], !g.Hidden, true);
         PickTheme(Theme.Current.Id);
@@ -439,6 +457,7 @@ partial class Shell {
         Settings.Set("Fullscreen", optFull.On ? "True" : "");
         if (optFull.On != isFull) SetFullscreen(optFull.On);
         Settings.Set("GitHubToken", tokenBox.Password.Trim());
+        if (Settings.Get("SteamApiKey") != steamKeyBox.Password.Trim()) { Settings.Set("SteamApiKey", steamKeyBox.Password.Trim()); frLast = null; frAt = DateTime.MinValue; }
         try {
             if (optStartup.On && !File.Exists(StartupLink)) MakeShortcut(StartupLink);
             else if (!optStartup.On && File.Exists(StartupLink)) File.Delete(StartupLink);
@@ -665,6 +684,7 @@ partial class Shell {
         N<Button>("BtnUninstGo").Click += (s, e) => TryAction("Uninstalling " + uninstGame.Name, ConfirmUninstall);
     }
     void OpenUninstall(Game g) {
+        if (g.ByStore) { StoreUninstall(g); return; }
         uninstGame = g;
         N<Image>("UninstIcon").Source = (ImageSource)g.Icon;
         N<TextBlock>("UninstTitle").Text = "Uninstall " + g.Name + "?";

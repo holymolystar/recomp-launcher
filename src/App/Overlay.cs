@@ -2,7 +2,9 @@
 // together, for when Steam keeps the Xbox button for itself) opens a panel over the game: the game, how long it's been
 // played, the clock and battery, and Resume, Go to the launcher, Close the game. B or the same button again resumes.
 // It's its own small window, always on top, on the game's screen; it shows over games in a window or borderless full
-// screen (not over the rare game in exclusive full screen). The game keeps getting the controller's presses too.
+// screen. Nothing can draw over a game in exclusive full screen (it has the screen to itself), so for those the menu
+// steps the game aside: the game is minimised (it leaves exclusive full screen), the menu shows on its own dark
+// background, and Resume brings the game back to full screen. The game keeps getting the controller's presses too.
 // Close the game asks first (press again), then asks the game to close as its window's X button would; if it's still
 // running 5 seconds later, the button becomes Force close.
 using System;
@@ -25,6 +27,7 @@ partial class Shell {
     Window ov; Border ovPanel; Image ovIcon; TextBlock ovTitle, ovSub, ovClock, ovNote;
     readonly List<Button> ovButtons = new List<Button>();
     int ovIdx; int ovCloseStep; DateTime ovCloseAt; DispatcherTimer ovTick; IntPtr ovGameWindow;
+    bool ovExclusive; Grid ovRoot;   // the game was in exclusive full screen and is minimised while the menu shows
     bool OverlayOpen { get { return ov != null && ov.IsVisible; } }
 
     [DllImport("user32.dll")] static extern bool SetForegroundWindow(IntPtr h);
@@ -33,6 +36,10 @@ partial class Shell {
     [DllImport("user32.dll")] static extern bool AttachThreadInput(uint a, uint b, bool attach);
     [DllImport("kernel32.dll")] static extern uint GetCurrentThreadId();
     [DllImport("user32.dll")] static extern bool ShowWindow(IntPtr h, int cmd);
+    [DllImport("user32.dll")] static extern bool IsIconic(IntPtr h);
+    // Windows says a Direct3D game has the screen to itself (exclusive full screen): QUNS_RUNNING_D3D_FULL_SCREEN
+    [DllImport("shell32.dll")] static extern int SHQueryUserNotificationState(out int state);
+    static bool ExclusiveFullScreen() { int st; try { return SHQueryUserNotificationState(out st) == 0 && st == 3; } catch { return false; } }
     // Windows lets only the window in front hand the front to another; borrowing its input queue for a moment does it
     static void BringToFront(IntPtr h) {
         if (h == IntPtr.Zero) return;
@@ -46,7 +53,7 @@ partial class Shell {
         if (ov != null) return;
         ov = new Window { WindowStyle = WindowStyle.None, AllowsTransparency = true, Background = Brushes.Transparent, Topmost = true, ShowInTaskbar = false,
             ResizeMode = ResizeMode.NoResize, Title = "Recomp Launcher", ShowActivated = true, FontFamily = W.FontFamily, Foreground = Ui.Brush(Ui.Text) };
-        var root = new Grid { Background = new SolidColorBrush(Color.FromArgb(0x8C, 0, 0, 0)) };
+        var root = ovRoot = new Grid { Background = new SolidColorBrush(Color.FromArgb(0x8C, 0, 0, 0)) };
         root.MouseLeftButtonUp += (s, e) => { if (e.OriginalSource == root) ResumeGame(); };
 
         ovPanel = new Border { Width = 440, HorizontalAlignment = HorizontalAlignment.Left, Background = Ui.Brush("#11181D"), BorderBrush = Ui.Brush("#26333C"),
@@ -113,6 +120,15 @@ partial class Shell {
         var src = PresentationSource.FromVisual(W);
         if (src != null && src.CompositionTarget != null) scale = src.CompositionTarget.TransformToDevice.M11;
         ov.Left = screen.Bounds.Left / scale; ov.Top = screen.Bounds.Top / scale; ov.Width = screen.Bounds.Width / scale; ov.Height = screen.Bounds.Height / scale;
+        // exclusive full screen: the game in front has the screen to itself; minimise it so the menu can show
+        // (its screen is worked out above, before: a minimised window has none)
+        ovExclusive = ExclusiveFullScreen();
+        if (ovExclusive) {
+            var fg = GetForegroundWindow();
+            if (ovGameWindow == IntPtr.Zero) ovGameWindow = fg;
+            ShowWindow(fg != IntPtr.Zero ? fg : ovGameWindow, 6);   // SW_MINIMIZE
+        }
+        ovRoot.Background = ovExclusive ? (Brush)Ui.Brush("#070B0E") : new SolidColorBrush(Color.FromArgb(0x8C, 0, 0, 0));
         OverlayTick();
         MarkOverlay();
         ov.Show();
@@ -186,6 +202,8 @@ partial class Shell {
         if (!OverlayOpen) return;
         CloseOverlay(true);
         Sound.Play(Sfx.Back);
+        // a game stepped aside from exclusive full screen goes back to it
+        if (ovGameWindow != IntPtr.Zero && (ovExclusive || IsIconic(ovGameWindow))) ShowWindow(ovGameWindow, 9);   // SW_RESTORE
         BringToFront(ovGameWindow);
     }
     void CloseOverlay(bool animate) {

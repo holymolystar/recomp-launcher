@@ -18,7 +18,7 @@ using System.Windows.Media;
 namespace RecompLauncher {
 
 static class LauncherVersion {
-    public const string Current = "2.1.0";
+    public const string Current = "2.2.0";
     public const string Repo = "holymolystar/recomp-launcher";
 }
 

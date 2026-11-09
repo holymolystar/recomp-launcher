@@ -35,6 +35,21 @@ partial class Shell {
         SetHints();
     }
 
+    // hide a game from the library (Settings > Library brings it back); nothing is uninstalled
+    void HideGame(Game g) {
+        g.Hidden = true;
+        Settings.Set("Hidden", string.Join(",", Games.Where(x => x.Hidden).Select(x => x.Id)));
+        Settings.Save();
+        Sound.Play(Sfx.Back);
+        SetStep(g.Name + " is hidden. Settings > Library shows it again.", Ui.Muted);
+        if (homePage == "game") { homePage = gameBack; ShowHomePage(); }
+        ApplySort(true); ApplyFilter(); UpdateChips();
+        var next = Games.FirstOrDefault(x => !x.Hidden && Shown(x));
+        if (next != null) ShowGame(next);
+        if (view == View.Home) MarkHome(null, sel);
+        SetHints();
+    }
+
     // ---------- small cards: collections and the keyboard ----------
     Grid Card(string name, double width, VerticalAlignment where, out Border card, out StackPanel body) {
         var layer = new Grid { Visibility = Visibility.Collapsed, Opacity = 0 };

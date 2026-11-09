@@ -59,6 +59,8 @@ static class Program {
             Directory.CreateDirectory(Paths.Logs);
             Catalog.Load(Path.Combine(root, "games.json"));
             Settings.Load(Path.Combine(root, "settings.json"));
+            SteamGames.AddInstalled();   // your Steam library (Settings > General > Steam games)
+            Stores.AddLibraries();       // Epic Games and GOG (Settings > General > Other stores)
             Theme.Use(Settings.Get("Theme"));
             Profiles.Load();
             int vol; if (int.TryParse(Settings.Get("SoundVolume"), out vol)) Sound.Volume = vol;

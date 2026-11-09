@@ -129,6 +129,12 @@ class Game {
     public string Id, Name, Short, Source, Exe, Proc, SettingsKey, Launch, Repo, Asset, NotAsset, Accent, Accent2;
     public string Backup, Keep, Replace, FirstRun, SetupArg, Rebuild, Needs, DefaultDir, Series, SettingsLabel, CheckFile, Saves;
     public bool Pre, NoSha, Console;
+    public string Steam;                          // a Steam game: its app id (Steam.cs)
+    public string[] Languages = new string[0];    // the languages Steam has it in
+    // a game from Epic or GOG (Stores.cs): the store, its id there, and what the store needs to start it
+    public string Store, StoreId, StoreNs, StoreItem, StoreExe, StoreArgs, StoreUninstall, StoreArt, StoreHero;
+    public bool ByStore { get { return Steam != null || Store != null; } }
+    public string StoreName { get { return Steam != null ? "Steam" : Store == "epic" ? "Epic Games" : Store == "gog" ? "GOG" : null; } }
     public RomSpec Rom = new RomSpec();
     public int Rank;
 
@@ -168,7 +174,8 @@ static class Catalog {
                 SetupArg = Json.Str(d, "SetupArg"), Rebuild = Json.Str(d, "Rebuild"), Needs = Json.Str(d, "Needs") ?? "",
                 DefaultDir = Json.Str(d, "DefaultDir"), Series = Json.Str(d, "Series") ?? "nintendo",
                 SettingsLabel = Json.Str(d, "SettingsLabel"), CheckFile = Json.Str(d, "CheckFile"), Saves = Json.Str(d, "Saves"),
-                Pre = Json.Bool(d, "Pre"), NoSha = Json.Bool(d, "NoSha"), Console = Json.Bool(d, "Console")
+                Pre = Json.Bool(d, "Pre"), NoSha = Json.Bool(d, "NoSha"), Console = Json.Bool(d, "Console"),
+                Steam = Json.Str(d, "Steam"), Languages = Json.Strings(d, "Languages")
             };
             if (g.SettingsLabel == null) g.SettingsLabel = g.Name;
             if (g.CheckFile == null) g.CheckFile = g.Exe;
@@ -226,7 +233,7 @@ static class Settings {
     public static bool On(string key) { return Get(key) != "off"; }
     public static void Save() {
         try {
-            foreach (var g in Catalog.Games) if (!values.ContainsKey(g.SettingsKey)) values[g.SettingsKey] = g.DefaultDir;
+            foreach (var g in Catalog.Games) if (g.SettingsKey != null && !values.ContainsKey(g.SettingsKey)) values[g.SettingsKey] = g.DefaultDir;
             Json.WriteFile(Path, values);
         } catch { }
     }

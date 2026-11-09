@@ -81,6 +81,7 @@ static class Engine {
         try { return Detect(g); } catch { return null; }
     }
     static Installed Detect(Game g) {
+        if (g.ByStore) return Stores.Detect(g);
         string exe = ResolveExe(g);
         var mk = Marker(g);
         string mkTag = Json.Str(mk, "tag");
@@ -181,6 +182,7 @@ static class Engine {
         return null;
     }
     public static Release FetchLatest(Game g, string token) {
+        if (g.ByStore) return Stores.Note(g);   // the store keeps it up to date
         ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
         if (g.Repo != null) {
             // one request for the recent releases: the newest is the one to install, the ones before it carry the
@@ -304,6 +306,11 @@ static class Engine {
     // the game's own processes (by games.json Proc, which can end in *)
     public static List<Process> Processes(Game g) {
         var r = new List<Process>();
+        // a game the launcher found in a store (no Proc): whatever runs from its folder
+        if (string.IsNullOrEmpty(g.Proc) && g.ByStore && !string.IsNullOrEmpty(g.Dir)) {
+            foreach (var p in Process.GetProcesses()) { try { if (Paths.Under(p.MainModule.FileName, g.Dir)) r.Add(p); } catch { } }
+            return r;
+        }
         if (string.IsNullOrEmpty(g.Proc)) return r;
         try {
             if (g.Proc.Contains("*")) {
@@ -314,6 +321,8 @@ static class Engine {
         return r;
     }
     public static bool IsRunning(Game g) {
+        if (string.IsNullOrEmpty(g.Proc) && g.Steam != null) return SteamGames.RunningApp == g.Steam;   // Steam says which game runs
+        if (string.IsNullOrEmpty(g.Proc) && g.ByStore) return Processes(g).Count > 0;
         if (string.IsNullOrEmpty(g.Proc)) return false;
         try {
             if (g.Proc.Contains("*")) {
