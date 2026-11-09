@@ -99,6 +99,12 @@ partial class Shell {
         card.Children.Add(new TextBlock { Text = p != null ? Profiles.DisplayName(p) : "New profile", FontSize = 14, FontFamily = Ui.Semi, HorizontalAlignment = HorizontalAlignment.Center,
             TextTrimming = TextTrimming.CharacterEllipsis, Margin = new Thickness(0, 8, 0, 0) });
         card.Children.Add(new TextBlock { Text = p == Profiles.Current ? "Playing now" : "", FontSize = 11, Foreground = Ui.Brush(Ui.Teal), HorizontalAlignment = HorizontalAlignment.Center });
+        if (p != null) {
+            string top; double secs = Playtime.TotalIn(Profiles.PlaytimeFile(p), out top);
+            var topGame = top != null ? Catalog.Find(top) : null;
+            card.Children.Add(new TextBlock { Text = secs > 60 ? Playtime.Format(secs) + (topGame != null ? "\n" + (topGame.Short ?? topGame.Name) + " most" : "") : "", FontSize = 11, Foreground = Ui.Brush(Ui.Muted),
+                HorizontalAlignment = HorizontalAlignment.Center, TextAlignment = TextAlignment.Center, Margin = new Thickness(0, 2, 0, 0) });
+        }
         int idx = plStops.Count;
         card.MouseLeftButtonUp += (s, e) => { if (plIdx == idx) PlayPicked(); else { Sound.Play(Sfx.Move); PickPlayer(idx); } };
         plStops.Add(card);
@@ -142,18 +148,19 @@ partial class Shell {
         Sound.Play(Sfx.Select);
         Profiles.Switch(p);
         ApplyAvatar();
+        RefreshForProfile();
         SetStep("Playing as " + Profiles.DisplayName(p) + ".", Ui.Teal);
         ClosePlayers();
     }
     void EditPicked() {
         var p = PlTarget; if (p == null) return;
-        Profiles.Switch(p); ApplyAvatar();
+        Profiles.Switch(p); ApplyAvatar(); RefreshForProfile();
         HideCard("PlayersLayer", "PlayersCard");
         OpenProfile();
     }
     void NewPlayer() {
         var p = Profiles.Add(plRandom);
-        Profiles.Switch(p); ApplyAvatar();
+        Profiles.Switch(p); ApplyAvatar(); RefreshForProfile();
         HideCard("PlayersLayer", "PlayersCard");
         OpenProfile();
     }

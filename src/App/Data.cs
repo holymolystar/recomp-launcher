@@ -87,6 +87,8 @@ class RomSpec {
 class Release {
     public string Tag, Notes, Date, Url, Sha, Problem, Checked;
     public double Size;
+    // the releases before this one, newest first (tag, date and notes only), for the notes of every version skipped
+    public List<Release> Older = new List<Release>();
     public Dictionary<string, object> ToDict() {
         var d = new Dictionary<string, object>();
         d["Tag"] = Tag; d["Notes"] = Notes; d["Date"] = Date; d["Checked"] = Checked;
@@ -94,14 +96,20 @@ class Release {
         if (Size > 0) d["Size"] = Size;
         if (Sha != null) d["Sha"] = Sha;
         if (Problem != null) d["Problem"] = Problem;
+        if (Older.Count > 0) d["Older"] = Older.Select(o => (object)new Dictionary<string, object> { { "Tag", o.Tag }, { "Date", o.Date }, { "Notes", o.Notes } }).ToList();
         return d;
     }
     public static Release From(IDictionary<string, object> d) {
         if (d == null || Json.Str(d, "Tag") == null) return null;
-        return new Release {
+        var r = new Release {
             Tag = Json.Str(d, "Tag"), Notes = Json.Str(d, "Notes"), Date = Json.Str(d, "Date"), Url = Json.Str(d, "Url"),
             Sha = Json.Str(d, "Sha"), Problem = Json.Str(d, "Problem"), Checked = Json.Str(d, "Checked"), Size = Json.Num(d, "Size")
         };
+        object older;
+        if (d.TryGetValue("Older", out older) && older is System.Collections.IEnumerable)
+            foreach (var o in ((System.Collections.IEnumerable)older).OfType<Dictionary<string, object>>())
+                if (Json.Str(o, "Tag") != null) r.Older.Add(new Release { Tag = Json.Str(o, "Tag"), Date = Json.Str(o, "Date"), Notes = Json.Str(o, "Notes") });
+        return r;
     }
     public DateTime CheckedAt { get { DateTime t; return DateTime.TryParse(Checked, out t) ? t : DateTime.MinValue; } }
 }
@@ -255,7 +263,20 @@ static class Playtime {
         if (t == read) return;
         read = t; data = Json.ReadFile(Path) ?? new Dictionary<string, object>();
     }
+    // the profile whose play time is shown and counted (Profiles.PlaytimeFile)
+    public static void Use(string path) { Path = path; read = DateTime.MinValue; data = new Dictionary<string, object>(); }
     public static double Total(string id) { Refresh(); return Json.Num(Json.Obj(data, id), "total"); }
+    // all of a profile's play time, and its most played game's id (for Who's playing?)
+    public static double TotalIn(string path, out string top) {
+        top = null; double sum = 0, most = 0;
+        var d = Json.ReadFile(path);
+        if (d == null) return 0;
+        foreach (var kv in d) {
+            double t = Json.Num(kv.Value as Dictionary<string, object>, "total");
+            sum += t; if (t > most) { most = t; top = kv.Key; }
+        }
+        return sum;
+    }
     public static DateTime Last(string id) {
         Refresh(); DateTime d;
         return DateTime.TryParse(Json.Str(Json.Obj(data, id), "last"), out d) ? d : DateTime.MinValue;

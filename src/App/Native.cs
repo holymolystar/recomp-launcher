@@ -1,4 +1,4 @@
-// Windows calls: program icons, taskbar identity, Windows 11 corners and XInput controllers.
+﻿// Windows calls: program icons, taskbar identity, Windows 11 corners and XInput controllers.
 using System;
 using System.Runtime.InteropServices;
 
@@ -48,11 +48,30 @@ static class Pad {
     [StructLayout(LayoutKind.Sequential)]
     public struct State { public uint Packet; public ushort Buttons; public byte LT, RT; public short LX, LY, RX, RY; }
     [DllImport("xinput1_4.dll", EntryPoint = "XInputGetState")] static extern int Get14(int user, out State s);
+    // the same, with the Xbox button (0x400) too: Windows has it, unnamed, as function number 100
+    [DllImport("xinput1_4.dll", EntryPoint = "#100")] static extern int GetEx14(int user, out State s);
+    static bool noEx;
     [DllImport("xinput9_1_0.dll", EntryPoint = "XInputGetState")] static extern int Get910(int user, out State s);
+    [StructLayout(LayoutKind.Sequential)] struct Vibration { public ushort Left, Right; }
+    [DllImport("xinput1_4.dll", EntryPoint = "XInputSetState")] static extern int Set14(int user, ref Vibration v);
+    [DllImport("xinput9_1_0.dll", EntryPoint = "XInputSetState")] static extern int Set910(int user, ref Vibration v);
+    static System.Threading.Timer rumbleOff;
+    // a short buzz on the controller that answered last (Xbox controllers, and others through Steam Input)
+    public static void Rumble(double strength, int ms) {
+        if (last < 0 || none) return;
+        int user = last;
+        try {
+            var v = new Vibration { Left = (ushort)(65535 * strength), Right = (ushort)(65535 * strength * 0.6) };
+            if (legacy) Set910(user, ref v); else Set14(user, ref v);
+            if (rumbleOff != null) rumbleOff.Dispose();
+            rumbleOff = new System.Threading.Timer(_ => { try { var z = new Vibration(); if (legacy) Set910(user, ref z); else Set14(user, ref z); } catch { } }, null, ms, System.Threading.Timeout.Infinite);
+        } catch { }
+    }
     static bool legacy, none;
     static int last = -1;
     public const int Up = 0x1, Down = 0x2, Left = 0x4, Right = 0x8, Start = 0x10, Back = 0x20, LS = 0x40, RS = 0x80,
-                     LB = 0x100, RB = 0x200, A = 0x1000, B = 0x2000, X = 0x4000, Y = 0x8000;
+                     LB = 0x100, RB = 0x200, A = 0x1000, B = 0x2000, X = 0x4000, Y = 0x8000, Guide = 0x400,
+                     LT = 0x10000, RT = 0x20000;   // the triggers, as buttons (made from how far they're pulled)
     // the first connected controller (the one that answered last is asked first)
     public static bool TryGet(out State s) {
         s = new State();
@@ -61,7 +80,12 @@ static class Pad {
             int i = last >= 0 ? (last + k) % 4 : k;
             int r;
             try {
-                if (!legacy) { try { r = Get14(i, out s); } catch (DllNotFoundException) { legacy = true; r = Get910(i, out s); } }
+                if (!legacy) {
+                    try {
+                        if (!noEx) { try { r = GetEx14(i, out s); } catch (EntryPointNotFoundException) { noEx = true; r = Get14(i, out s); } }
+                        else r = Get14(i, out s);
+                    } catch (DllNotFoundException) { legacy = true; r = Get910(i, out s); }
+                }
                 else r = Get910(i, out s);
             } catch (DllNotFoundException) { none = true; return false; }
             if (r == 0) { last = i; return true; }

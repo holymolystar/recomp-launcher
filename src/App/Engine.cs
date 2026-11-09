@@ -1,4 +1,4 @@
-// What a game is (installed version), where its releases are (GitHub or SMO's GitLab project), and starting things:
+﻿// What a game is (installed version), where its releases are (GitHub or SMO's GitLab project), and starting things:
 // the game, its first-run setup, and the PowerShell workers that install, update, convert and uninstall.
 using System;
 using System.Collections;
@@ -40,6 +40,15 @@ static class Versions {
         return a != null || b == null;   // a numbered release over an unknown build, or two names that differ
     }
     static string Norm(string s) { return (s ?? "").Trim().TrimStart('v', 'V'); }
+    // every release newer than what is installed, newest first (the latest alone when nothing is installed)
+    public static List<Release> Missed(Release latest, Installed inst) {
+        var r = new List<Release>();
+        if (latest == null) return r;
+        r.Add(latest);
+        if (inst == null || !IsNewer(latest, inst)) return r;
+        foreach (var o in latest.Older) { if (!IsNewer(o, inst)) break; r.Add(o); }
+        return r;
+    }
 }
 
 static class Paths {
@@ -174,15 +183,17 @@ static class Engine {
     public static Release FetchLatest(Game g, string token) {
         ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
         if (g.Repo != null) {
-            Dictionary<string, object> rel;
-            if (g.Pre) {
-                // projects that only publish pre-releases: the newest release that has the download
-                var all = ((IEnumerable)Get("https://api.github.com/repos/" + g.Repo + "/releases?per_page=15", ref token)).Cast<Dictionary<string, object>>();
-                rel = all.Where(x => !Json.Bool(x, "draft") && PickAsset(x, g) != null)
-                         .OrderByDescending(x => Json.Str(x, "published_at")).FirstOrDefault();
-                if (rel == null) throw new Exception("no release with a Windows download");
-            } else rel = (Dictionary<string, object>)Get("https://api.github.com/repos/" + g.Repo + "/releases/latest", ref token);
+            // one request for the recent releases: the newest is the one to install, the ones before it carry the
+            // notes of versions a player may have skipped
+            var all = ((IEnumerable)Get("https://api.github.com/repos/" + g.Repo + "/releases?per_page=30", ref token)).Cast<Dictionary<string, object>>()
+                .Where(x => !Json.Bool(x, "draft") && (g.Pre || !Json.Bool(x, "prerelease")))
+                .OrderByDescending(x => Json.Str(x, "published_at")).ToList();
+            // projects that only publish pre-releases: the newest release that has the download
+            var rel = g.Pre ? all.FirstOrDefault(x => PickAsset(x, g) != null) : all.FirstOrDefault();
+            if (rel == null) throw new Exception(g.Pre ? "no release with a Windows download" : "this project has no releases");
             var r = new Release { Tag = Json.Str(rel, "tag_name"), Notes = Json.Str(rel, "body"), Date = Json.Str(rel, "published_at") };
+            foreach (var o in all.SkipWhile(x => x != rel).Skip(1).Take(25))
+                r.Older.Add(new Release { Tag = Json.Str(o, "tag_name"), Notes = Json.Str(o, "body"), Date = Json.Str(o, "published_at") });
             var asset = PickAsset(rel, g);
             if (asset != null) {
                 r.Url = Json.Str(asset, "browser_download_url"); r.Size = Json.Num(asset, "size");
@@ -193,12 +204,12 @@ static class Engine {
         }
         // Super Mario Odyssey: GitLab; the zip is linked from the notes, its SHA-256 written next to it
         string none = null;
-        var rels = ((IEnumerable)Get("https://gitlab.com/api/v4/projects/88379810/releases?per_page=1", ref none)).Cast<Dictionary<string, object>>().First();
+        var gl = ((IEnumerable)Get("https://gitlab.com/api/v4/projects/88379810/releases?per_page=20", ref none)).Cast<Dictionary<string, object>>().ToList();
+        var rels = gl.First();
         string body = Json.Str(rels, "description") ?? "";
-        var res = new Release {
-            Tag = Json.Str(rels, "tag_name"), Date = Json.Str(rels, "released_at"),
-            Notes = Regex.Replace(Regex.Split(body, @"\*\*Downloads\*\*")[0], @"\\([>\-\*_#\[\]\(\)!.+`])", "$1")
-        };
+        Func<string, string> clean = b => Regex.Replace(Regex.Split(b ?? "", @"\*\*Downloads\*\*")[0], @"\\([>\-\*_#\[\]\(\)!.+`])", "$1");
+        var res = new Release { Tag = Json.Str(rels, "tag_name"), Date = Json.Str(rels, "released_at"), Notes = clean(body) };
+        foreach (var o in gl.Skip(1)) res.Older.Add(new Release { Tag = Json.Str(o, "tag_name"), Date = Json.Str(o, "released_at"), Notes = clean(Json.Str(o, "description")) });
         var up = Regex.Match(body, @"\(/uploads/([0-9a-f]{32})/([^)\s]*windows[^)\s]*\.zip)\)");
         if (up.Success) res.Url = "https://gitlab.com/-/project/88379810/uploads/" + up.Groups[1].Value + "/" + up.Groups[2].Value;
         else {
@@ -289,6 +300,18 @@ static class Engine {
             }
             return dirs.FirstOrDefault(File.Exists);
         } catch { return null; }
+    }
+    // the game's own processes (by games.json Proc, which can end in *)
+    public static List<Process> Processes(Game g) {
+        var r = new List<Process>();
+        if (string.IsNullOrEmpty(g.Proc)) return r;
+        try {
+            if (g.Proc.Contains("*")) {
+                string pre = g.Proc.Replace("*", "");
+                r.AddRange(Process.GetProcesses().Where(p => p.ProcessName.StartsWith(pre, StringComparison.OrdinalIgnoreCase)));
+            } else r.AddRange(Process.GetProcessesByName(g.Proc));
+        } catch { }
+        return r;
     }
     public static bool IsRunning(Game g) {
         if (string.IsNullOrEmpty(g.Proc)) return false;

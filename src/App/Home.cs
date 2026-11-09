@@ -17,7 +17,7 @@ using System.Windows.Threading;
 
 namespace RecompLauncher {
 
-class HomeTileUi { public Grid Root; public Border Sel, Face, Shade, Badge; public TextBlock Name, BadgeText; public Image Icon; }
+class HomeTileUi { public Grid Root; public Border Sel, Face, Shade, Badge, Star; public TextBlock Name, BadgeText; public Image Icon; }
 class HomeButton { public Border Circle; public TextBlock Glyph, Label; public string Text; public Action Do; }
 
 partial class Shell {
@@ -86,9 +86,11 @@ partial class Shell {
         var line = new Border { Height = 1, Background = Ui.Brush("#33424D"), VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(26, 0, 26, 0) };
         Grid.SetRow(line, 6);
         homeLayer.Children.Add(line);
-        var console = new TextBlock { Text = "", FontFamily = Ui.Mdl, FontSize = 22, Foreground = Ui.Brush(Ui.Text), Margin = new Thickness(40, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Left };
-        Grid.SetRow(console, 6);
-        homeLayer.Children.Add(console);
+        // the controller in use, drawn small (dim when none is connected)
+        homePadIcon = new ControllerView { Width = 44, Height = 30, Margin = new Thickness(36, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Left, Opacity = 0.45, Cursor = Cursors.Hand };
+        homePadIcon.MouseLeftButtonUp += (s2, e2) => { if (!running) OpenSettings("Controller"); };
+        Grid.SetRow(homePadIcon, 6);
+        homeLayer.Children.Add(homePadIcon);
 
         BuildHomeAll();
         BuildGamePage();
@@ -166,7 +168,11 @@ partial class Shell {
         fade.GradientStops.Add(new GradientStop(Color.FromArgb(0xD0, 0, 0, 0), 1));
         var caption = new Border { VerticalAlignment = VerticalAlignment.Bottom, CornerRadius = new CornerRadius(0, 0, 2, 2), Background = fade,
             Padding = new Thickness(size * 0.05, fs * 1.6, size * 0.05, size * 0.045), Child = capText, IsHitTestVisible = false };
-        box.Children.Add(h.Sel); box.Children.Add(h.Face); box.Children.Add(caption); box.Children.Add(h.Shade); box.Children.Add(h.Badge);
+        // a favourite has a star in its top right corner
+        h.Star = new Border { Width = size * 0.16, Height = size * 0.16, CornerRadius = new CornerRadius(size * 0.08), Margin = new Thickness(size * 0.04), HorizontalAlignment = HorizontalAlignment.Right,
+            VerticalAlignment = VerticalAlignment.Top, Background = Ui.Brush("#f2c230"), IsHitTestVisible = false, Visibility = Visibility.Collapsed,
+            Child = new TextBlock { Text = "\u2605", FontSize = size * 0.095, Foreground = Ui.Brush("#0A0E11"), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 0, size * 0.005) } };
+        box.Children.Add(h.Sel); box.Children.Add(h.Face); box.Children.Add(caption); box.Children.Add(h.Shade); box.Children.Add(h.Badge); box.Children.Add(h.Star);
         var stack = new StackPanel();
         stack.Children.Add(nameHost); stack.Children.Add(box);
         h.Root = new Grid { Margin = named ? new Thickness(0, 0, 9, 14) : new Thickness(0, 0, 16, 18), Cursor = Cursors.Hand, Background = Brushes.Transparent, Tag = g };
@@ -201,6 +207,7 @@ partial class Shell {
         string badge = g.State == State.Update ? "UPDATE" : g.IsBusy ? StatusOf(g).Tile.ToUpper() : null;
         h.Badge.Visibility = badge != null ? Visibility.Visible : Visibility.Collapsed;
         if (badge != null) { h.BadgeText.Text = badge; h.Badge.Background = Ui.Brush(gold ? Ui.Gold : Raised); }
+        if (h.Star != null) h.Star.Visibility = Profiles.IsFav(g.Id) ? Visibility.Visible : Visibility.Collapsed;
     }
     void MarkHome(Game prev, Game g) {
         foreach (var o in prev == null ? Games : (IEnumerable<Game>)new[] { prev, g }) {
@@ -294,7 +301,7 @@ partial class Shell {
         N<Grid>("Track").Visibility = on && !running ? Visibility.Hidden : Visibility.Visible;
         // beside the console glyph in the bottom bar
         var status = (FrameworkElement)((FrameworkElement)N<TextBlock>("StepText").Parent).Parent;
-        status.Margin = on ? new Thickness(84, 20, 40, 0) : new Thickness(70, 4, 40, 0);
+        status.Margin = on ? new Thickness(98, 20, 40, 0) : new Thickness(70, 4, 40, 0);
         // a narrower status column on Home, so the button hints on the right have room
         ((Grid)status).ColumnDefinitions[0].Width = new GridLength(on ? 360 : 560);
         if (on) { StopDrift(); homeClockTimer.Start(); TickHomeClock(); }
@@ -348,18 +355,38 @@ partial class Shell {
         homeAllPage.Children.Add(homeAllScroll);
         homeLayer.Children.Add(homeAllPage);
     }
+    string pillIds;
+    void RebuildHomePills() {
+        var defs = HomeFilters();
+        string ids = string.Join("|", defs.Select(f => f[0]).ToArray());
+        if (ids == pillIds) return;
+        pillIds = ids;
+        foreach (var old in homeFilterPills.Children.OfType<Border>().ToList()) if (old.Tag is string) homeFilterPills.Children.Remove(old);
+        int at = homeFilterPills.Children.IndexOf(homeLayoutPills) + 1;   // after the layout buttons
+        foreach (var f in defs) {
+            string id = f[0];
+            var pill = new Border { CornerRadius = new CornerRadius(16), Height = 32, Padding = new Thickness(16, 0, 16, 0), Margin = new Thickness(8, 0, 0, 0), Cursor = Cursors.Hand, Tag = id,
+                Child = new TextBlock { FontSize = 13, FontFamily = Ui.Semi, VerticalAlignment = VerticalAlignment.Center },
+                Effect = new DropShadowEffect { BlurRadius = 8, ShadowDepth = 1, Opacity = Theme.Current.Light ? 0.15 : 0.3 } };
+            pill.MouseLeftButtonUp += (s, e) => SetFilter(id);
+            homeFilterPills.Children.Insert(at++, pill);
+        }
+    }
     void UpdateHomeFilters() {
         if (homeFilterPills == null) return;
+        RebuildHomePills();
+        if (!HomeFilters().Any(f => f[0] == filter)) filter = "all";
         var list = Listed();
         foreach (var c in homeFilterPills.Children.OfType<Border>()) {
             string id = (string)c.Tag; bool on = id == filter;
-            int n = id == "installed" ? list.Count(g => g.Inst != null) : id == "updates" ? list.Count(g => g.State == State.Update) : id == "new" ? list.Count(g => g.Inst == null) : list.Count;
+            int n = list.Count(g => InFilter(g, id));
             var t = (TextBlock)c.Child;
-            t.Text = FilterDefs.First(f => f[0] == id)[1] + (id == "all" ? "" : "  " + n);
+            var def = HomeFilters().FirstOrDefault(f => f[0] == id);
+            t.Text = (def != null ? def[1] : id) + (id == "all" ? "" : "  " + n);
             c.Background = Ui.Brush(on ? Ui.Teal : Raised);
             t.Foreground = Ui.Brush(on ? (Theme.Current.Light ? "#ffffff" : "#0A0E11") : Ui.Text);
         }
-        if (homeAllCount != null) { int shown = list.Count(Shown); homeAllCount.Text = shown == list.Count ? list.Count + " games" : shown + " of " + list.Count; }
+        if (homeAllCount != null) { int shown = list.Count(Shown); homeAllCount.Text = shown == list.Count ? list.Count + " games" : shown + " of " + list.Count; ShowSearch(); }
     }
     void OpenHomeAll(string filterId) {
         if (homePage != "all") Sound.Play(Sfx.Open);
@@ -369,6 +396,7 @@ partial class Shell {
     }
     void CloseHomeAll() {
         Sound.Play(Sfx.Back);
+        N<TextBox>("SearchBox").Text = "";   // a search is for All games only
         homePage = "home";
         filter = "all";   // the home row ignores filters: it always shows the installed games
         ShowHomePage();

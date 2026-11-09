@@ -60,16 +60,59 @@ partial class Shell {
     }
     void FillNotes(Game g) {
         notesFor = g;
-        notes.Blocks.Clear();
+        notes.Blocks.Clear(); notesFolds.Clear();
         var date = N<TextBlock>("NotesDate"); date.Text = "";
         if (g.Latest == null) {
             var p = new Paragraph();
             AddInlines(p, g.State == State.Checking || lookingUp == g ? "Loading the release notes..." : "Couldn't load the release notes.", Ui.Muted);
             notes.Blocks.Add(p); return;
         }
-        DateTime d;
-        date.Text = DateTime.TryParse(g.Latest.Date, out d) ? g.Latest.Tag + "  \u2022  " + d.ToLocalTime().ToString("MMM d, yyyy") : g.Latest.Tag;
-        foreach (var raw in (g.Latest.Notes ?? "").Replace("\r", "").Split('\n')) {
+        var missed = Versions.Missed(g.Latest, g.Inst);
+        date.Text = g.Latest.Tag + (NoteDate(g.Latest) != "" ? "  \u2022  " + NoteDate(g.Latest) : "") + (missed.Count > 1 ? "  \u2022  " + missed.Count + " updates" : "");
+        if (missed.Count == 1) { AddNoteLines(notes.Blocks, g.Latest.Notes, g, null); return; }
+        // several versions since the one installed: all their notes, newest first; the newest open, the rest folded
+        // to one line each (click, or A on a controller, opens them all)
+        var intro = new Paragraph { Margin = new Thickness(0, 0, 0, 12) };
+        AddInlines(intro, "You have " + g.Inst.Label + ". There are " + missed.Count + " updates since then, newest first.", Ui.Muted);
+        notes.Blocks.Add(intro);
+        notesFolds.Clear();
+        for (int i = 0; i < missed.Count; i++) {
+            var rel = missed[i];
+            var body = new Section();
+            AddNoteLines(body.Blocks, rel.Notes, g, null);
+            if (body.Blocks.Count == 0) body.Blocks.Add(new Paragraph(new Run("No notes for this version.") { Foreground = Ui.Brush(Ui.Muted) }));
+            int changes = Regex.Matches(rel.Notes ?? "", @"(?m)^\s*[-*]\s+").Count;
+            var head = new Paragraph { Margin = new Thickness(0, i == 0 ? 0 : 18, 0, 8), Cursor = Cursors.Hand, FontSize = 15.5, FontWeight = FontWeights.SemiBold };
+            var arrow = new Run(i == 0 ? "\u25be  " : "\u25b8  ") { Foreground = Ui.Brush(g.Accent) };
+            head.Inlines.Add(arrow);
+            head.Inlines.Add(new Run(rel.Tag) { Foreground = Ui.Brush(Ui.Text) });
+            head.Inlines.Add(new Run("   " + NoteDate(rel) + (changes > 0 ? "  \u2022  " + changes + (changes == 1 ? " change" : " changes") : "")) { Foreground = Ui.Brush(Ui.Muted), FontSize = 12.5, FontWeight = FontWeights.Normal });
+            notes.Blocks.Add(head);
+            var fold = new object[] { head, body, arrow };
+            notesFolds.Add(fold);
+            if (i == 0) notes.Blocks.InsertAfter(head, body);
+            head.MouseLeftButtonUp += (s, e) => ToggleFold(fold, !notes.Blocks.Contains(body));
+        }
+    }
+    readonly List<object[]> notesFolds = new List<object[]>();   // (heading, notes, arrow) per version
+    void ToggleFold(object[] f, bool open) {
+        var head = (Paragraph)f[0]; var body = (Section)f[1];
+        bool isOpen = notes.Blocks.Contains(body);
+        if (open && !isOpen) notes.Blocks.InsertAfter(head, body);
+        else if (!open && isOpen) notes.Blocks.Remove(body);
+        ((Run)f[2]).Text = open ? "\u25be  " : "\u25b8  ";
+    }
+    // A on a controller: every version open, or back to only the newest
+    void ToggleAllNotes() {
+        if (notesFolds.Count < 2) return;
+        bool openAll = notesFolds.Skip(1).Any(f => !notes.Blocks.Contains((Section)f[1]));
+        for (int i = 0; i < notesFolds.Count; i++) ToggleFold(notesFolds[i], i == 0 || openAll);
+        Sound.Play(openAll ? Sfx.Open : Sfx.Back);
+        SetHints();
+    }
+    static string NoteDate(Release r) { DateTime d; return DateTime.TryParse(r.Date, out d) ? d.ToLocalTime().ToString("MMM d, yyyy") : ""; }
+    void AddNoteLines(BlockCollection blocks, string text, Game g, object unused) {
+        foreach (var raw in (text ?? "").Replace("\r", "").Split('\n')) {
             // GitHub's notes can hold HTML (<details>, <b>) and code fences: shown as plain text
             string line = Regex.Replace(raw, @"<[^>]+>", "").Replace("&nbsp;", " ").Replace("&amp;", "&").Replace("&lt;", "<").Replace("&gt;", ">").TrimEnd();
             if (line.Trim().Length == 0 || Regex.IsMatch(line, @"^>\s*\[!") || Regex.IsMatch(line, @"^\s*```")) continue;
@@ -82,10 +125,12 @@ partial class Shell {
                 AddInlines(p, m.Groups[1].Value);
             } else if ((m = Regex.Match(line, @"^>\s?(.*)")).Success) AddInlines(p, m.Groups[1].Value, Ui.Muted);
             else AddInlines(p, line);
-            notes.Blocks.Add(p);
+            blocks.Add(p);
         }
     }
     void Log(string text, string color = null) {
+        // finished installs and updates also show by the clock while the launcher waits in the tray
+        if (color == Ui.Teal && text != null && (text.Contains(" updated to ") || text.Contains(" is installed"))) Notify("Recomp Launcher", text);
         var p = new Paragraph { Margin = new Thickness(0, 0, 0, 4) };
         p.Inlines.Add(new Run(DateTime.Now.ToString("HH:mm:ss") + "    ") { Foreground = Ui.Brush(Ui.Dim), FontSize = 11.5 });
         var r = new Run(text ?? ""); if (color != null) r.Foreground = Ui.Brush(color);
@@ -190,7 +235,7 @@ partial class Shell {
     }
 
     // ---------- settings ----------
-    Toggle optClose, optFull, optStartup, optAuto;
+    Toggle optFull, optStartup, optAuto;
     PasswordBox tokenBox; TextBlock tokenCheck;
     readonly Dictionary<string, Toggle> showToggles = new Dictionary<string, Toggle>();
     readonly List<FolderRow> folderRows = new List<FolderRow>();
@@ -200,28 +245,33 @@ partial class Shell {
         return new TextBlock { Text = text, FontSize = 10.5, FontWeight = FontWeights.Bold, Foreground = Ui.Brush(Ui.Teal), Margin = new Thickness(0, first ? 4 : 18, 0, 4) };
     }
     void BuildSettings() {
-        var rows = N<StackPanel>("SetRows");
-        rows.Children.Add(Heading("THEME", true));
-        rows.Children.Add(new TextBlock { TextWrapping = TextWrapping.Wrap, FontSize = 11.5, Foreground = Ui.Brush(Ui.Muted), Margin = new Thickness(0, 0, 0, 8),
-            Text = "Pick a look. The launcher reopens with it when you save." });
+        var rows = SetSection("Theme", "\uE790", "Pick a look. The launcher reopens with it when you save.");
         themeGrid = new UniformGrid { Columns = 3 };
         foreach (var th in Theme.All) themeGrid.Children.Add(ThemeSwatch(th));
         rows.Children.Add(themeGrid);
-        rows.Children.Add(Heading("OPTIONS", false));
-        optClose = NewToggle("Close the launcher when a game starts", "Play time is still counted while you play.");
+        rows = SetSection("General", "\uE713", "What happens when a game starts, how the launcher opens, and update checks.");
+        rows.Children.Add(ChoiceRow("OnPlay", "When a game starts", "Play time is counted either way. In the tray the launcher uses almost no memory, and it comes back by itself when the game closes.", 1,
+            new[] { "stay", "close", "tray" }, new[] { "Stay open", "Close", "Wait in the tray" }));
         optFull = NewToggle("Open in full screen", "F11, the full screen button or View on a controller switch it any time.");
         optStartup = NewToggle("Open when Windows starts", "Adds Recomp Launcher to your Startup folder.");
         optAuto = NewToggle("Check for updates every 3 hours", "While the launcher is open. Only installed games are checked.");
-        foreach (var t in new[] { optClose, optFull, optStartup, optAuto }) rows.Children.Add(t.Root);
+        foreach (var t in new[] { optFull, optStartup, optAuto }) rows.Children.Add(t.Root);
+        rows.Children.Add(ChoiceRow("TvMode", "Big screen (TV) mode", "Everything a quarter bigger, to read from across the room. Automatic: in full screen.", 0,
+            new[] { "off", "auto", "on" }, new[] { "Off", "Automatic", "On" }));
+        rows.Children.Add(LauncherUpdateRow());
+        rows = SetSection("Sound", "\uE767", "Little sounds as you move around, and the character creator's tune.");
         rows.Children.Add(VolumeRow());
+        rows = SetSection("Controller", "\uE7FC", "Xbox, PlayStation and Switch Pro controllers: button names, which button picks, and how it moves.");
+        BuildPadSection(rows);
 
-        rows.Children.Add(Heading("GITHUB TOKEN (OPTIONAL)", false));
+        rows = SetSection("GitHub token", "\uE72E", "Optional: more update checks an hour.");
         rows.Children.Add(new TextBlock { TextWrapping = TextWrapping.Wrap, FontSize = 11.5, Foreground = Ui.Brush(Ui.Muted), Margin = new Thickness(0, 0, 0, 8),
             Text = "Without one, GitHub allows 60 update checks an hour, and some games then show \"Couldn't check\". With a token it's 5,000. Make one at github.com: your picture > Settings > Developer settings > Personal access tokens > Fine-grained tokens > Generate new token. Give it any name, Repository access: Public repositories, no permissions. Generate it, copy it, paste it here. It can't change anything on your account." });
         tokenBox = new PasswordBox { Height = 38, FontSize = 13, Padding = new Thickness(10, 0, 10, 0), VerticalContentAlignment = VerticalAlignment.Center,
             Background = Ui.Brush("#0A0E11"), Foreground = Ui.Brush(Ui.Text), BorderBrush = Ui.Brush("#26333C"), CaretBrush = Ui.Brush(Ui.Text) };
         tokenBox.LostKeyboardFocus += (s, e) => TestToken();
         var site = MakeButton("Open GitHub");
+        tokenSite = site;
         site.Click += (s, e) => { try { System.Diagnostics.Process.Start("https://github.com/settings/personal-access-tokens/new"); } catch { } };
         var tl = new Grid();
         tl.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); tl.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -230,7 +280,7 @@ partial class Shell {
         tokenCheck = new TextBlock { FontSize = 11.5, Margin = new Thickness(2, 6, 0, 0), TextWrapping = TextWrapping.Wrap };
         rows.Children.Add(tokenCheck);
 
-        rows.Children.Add(Heading("GAMES IN THE LIBRARY", false));
+        rows = SetSection("Library", "\uE8F1", "Which games show up in the launcher.");
         rows.Children.Add(new TextBlock { TextWrapping = TextWrapping.Wrap, FontSize = 11.5, Foreground = Ui.Brush(Ui.Muted), Margin = new Thickness(0, 0, 0, 6),
             Text = "Turn a game off to hide it from the library. Nothing is uninstalled: turn it back on any time." });
         showButtons = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 4) };
@@ -247,7 +297,7 @@ partial class Shell {
         }
         rows.Children.Add(showGrid);
 
-        rows.Children.Add(Heading("GAME FOLDERS", false));
+        rows = SetSection("Game folders", "\uE8B7", "Where each game is (or will be) installed.");
         var defs = new List<FolderRow>();
         foreach (var g in Games.OrderBy(Catalog.SeriesOf).ThenBy(x => x.Rank)) {
             defs.Add(new FolderRow { G = g, Key = g.SettingsKey, Label = g.SettingsLabel, File = g.CheckFile, New = true });
@@ -275,7 +325,12 @@ partial class Shell {
         N<Button>("BtnSetCancel").Click += (s, e) => CloseSettings();
         N<Rectangle>("SettingsDim").MouseLeftButtonDown += (s, e) => CloseSettings();
         N<Button>("BtnSetSave").Click += (s, e) => SaveSettingsPanel();
-        N<Button>("BtnSetDefaults").Click += (s, e) => { foreach (var r in folderRows) r.Box.Text = Settings.Default(r.Key); };
+        N<Button>("BtnSetDefaults").Click += (s, e) => {
+            if (setSections[setSection].Name == "Controller") {
+                foreach (var c in setChoices.Where(c => c.Key.StartsWith("Pad"))) PickChoice(c, c.Values[c.Def]);
+                SetToggle(optRumble, true, false); PreviewPadStyle();
+            } else foreach (var r in folderRows) r.Box.Text = Settings.Default(r.Key);
+        };
     }
     // ---------- sound volume: Off and four levels, each one plays a chime at its loudness when picked ----------
     StackPanel volumeButtons; int pickedVolume = 50;
@@ -344,9 +399,10 @@ partial class Shell {
         else if (Directory.Exists(dir)) { l.Text = r.File + " isn't in this folder"; l.Foreground = Ui.Brush(Ui.Gold); }
         else { l.Text = "This folder doesn't exist"; l.Foreground = Ui.Brush(Ui.Red); }
     }
-    void OpenSettings() {
+    void OpenSettings(string section = null) {
         foreach (var r in folderRows) { r.Box.Text = Settings.Get(r.Key); CheckPathLabel(r); }
-        SetToggle(optClose, Settings.On("CloseOnPlay"), true);
+        foreach (var c in setChoices) PickChoice(c, c.Key == "OnPlay" ? OnPlayMode() : Settings.Get(c.Key).Length > 0 ? Settings.Get(c.Key) : c.Values[c.Def]);
+        SetToggle(optRumble, Settings.On("PadRumble"), true);
         SetToggle(optFull, Settings.Get("Fullscreen") == "True", true);
         SetToggle(optStartup, File.Exists(StartupLink), true);
         SetToggle(optAuto, Settings.On("AutoCheck"), true);
@@ -356,13 +412,13 @@ partial class Shell {
         foreach (var g in Games) SetToggle(showToggles[g.Id], !g.Hidden, true);
         PickTheme(Theme.Current.Id);
         fb.Visibility = Visibility.Collapsed;
-        setStops = SetStops(); MarkSetStop(-1);
-        if (padUsed) SelectSetStop(0);
         ShowCard("SettingsLayer", "SettingsCard");
+        ShowSetSection(section != null ? Math.Max(0, setSections.FindIndex(x => x.Name == section)) : 0);
         ((RotateTransform)N<TextBlock>("GearIcon").RenderTransform).BeginAnimation(RotateTransform.AngleProperty, Anim(90, 500, 0));
     }
     void CloseSettings() {
         HideCard("SettingsLayer", "SettingsCard");
+        SetPadKind(padKind);   // the button names as saved (a preview may have changed them)
         ((RotateTransform)N<TextBlock>("GearIcon").RenderTransform).BeginAnimation(RotateTransform.AngleProperty, Anim(0, 500));
     }
     void BrowseInto(TextBox box, string title) {
@@ -374,9 +430,12 @@ partial class Shell {
     void SaveSettingsPanel() {
         Sound.Play(Sfx.Select, pickedVolume);
         foreach (var r in folderRows) Settings.Set(r.Key, r.Box.Text.Trim().TrimEnd('\\'));
-        Settings.Set("CloseOnPlay", optClose.On ? "on" : "off");
+        foreach (var c in setChoices) Settings.Set(c.Key, c.Picked);
+        Settings.Set("PadRumble", optRumble.On ? "on" : "off");
         Settings.Set("AutoCheck", optAuto.On ? "on" : "off");
         Sound.Volume = pickedVolume; Settings.Set("SoundVolume", pickedVolume.ToString());
+        ApplyPadSettings();
+        ApplyScale();
         Settings.Set("Fullscreen", optFull.On ? "True" : "");
         if (optFull.On != isFull) SetFullscreen(optFull.On);
         Settings.Set("GitHubToken", tokenBox.Password.Trim());
@@ -426,16 +485,158 @@ partial class Shell {
     // controller in Settings: a list of stops (switches, buttons, the folders' Browse buttons)
     List<FrameworkElement> setStops = new List<FrameworkElement>();
     int setIdx = -1;
+    // the stops of the section shown, then the buttons at the bottom
     List<FrameworkElement> SetStops() {
-        var s = new List<FrameworkElement>();
-        foreach (FrameworkElement b in themeGrid.Children) s.Add(b);
-        foreach (var t in new[] { optClose, optFull, optStartup, optAuto }) s.Add(t.Root);
-        foreach (FrameworkElement b in volumeButtons.Children) s.Add(b);
-        foreach (FrameworkElement b in showButtons.Children) s.Add(b);
-        foreach (FrameworkElement c in showGrid.Children) s.Add(c);
-        foreach (var r in folderRows) s.Add(r.Btn);
-        s.Add(N<Button>("BtnSetDefaults")); s.Add(N<Button>("BtnSetCancel")); s.Add(N<Button>("BtnSetSave"));
+        var all = new List<FrameworkElement>();
+        foreach (FrameworkElement b in themeGrid.Children) all.Add(b);
+        foreach (var c in setChoices) all.AddRange(c.Buttons);
+        foreach (var t in new[] { optFull, optStartup, optAuto }) all.Add(t.Root);
+        foreach (FrameworkElement b in volumeButtons.Children) all.Add(b);
+        all.Add(optRumble.Root);
+        all.Add(tokenSite);
+        foreach (FrameworkElement b in showButtons.Children) all.Add(b);
+        foreach (FrameworkElement c in showGrid.Children) all.Add(c);
+        foreach (var r in folderRows) all.Add(r.Btn);
+        var panel = setSections[setSection].Panel;
+        var s = all.Where(el => el.IsDescendantOf(panel)).ToList();
+        var def = N<Button>("BtnSetDefaults");
+        if (def.Visibility == Visibility.Visible) s.Add(def);
+        s.Add(N<Button>("BtnSetCancel")); s.Add(N<Button>("BtnSetSave"));
         return s;
+    }
+    Button tokenSite;
+
+    // ---------- the sections (LB / RB on a controller) ----------
+    class SetSec { public string Name, Desc; public StackPanel Panel; public Border Tab; }
+    readonly List<SetSec> setSections = new List<SetSec>();
+    int setSection;
+    StackPanel SetSection(string name, string glyph, string desc) {
+        var panel = new StackPanel { Visibility = Visibility.Collapsed };
+        N<StackPanel>("SetRows").Children.Add(panel);
+        var row = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+        row.Children.Add(new TextBlock { Text = glyph, FontFamily = Ui.Mdl, FontSize = 17, Width = 24, VerticalAlignment = VerticalAlignment.Center });
+        row.Children.Add(new TextBlock { Text = name, FontSize = 15, FontFamily = Ui.Semi, Margin = new Thickness(12, 0, 0, 1), VerticalAlignment = VerticalAlignment.Center });
+        var tab = new Border { Height = 48, CornerRadius = new CornerRadius(12), Padding = new Thickness(14, 0, 10, 0), Margin = new Thickness(0, 0, 0, 4), Child = row, Cursor = Cursors.Hand, Background = Ui.Brush("#00000000") };
+        int idx = setSections.Count;
+        tab.MouseLeftButtonUp += (s, e) => { Sound.Play(Sfx.Move); ShowSetSection(idx); };
+        N<StackPanel>("SetTabs").Children.Add(tab);
+        setSections.Add(new SetSec { Name = name, Desc = desc, Panel = panel, Tab = tab });
+        return panel;
+    }
+    void ShowSetSection(int i) {
+        int n = setSections.Count;
+        setSection = ((i % n) + n) % n;
+        for (int k = 0; k < n; k++) {
+            var sec = setSections[k]; bool on = k == setSection;
+            sec.Panel.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+            sec.Tab.Background = on ? Ui.Brush(Ui.Teal) : Ui.Brush("#00000000");
+            foreach (TextBlock t in ((StackPanel)sec.Tab.Child).Children) t.Foreground = on ? Ui.Brush(Theme.Current.Light ? "#ffffff" : "#0A0E11") : Ui.Brush(Ui.Text);
+        }
+        var cur = setSections[setSection];
+        N<TextBlock>("SetSectionTitle").Text = cur.Name;
+        N<TextBlock>("SetSectionDesc").Text = cur.Desc;
+        var def = N<Button>("BtnSetDefaults");
+        def.Visibility = cur.Name == "Controller" || cur.Name == "Game folders" ? Visibility.Visible : Visibility.Collapsed;
+        def.Content = cur.Name == "Controller" ? "Reset controller settings" : "Reset folders";
+        N<ScrollViewer>("SetScroll").ScrollToTop();
+        cur.Panel.BeginAnimation(UIElement.OpacityProperty, Anim(1, 220, 0));
+        cur.Tab.BringIntoView();
+        if (padDiagram != null) padDiagram.Show(0);
+        // the layout is needed to know which stops are in the section
+        W.Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() => {
+            setStops = SetStops(); setIdx = -1; MarkSetStop(-1);
+            if (padUsed && setStops.Count > 0) { setIdx = 0; MarkSetStop(0); }
+            SetHints();
+        }));
+    }
+    // the nearest stop in a direction (up, down, left, right), or -1
+    static int Nearest(List<FrameworkElement> stops, int from, int dx, int dy, Visual root) {
+        if (from < 0 || from >= stops.Count || !stops[from].IsVisible) return -1;
+        Func<FrameworkElement, Point> centre = el => el.TransformToAncestor(root).Transform(new Point(el.ActualWidth / 2, el.ActualHeight / 2));
+        var c0 = centre(stops[from]);
+        int best = -1; double bestScore = double.MaxValue;
+        for (int i = 0; i < stops.Count; i++) {
+            if (i == from || !stops[i].IsVisible) continue;
+            var c = centre(stops[i]);
+            double along = (c.X - c0.X) * dx + (c.Y - c0.Y) * dy, across = Math.Abs((c.X - c0.X) * dy) + Math.Abs((c.Y - c0.Y) * dx);
+            if (along < 6) continue;
+            double score = along + across * (dy != 0 ? 0.4 : 3);
+            if (score < bestScore) { bestScore = score; best = i; }
+        }
+        return best;
+    }
+    // what the launcher does when a game starts: stay open, close, or wait in the tray (older settings: CloseOnPlay)
+    string OnPlayMode() {
+        string v = Settings.Get("OnPlay");
+        if (v == "stay" || v == "close" || v == "tray") return v;
+        return Settings.Get("CloseOnPlay") == "off" ? "stay" : "close";
+    }
+
+    // ---------- the Controller section ----------
+    class SetChoice { public string Key, Picked; public string[] Values; public int Def; public Button[] Buttons; }
+    readonly List<SetChoice> setChoices = new List<SetChoice>();
+    Toggle optRumble;
+    void BuildPadSection(StackPanel rows) {
+        padStatus = new TextBlock { FontSize = 12.5, Foreground = Ui.Brush(Ui.Muted), TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 10) };
+        rows.Children.Add(padStatus);
+        // the controller, with what each button does in the launcher; buttons light up as they're pressed
+        padDiagram = new ControllerView { Callouts = true, Height = 340, Margin = new Thickness(0, 0, 0, 6), Actions = new[] {
+            new[] { "A", "Pick, start a game" }, new[] { "B", "Back" }, new[] { "X", "Update the game" }, new[] { "Y", "Game page" },
+            new[] { "LB", "Profiles (Filter in All games)" }, new[] { "RB", "Favourite (Search in All games)" },
+            new[] { "Move", "Move around" }, new[] { "LS", "Sort (press the stick)" }, new[] { "RS", "All games (press), scroll" },
+            new[] { "\u2261", "Settings" }, new[] { "\u29C9", "Full screen" } } };
+        rows.Children.Add(new Border { Background = Ui.Brush("#0D1215"), CornerRadius = new CornerRadius(16), Padding = new Thickness(10, 14, 10, 14), Child = padDiagram, Margin = new Thickness(0, 0, 0, 14) });
+        rows.Children.Add(ChoiceRow("PadPrompts", "Button names", "The names and colours in the hints. Automatic follows the controller plugged in.", 0,
+            new[] { "auto", "xbox", "playstation", "nintendo" }, new[] { "Automatic", "Xbox", "PlayStation", "Nintendo" }));
+        rows.Children.Add(ChoiceRow("PadConfirm", "Pick with", "Automatic: the right button on Switch controllers (as on a Switch), the bottom button on others.", 0,
+            new[] { "auto", "bottom", "right" }, new[] { "Automatic", "Bottom button", "Right button" }));
+        rows.Children.Add(ChoiceRow("PadRepeat", "Moving when held", "How fast the selection keeps moving while a direction is held.", 1,
+            new[] { "slow", "normal", "fast" }, new[] { "Slow", "Normal", "Fast" }));
+        rows.Children.Add(ChoiceRow("PadStick", "Stick sensitivity", "High moves with a small push; Low ignores a worn stick that drifts.", 1,
+            new[] { "low", "normal", "high" }, new[] { "Low", "Normal", "High" }));
+        rows.Children.Add(ChoiceRow("PadMenu", "In-game menu", "The Xbox, PS or Home button (or View and Menu together) opens a menu over the game: resume, go to the launcher, or close the game. Needs the launcher to stay open or wait in the tray.", 0,
+            new[] { "on", "off" }, new[] { "On", "Off" }));
+        optRumble = NewToggle("Vibration", "A short buzz when a game starts (Xbox controllers, and others through Steam Input).");
+        rows.Children.Add(optRumble.Root);
+        rows.Children.Add(new TextBlock { FontSize = 11.5, Foreground = Ui.Brush(Ui.Muted), TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 12, 0, 0),
+            Text = "PlayStation (DualShock 4, DualSense) and Switch Pro controllers work without Steam: plug them in or pair them by Bluetooth. When Steam Input, DS4Windows or BetterJoy is running, the launcher uses that instead." });
+    }
+    FrameworkElement ChoiceRow(string key, string label, string desc, int def, string[] values, string[] names) {
+        var c = new SetChoice { Key = key, Values = values, Def = def, Picked = values[def], Buttons = new Button[values.Length] };
+        var row = new Grid { Margin = new Thickness(0, 8, 0, 8) };
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 16, 0) };
+        text.Children.Add(new TextBlock { Text = label, FontSize = 13, FontFamily = Ui.Semi });
+        text.Children.Add(new TextBlock { Text = desc, FontSize = 11.5, Foreground = Ui.Brush(Ui.Muted), TextWrapping = TextWrapping.Wrap });
+        var bar = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+        for (int i = 0; i < values.Length; i++) {
+            var b = MakeButton(names[i], 32); b.FontSize = 12; b.Padding = new Thickness(12, 0, 12, 0); b.Margin = new Thickness(6, 0, 0, 0);
+            string v = values[i];
+            b.Click += (s, e) => { PickChoice(c, v); Sound.Play(Sfx.Select); if (key == "PadPrompts" || key == "PadConfirm") PreviewPadStyle(); };
+            c.Buttons[i] = b; bar.Children.Add(b);
+        }
+        Grid.SetColumn(bar, 1);
+        row.Children.Add(text); row.Children.Add(bar);
+        setChoices.Add(c);
+        return row;
+    }
+    void PickChoice(SetChoice c, string v) {
+        if (Array.IndexOf(c.Values, v) < 0) v = c.Values[c.Def];
+        c.Picked = v;
+        for (int i = 0; i < c.Values.Length; i++) {
+            var b = c.Buttons[i]; bool on = c.Values[i] == v;
+            if (on) { b.Background = Ui.Brush(Ui.Teal); b.Foreground = Ui.Brush(Theme.Current.Light ? "#ffffff" : "#0A0E11"); }
+            else { b.ClearValue(Control.BackgroundProperty); b.ClearValue(Control.ForegroundProperty); }
+        }
+    }
+    // the button names as picked, before saving: shown on the drawing and in the hints
+    void PreviewPadStyle() {
+        string prompts = setChoices.First(c => c.Key == "PadPrompts").Picked, confirm = setChoices.First(c => c.Key == "PadConfirm").Picked;
+        PadStyle.Kind = prompts == "xbox" ? PadKind.Xbox : prompts == "playstation" ? PadKind.PlayStation : prompts == "nintendo" ? PadKind.Switch : (padKind != PadKind.None ? padKind : PadKind.Xbox);
+        PadStyle.ConfirmRight = confirm == "right" || (confirm != "bottom" && padKind == PadKind.Switch);
+        padDiagram.Kind = PadStyle.Kind; padDiagram.InvalidateVisual();
+        hintsShown = null; SetHints();
     }
     static readonly DropShadowEffect SetGlow = new DropShadowEffect { Color = Ui.Col("#3FB8A0"), BlurRadius = 18, ShadowDepth = 0, Opacity = 1 };
     void MarkSetStop(int i) {

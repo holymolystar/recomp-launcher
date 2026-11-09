@@ -66,7 +66,7 @@ static class Program {
             if (args.Theme != null) Theme.Use(args.Theme);
             Icons.DrawnOnly = args.DrawnIcons;
             ReleaseCache.Load(Path.Combine(root, "cache.json"));
-            Playtime.Path = Path.Combine(root, "playtime.json");
+            if (Playtime.Path == null) Playtime.Path = Path.Combine(root, "playtime.json");   // Profiles.Load picks the profile's
             Roms.Path = Path.Combine(root, "roms.json");
             var shell = new Shell(args);
             app.Startup += (s, e) => { };

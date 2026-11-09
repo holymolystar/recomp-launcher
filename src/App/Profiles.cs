@@ -16,7 +16,11 @@ using System.Linq;
 
 namespace RecompLauncher {
 
-class PlayerProfile { public string Id, Name, Avatar, Frame, Character; }
+class PlayerProfile {
+    public string Id, Name, Avatar, Frame, Character;
+    public List<string> Favs = new List<string>();                                       // favourite games, by id
+    public List<KeyValuePair<string, List<string>>> Collections = new List<KeyValuePair<string, List<string>>>();   // name, game ids
+}
 
 static class Profiles {
     public static readonly List<PlayerProfile> All = new List<PlayerProfile>();
@@ -34,7 +38,13 @@ static class Profiles {
             if (list != null)
                 foreach (var o in list) {
                     var p = o as Dictionary<string, object>; if (p == null) continue;
-                    All.Add(new PlayerProfile { Id = Json.Str(p, "Id"), Name = Json.Str(p, "Name") ?? "", Avatar = Json.Str(p, "Avatar") ?? "", Frame = Json.Str(p, "Frame") ?? "", Character = Json.Str(p, "Character") ?? "" });
+                    var pp = new PlayerProfile { Id = Json.Str(p, "Id"), Name = Json.Str(p, "Name") ?? "", Avatar = Json.Str(p, "Avatar") ?? "", Frame = Json.Str(p, "Frame") ?? "", Character = Json.Str(p, "Character") ?? "" };
+                    pp.Favs.AddRange(Json.Strings(p, "Favs"));
+                    object cols;
+                    if (p.TryGetValue("Collections", out cols) && cols is System.Collections.IEnumerable)
+                        foreach (var c in ((System.Collections.IEnumerable)cols).OfType<Dictionary<string, object>>())
+                            if (Json.Str(c, "Name") != null) pp.Collections.Add(new KeyValuePair<string, List<string>>(Json.Str(c, "Name"), Json.Strings(c, "Games").ToList()));
+                    All.Add(pp);
                 }
             original = Json.Str(d, "Original");
             var l = Json.Obj(d, "Live");
@@ -48,13 +58,36 @@ static class Profiles {
         }
         if (original == null) original = All[0].Id;
         if (Current == null) Current = All[0];
+        Playtime.Use(PlaytimeFile(Current));
+        Save();
+    }
+    // play time is kept per profile: the first profile keeps playtime.json (the time played before profiles), the
+    // others profiles\<id>\playtime.json
+    public static string PlaytimeFile(PlayerProfile p) {
+        if (p.Id == original) return Path.Combine(Paths.Root, "playtime.json");
+        string dir = Path.Combine(Dir, p.Id);
+        try { Directory.CreateDirectory(dir); } catch { }
+        return Path.Combine(dir, "playtime.json");
+    }
+    public static bool IsFav(string id) { return Current.Favs.Contains(id); }
+    public static void ToggleFav(string id) { if (!Current.Favs.Remove(id)) Current.Favs.Add(id); Save(); }
+    public static List<string> CollectionNames() { return Current.Collections.Select(c => c.Key).ToList(); }
+    public static List<string> InCollection(string name) { var c = Current.Collections.FirstOrDefault(x => x.Key == name); return c.Value ?? new List<string>(); }
+    // puts a game in a collection or takes it out; a collection with no games left goes away
+    public static void SetInCollection(string name, string id, bool on) {
+        int i = Current.Collections.FindIndex(x => x.Key == name);
+        if (i < 0) { if (!on) return; Current.Collections.Add(new KeyValuePair<string, List<string>>(name, new List<string>())); i = Current.Collections.Count - 1; }
+        var games = Current.Collections[i].Value;
+        if (on) { if (!games.Contains(id)) games.Add(id); } else games.Remove(id);
+        if (games.Count == 0) Current.Collections.RemoveAt(i);
         Save();
     }
     public static void Save() {
         try {
             Directory.CreateDirectory(Dir);
             Json.WriteFile(FilePath, new Dictionary<string, object> {
-                { "Profiles", All.Select(p => new Dictionary<string, object> { { "Id", p.Id }, { "Name", p.Name }, { "Avatar", p.Avatar }, { "Frame", p.Frame }, { "Character", p.Character } }).ToList() },
+                { "Profiles", All.Select(p => new Dictionary<string, object> { { "Id", p.Id }, { "Name", p.Name }, { "Avatar", p.Avatar }, { "Frame", p.Frame }, { "Character", p.Character },
+                    { "Favs", p.Favs.ToList() }, { "Collections", p.Collections.Select(c => (object)new Dictionary<string, object> { { "Name", c.Key }, { "Games", c.Value.ToList() } }).ToList() } }).ToList() },
                 { "Current", Current.Id }, { "Original", original }, { "Live", live.ToDictionary(kv => kv.Key, kv => (object)kv.Value) },
             });
         } catch { }
@@ -94,7 +127,7 @@ static class Profiles {
         if (Current == p) Current = All[0];
         Save();
     }
-    public static void Switch(PlayerProfile p) { Current = p; Save(); }
+    public static void Switch(PlayerProfile p) { Current = p; Playtime.Use(PlaytimeFile(p)); Save(); }
 
     // ---------- saves ----------
     // (catalog entry, full path) of each save folder of a game

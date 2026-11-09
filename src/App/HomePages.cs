@@ -166,6 +166,8 @@ partial class Shell {
         AddPageButton("", "Game folder", () => OpenFolder(sel.Dir));
         AddPageButton("", "Save backups", () => OpenFolder(sel.Backups));
         AddPageButton("", "Uninstall", () => { if (sel != null && sel.Inst != null && !running) OpenUninstall(sel); });
+        AddPageButton("", "Add to favourites", () => { if (sel != null) ToggleFavourite(sel); });
+        AddPageButton("", "Collections", () => { if (sel != null) OpenCollections(sel); });
         right.Children.Add(gpButtonRow);
         gamePage.Children.Add(right);
         homeLayer.Children.Add(gamePage);
@@ -213,6 +215,11 @@ partial class Shell {
         SetPageButton(3, "", "Game folder", Directory.Exists(g.Dir), true);
         SetPageButton(4, "", "Save backups", true, true);
         SetPageButton(5, "", "Uninstall", g.Inst != null && !running && !missing, g.Inst != null && !missing);
+        bool fav = Profiles.IsFav(g.Id);
+        SetPageButton(6, fav ? "\uE735" : "\uE734", fav ? "Favourite" : "Add to favourites", true, true);
+        if (fav) gpButtons[6].Glyph.Foreground = Ui.Brush(Ui.Gold);
+        int inCols = Profiles.CollectionNames().Count(c => Profiles.InCollection(c).Contains(g.Id));
+        SetPageButton(7, "\uE8F1", inCols > 0 ? "Collections  (" + inCols + ")" : "Add to a collection", true, true);
         if (gpIdx >= gpButtons.Count || !gpButtons[gpIdx].Enabled) gpIdx = Math.Max(0, gpButtons.FindIndex(b => b.Enabled && b.Root.Visibility == Visibility.Visible));
         MarkPageButtons();
     }

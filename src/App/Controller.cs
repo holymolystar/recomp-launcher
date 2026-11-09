@@ -28,6 +28,35 @@ partial class Shell {
     int focusIdx;
     DateTime nextScan = DateTime.MinValue;
 
+    // ---------- controller settings (Settings > Controller) ----------
+    PadKind padKind = PadKind.None;
+    bool menuKeyWas;
+    int padPress = 24000, padFirst = 400, padRepeat = 110;
+    ControllerView padDiagram, homePadIcon;
+    void ApplyPadSettings() {
+        string rep = Settings.Get("PadRepeat"), stick = Settings.Get("PadStick");
+        padFirst = rep == "slow" ? 520 : rep == "fast" ? 300 : 400;
+        padRepeat = rep == "slow" ? 170 : rep == "fast" ? 70 : 110;
+        padPress = stick == "low" ? 28000 : stick == "high" ? 17000 : 24000;
+        SetPadKind(padKind);
+    }
+    // the controller in use changed (or the prompt settings did): names, colours, icons
+    void SetPadKind(PadKind k) {
+        padKind = k;
+        string prompts = Settings.Get("PadPrompts"), confirm = Settings.Get("PadConfirm");
+        var auto = k == PadKind.None ? PadStyle.Kind : k;
+        PadStyle.Kind = prompts == "xbox" ? PadKind.Xbox : prompts == "playstation" ? PadKind.PlayStation : prompts == "nintendo" ? PadKind.Switch : auto;
+        PadStyle.ConfirmRight = confirm == "right" || (confirm != "bottom" && k == PadKind.Switch);
+        if (homePadIcon != null) { homePadIcon.Kind = PadStyle.Kind; homePadIcon.Connected = k != PadKind.None; homePadIcon.Opacity = k != PadKind.None ? 1 : 0.45;
+            homePadIcon.ToolTip = k != PadKind.None ? PadStyle.Name(k) + " controller connected" : "No controller connected"; homePadIcon.InvalidateVisual(); }
+        if (padDiagram != null) { padDiagram.Kind = PadStyle.Kind; padDiagram.Connected = k != PadKind.None; padDiagram.InvalidateVisual(); }
+        if (padStatus != null) padStatus.Text = k == PadKind.None ? "No controller connected. Plug one in or turn it on: Xbox, PlayStation and Switch Pro controllers all work."
+            : PadStyle.Name(k) + " controller connected" + (k != PadKind.Xbox && HidPads.Model != null && !Pad.TryGet(out dummyState) ? " (" + HidPads.Model + ", read directly)" : "") + ". Press its buttons to try them.";
+        hintsShown = null; SetHints();
+    }
+    Pad.State dummyState;
+    TextBlock padStatus;
+
     void BuildController() {
         padTimer = new DispatcherTimer(DispatcherPriority.Input) { Interval = TimeSpan.FromMilliseconds(16) };
         padTimer.Tick += (s, e) => PadTick();
@@ -42,17 +71,33 @@ partial class Shell {
         }
         Pad.State st;
         bool ok = Pad.TryGet(out st);
+        // an Xbox controller (or anything Steam Input shows as one); else a PlayStation or Switch one read directly
+        PadKind kind = PadKind.None;
+        if (ok) { var plugged = HidPads.Plugged(); kind = plugged != PadKind.None ? plugged : PadKind.Xbox; }
+        else ok = HidPads.TryGet(out st, out kind);
+        if (kind != padKind) SetPadKind(kind);
         if (ok != padOn) {
             padOn = ok;
             padTimer.Interval = TimeSpan.FromMilliseconds(ok ? 16 : 250);
             if (!ok) { padPrev = 0; padHeld.Clear(); }
         }
-        if (!ok || !padActive) { padPrev = 0; return; }
+        if (!ok) { padPrev = 0; return; }
         int b = st.Buttons;
+        // the right face button picks (Nintendo style): A and B change places
+        if (PadStyle.ConfirmRight) { int ab = b & (Pad.A | Pad.B); b = (b & ~(Pad.A | Pad.B)) | ((ab & Pad.A) != 0 ? Pad.B : 0) | ((ab & Pad.B) != 0 ? Pad.A : 0); }
+        // the triggers as buttons (letter jumps in All games)
+        if (st.LT > 120) b |= Pad.LT;
+        if (st.RT > 120) b |= Pad.RT;
+        // the in-game menu: the Xbox / PS / Home button, or View and Menu together, while a game runs
+        bool menuKey = (b & Pad.Guide) != 0 || (b & (Pad.Back | Pad.Start)) == (Pad.Back | Pad.Start);
+        if (menuKey && !menuKeyWas && playing != null && Settings.Get("PadMenu") != "off") { menuKeyWas = true; padPrev = b; ToggleOverlay(); return; }
+        menuKeyWas = menuKey;
+        // the launcher answers the controller only while it's in front, or while its in-game menu is open
+        if (!padActive && !OverlayOpen) { padPrev = 0; return; }
         // the left stick works like the d-pad
         // a worn or resting stick doesn't move the selection: it counts once pushed past 24000 (of 32767), and
         // keeps counting until it's back under 12000; only its stronger direction counts
-        const int press = 24000, release = 12000;
+        int press = padPress, release = padPress / 2;
         int ax = Math.Abs((int)st.LX), ay = Math.Abs((int)st.LY);
         int was = stickDir, now2 = 0;
         if (ay >= ax) { if (st.LY > ((was & Pad.Up) != 0 ? release : press)) now2 = Pad.Up; else if (st.LY < -((was & Pad.Down) != 0 ? release : press)) now2 = Pad.Down; }
@@ -61,15 +106,21 @@ partial class Shell {
         b |= now2;
         int pressed = b & ~padPrev;
         foreach (int bit in new[] { Pad.Up, Pad.Down, Pad.Left, Pad.Right }) {
-            if ((pressed & bit) != 0) padHeld[bit] = now.AddMilliseconds(400);
-            else if ((b & bit) != 0) { DateTime t; if (padHeld.TryGetValue(bit, out t) && now >= t) { pressed |= bit; padHeld[bit] = now.AddMilliseconds(110); } }
+            if ((pressed & bit) != 0) padHeld[bit] = now.AddMilliseconds(padFirst);
+            else if ((b & bit) != 0) { DateTime t; if (padHeld.TryGetValue(bit, out t) && now >= t) { pressed |= bit; padHeld[bit] = now.AddMilliseconds(padRepeat); } }
         }
         padPrev = b;
+        if (padDiagram != null && padDiagram.IsVisible) padDiagram.Show(b);
         // right stick: scroll
         if (Math.Abs((int)st.RY) > press) ScrollBy(-st.RY / 32768.0 * 24);
         if (pressed == 0) return;
+        if (OverlayOpen) {
+            foreach (int bit in new[] { Pad.Up, Pad.Down, Pad.Left, Pad.Right, Pad.A, Pad.B })
+                if ((pressed & bit) != 0) OverlayPad(bit);
+            return;
+        }
         if (!padUsed) { padUsed = true; SetHints(); }
-        foreach (int bit in new[] { Pad.Up, Pad.Down, Pad.Left, Pad.Right, Pad.A, Pad.B, Pad.X, Pad.Y, Pad.LB, Pad.RB, Pad.LS, Pad.RS, Pad.Start, Pad.Back })
+        foreach (int bit in new[] { Pad.Up, Pad.Down, Pad.Left, Pad.Right, Pad.A, Pad.B, Pad.X, Pad.Y, Pad.LB, Pad.RB, Pad.LS, Pad.RS, Pad.Start, Pad.Back, Pad.LT, Pad.RT })
             if ((pressed & bit) != 0) PadPress(bit);
     }
     void ScrollBy(double dy) {
@@ -98,6 +149,7 @@ partial class Shell {
             if (q.Count == 0) { t.Stop(); return; }
             var name = q.Dequeue();
             var f = typeof(Pad).GetField(name);
+            if (name == "Guide") { padUsed = true; ToggleOverlay(); return; }
             if (f != null) { padUsed = true; PadPress((int)f.GetValue(null)); }
         };
         t.Start();
@@ -150,6 +202,9 @@ partial class Shell {
     }
 
     void PadPress(int bit) {
+        if (OverlayOpen) { OverlayPad(bit); return; }
+        if (OskOpen) { OskPad(bit); return; }
+        if (ColOpen) { ColPad(bit); SetHints(); return; }
         if (CreatorOpen) { CreatorPad(bit); return; }
         // overlays first
         if (N<Grid>("UninstLayer").Visibility == Visibility.Visible) {
@@ -178,13 +233,12 @@ partial class Shell {
             return;
         }
         if (N<Grid>("SettingsLayer").Visibility == Visibility.Visible) {
-            if (setIdx < 0) { SelectSetStop(0); return; }
+            // LB / RB: the sections; the d-pad: the nearest switch or button that way
+            if (bit == Pad.LB || bit == Pad.RB) { Sound.Play(Sfx.Move); ShowSetSection(setSection + (bit == Pad.LB ? -1 : 1)); return; }
+            if (setIdx < 0 || setIdx >= setStops.Count) { SelectSetStop(0); return; }
             var el = setStops[setIdx];
-            bool inGrid = el.Parent == showGrid;
-            if (bit == Pad.Up) SelectSetStop(setIdx - (inGrid && setIdx - 2 >= 0 && setStops[setIdx - 2].Parent == showGrid ? 2 : 1));
-            else if (bit == Pad.Down) SelectSetStop(setIdx + (inGrid && setIdx + 2 < setStops.Count && setStops[setIdx + 2].Parent == showGrid ? 2 : 1));
-            else if (bit == Pad.Left) SelectSetStop(setIdx - 1);
-            else if (bit == Pad.Right) SelectSetStop(setIdx + 1);
+            int dx = bit == Pad.Left ? -1 : bit == Pad.Right ? 1 : 0, dy = bit == Pad.Up ? -1 : bit == Pad.Down ? 1 : 0;
+            if (dx != 0 || dy != 0) { int nx = Nearest(setStops, setIdx, dx, dy, N<Border>("SettingsCard")); SelectSetStop(nx < 0 ? setIdx : nx); }
             else if (bit == Pad.A) { var t = el.Tag as Toggle; if (t != null) SetToggle(t, !t.On, false); else Press(el as Button); }
             else if (bit == Pad.Start) SaveSettingsPanel();
             else if (bit == Pad.B) CloseSettings();
@@ -194,6 +248,7 @@ partial class Shell {
         if (N<Grid>("NotesLayer").Visibility == Visibility.Visible) {
             if (bit == Pad.B || bit == Pad.Y) CloseNotes();
             else if (bit == Pad.LB || bit == Pad.RB) SetTab(tab == "notes" ? "activity" : "notes");
+            else if (bit == Pad.A && tab == "notes") ToggleAllNotes();
             else if (bit == Pad.Up) ScrollBy(-80); else if (bit == Pad.Down) ScrollBy(80);
             return;
         }
@@ -202,6 +257,13 @@ partial class Shell {
         // main screen
         if (view == View.Home) {
             if (bit == Pad.LB && homePage == "home") { OpenPlayers(); SetHints(); return; }
+            if (bit == Pad.RB && homePage == "home" && homeZone == "tiles" && sel != null) { ToggleFavourite(sel); return; }
+            if (homeAll) {
+                if (bit == Pad.RB) { OpenSearch(); return; }
+                if (bit == Pad.LB) { CycleFilter(1); SetHints(); return; }
+                if (bit == Pad.LT || bit == Pad.RT) { JumpLetter(bit == Pad.RT ? 1 : -1); return; }
+                if (bit == Pad.B && SearchText().Length > 0) { ClearSearch(); return; }
+            }
             string d = bit == Pad.Left ? "left" : bit == Pad.Right ? "right" : bit == Pad.Up ? "up" : bit == Pad.Down ? "down" : bit == Pad.A ? "ok" : bit == Pad.B ? "back" : bit == Pad.Y ? "info" : null;
             if (d != null && HomeMove(d)) { SetHints(); return; }
         }
@@ -254,8 +316,17 @@ partial class Shell {
                 spec.Add(new[] { "A", "Install" });
                 if (romGame != null && romGame.Rom.Kind != "none") { spec.Add(new[] { "X", "Browse" }); spec.Add(new[] { "Y", "Skip" }); }
                 spec.Add(new[] { "B", "Close" });
-            } else if (N<Grid>("SettingsLayer").Visibility == Visibility.Visible) { spec.Add(new[] { "A", "Select" }); spec.Add(new[] { "≡", "Save" }); spec.Add(new[] { "X", "Defaults" }); spec.Add(new[] { "B", "Cancel" }); }
-            else if (N<Grid>("NotesLayer").Visibility == Visibility.Visible) { spec.Add(new[] { "LB", "Tabs" }); spec.Add(new[] { "B", "Close" }); }
+            } else if (N<Grid>("SettingsLayer").Visibility == Visibility.Visible) {
+                spec.Add(new[] { "LB", "Section" }); spec.Add(new[] { "RB", "Section" }); spec.Add(new[] { "A", "Select" }); spec.Add(new[] { "\u2261", "Save" });
+                if (N<Button>("BtnSetDefaults").Visibility == Visibility.Visible) spec.Add(new[] { "X", "Defaults" });
+                spec.Add(new[] { "B", "Cancel" });
+            }
+            else if (N<Grid>("NotesLayer").Visibility == Visibility.Visible) {
+                if (tab == "notes" && notesFolds.Count > 1) spec.Add(new[] { "A", notesFolds.Skip(1).Any(f => !notes.Blocks.Contains((System.Windows.Documents.Section)f[1])) ? "All versions" : "Newest only" });
+                spec.Add(new[] { "LB", "Tabs" }); spec.Add(new[] { "B", "Close" });
+            }
+            else if (OskOpen) { }
+            else if (ColOpen) { spec.Add(new[] { "A", "Select" }); spec.Add(new[] { "B", "Done" }); }
             else if (PlayersOpen) { spec.Add(new[] { "A", plIdx < Profiles.All.Count ? "Play as" : plIdx == Profiles.All.Count ? "New profile" : "Select" }); spec.Add(new[] { "X", "Edit" }); spec.Add(new[] { "B", "Close" }); }
             else if (ProfileOpen) { spec.Add(new[] { "A", "Select" }); spec.Add(new[] { "B", "Close" }); }
             else if (view == View.Home) {
@@ -264,6 +335,8 @@ partial class Shell {
                 if (homePage != "game") {
                     spec.Add(new[] { "RS", homeAll ? "Layout" : "All games" });
                     spec.Add(new[] { "LB", homeAll ? "Filter" : "Profiles" });
+                    if (homeAll) spec.Add(new[] { "RB", "Search" });
+                    else if (homeZone == "tiles" && sel != null) spec.Add(new[] { "RB", Profiles.IsFav(sel.Id) ? "Unfavourite" : "Favourite" });
                     spec.Add(new[] { "≡", "Settings" });
                 }
                 if (sel != null && sel.State == State.Update && homeZone == "tiles" && homePage != "game") spec.Add(new[] { "X", "Update" });
@@ -292,7 +365,9 @@ partial class Shell {
         foreach (var s in spec) host.Children.Add(Hint(s[0], s[1]));
     }
     static UIElement Hint(string key, string label) {
-        string color = key == "A" ? "#6CC04A" : key == "B" ? "#E0524B" : key == "X" ? "#3E8FE0" : key == "Y" ? "#E8B730" : "#8A9AA5";
+        // named and coloured as on the controller in use (Settings > Controller)
+        string color = PadStyle.Colour(key);
+        key = PadStyle.Label(key);
         bool round = key.Length == 1;
         var badge = new Border { Width = round ? 24 : 32, Height = 24, CornerRadius = new CornerRadius(12), Background = Ui.Brush("#1C252C"),
             BorderBrush = Ui.Brush(color), BorderThickness = new Thickness(1.5), VerticalAlignment = VerticalAlignment.Center,

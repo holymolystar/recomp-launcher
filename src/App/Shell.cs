@@ -88,7 +88,12 @@ partial class Shell {
         BuildController();
         WireEvents();
         W.ContentRendered += (s, e) => Started();
-        W.ShowDialog();
+        // shown as a normal window (not a dialog, which hiding would end), running until it's closed: the launcher
+        // can wait hidden in the tray while a game runs
+        var frame = new DispatcherFrame();
+        W.Closed += (s, e) => frame.Continue = false;
+        W.Show();
+        Dispatcher.PushFrame(frame);
     }
     void ApplySettings() {
         foreach (var g in Games) {
@@ -126,11 +131,17 @@ partial class Shell {
         var first = Catalog.Find(args.Select ?? Settings.Get("LastGame")) ?? Games[0];
         SetTab("notes");
         SetView(View.Home, false);
+        if (args.Select == null && args.Snapshot == null && Settings.Get("LastPage") == "all") {
+            homePage = "all"; filter = Settings.Get("LastFilter").Length > 0 ? Settings.Get("LastFilter") : "all";
+            ShowHomePage();
+        }
         ShowGame(first);
         if (args.Full || (args.Snapshot == null && Settings.Get("Fullscreen") == "True")) SetFullscreen(true);
         // card faces after the first frame, a few at a time, so the window shows at once
         LoadIconsLater(Games.ToList());
         CheckAll(false);
+        if (args.Snapshot == null) CheckLauncher(false);
+        ApplyPadSettings();
         StartController();
         SetAutoCheck();
         if (args.Search != null) N<TextBox>("SearchBox").Text = args.Search;
@@ -467,8 +478,11 @@ partial class Shell {
         foreach (var p in new Panel[] { N<StackPanel>("Tiles"), N<WrapPanel>("GridTiles"), N<WrapPanel>("CompactTiles"), N<StackPanel>("ListRows") }) p.Children.Clear();
         if (homeTiles != null) { homeTiles.Children.Clear(); homeAllTiles.Children.Clear(); }
         if (view == View.Home) {
-            foreach (var g in o) { homeTiles.Children.Add(((GameUi)g.Ui).Home.Root); homeAllTiles.Children.Add(AllElement(g)); }
-            AddHomeSlots(); order = o; QueueScroll(); return;
+            // the home row: favourites first, then the games played most recently ("continue playing"), then the rest
+            var row = Games.OrderByDescending(g => Profiles.IsFav(g.Id)).ThenByDescending(g => Playtime.Last(g.Id)).ThenBy(Catalog.SeriesOf).ThenBy(g => g.Rank).ToList();
+            foreach (var g in row) homeTiles.Children.Add(((GameUi)g.Ui).Home.Root);
+            foreach (var g in o) homeAllTiles.Children.Add(AllElement(g));
+            AddHomeSlots(); order = homePage == "home" ? row : o; QueueScroll(); return;
         }
         int prev = -1;
         foreach (var g in o) {
@@ -486,13 +500,32 @@ partial class Shell {
         // the home row holds only installed games (and one being installed); the rest are in All games
         if (view == View.Home && homePage == "home") return g.Inst != null || g.IsBusy;
         string q = N<TextBox>("SearchBox").Text.Trim();
-        if (q.Length > 0 && (g.Name + " " + g.Short + " " + g.Source + " " + g.Id).IndexOf(q, StringComparison.CurrentCultureIgnoreCase) < 0) return false;
-        switch (filter) {
+        if (q.Length > 0 && (g.Name + " " + g.Short).IndexOf(q, StringComparison.CurrentCultureIgnoreCase) < 0) return false;
+        return InFilter(g, filter);
+    }
+    bool InFilter(Game g, string f) {
+        switch (f) {
             case "installed": return g.Inst != null;
             case "updates": return g.State == State.Update || g.State == State.Updating;
             case "new": return g.Inst == null;
-            default: return true;
+            case "fav": return Profiles.IsFav(g.Id);
+            default: return f.StartsWith("col:") ? Profiles.InCollection(f.Substring(4)).Contains(g.Id) : true;
         }
+    }
+    // All games' filters: the four, then Favourites and the profile's collections when it has any
+    List<string[]> HomeFilters() {
+        var l = FilterDefs.ToList();
+        if (Profiles.Current.Favs.Count > 0) l.Add(new[] { "fav", "\u2605 Favourites" });
+        foreach (var c in Profiles.CollectionNames()) l.Add(new[] { "col:" + c, c });
+        return l;
+    }
+    // the profile changed: its favourites, collections and play time
+    void RefreshForProfile() {
+        foreach (var g in Games) UpdateHomeTile(g);
+        pillIds = null; UpdateChips();
+        ApplySort(true); ApplyFilter();
+        if (view == View.Home) MarkHome(null, sel);
+        UpdateViews();
     }
     List<Game> ShownGames() { return order.Where(g => ElementOf(g).Visibility == Visibility.Visible).ToList(); }
     void ApplyFilter() {
@@ -513,8 +546,8 @@ partial class Shell {
     void SetFilter(string id) { filter = id; UpdateChips(); ApplyFilter(); QueueScroll(); }
     void CycleFilter(int dir) {
         Sound.Play(Sfx.Move);
-        var ids = new[] { "all", "installed", "updates", "new" };
-        int i = (Array.IndexOf(ids, filter) + dir + ids.Length) % ids.Length;
+        var ids = view == View.Home ? HomeFilters().Select(f => f[0]).ToArray() : new[] { "all", "installed", "updates", "new" };
+        int i = (Math.Max(0, Array.IndexOf(ids, filter)) + dir + ids.Length) % ids.Length;
         SetFilter(ids[i]);
     }
     void SetSort(string s) {
@@ -785,7 +818,7 @@ partial class Shell {
     void PrimaryAction(Game g) {
         if (g != sel) ShowGame(g);
         if (g.State == State.Missing) { Sound.Play(Sfx.Select); TryAction("Installing " + g.Name, () => StartInstall(g)); }
-        else if (!g.IsBusy) { Sound.Play(Sfx.Launch); TryAction("Starting " + g.Name, () => StartGame(g)); }
+        else if (!g.IsBusy) { Sound.Play(Sfx.Launch); if (padUsed && Settings.On("PadRumble")) Pad.Rumble(0.45, 160); TryAction("Starting " + g.Name, () => StartGame(g)); }
         else Sound.Play(Sfx.Bump);
     }
     void TryAction(string what, Action a) {
@@ -846,7 +879,13 @@ partial class Shell {
                 var r = MessageBox.Show(W, "An update is still running. Closing this window won't stop the current game's update, but any game after it in the queue won't be updated.\n\nClose anyway?", "Recomp Launcher", MessageBoxButton.YesNo, MessageBoxImage.Warning);
                 if (r != MessageBoxResult.Yes) { e.Cancel = true; return; }
             }
-            if (args.Snapshot == null && sel != null) { Settings.Set("LastGame", sel.Id); Settings.Save(); }
+            if (args.Snapshot == null && sel != null) {
+                // where you were: the game, the page (Home or All games) and the filter there
+                Settings.Set("LastGame", sel.Id);
+                Settings.Set("LastPage", homePage == "game" ? gameBack : homePage);
+                Settings.Set("LastFilter", filter);
+                Settings.Save();
+            }
         };
         W.Activated += (s, e) => { if (isFull) W.Topmost = true; padActive = true; };
         W.Deactivated += (s, e) => { W.Topmost = false; padActive = false; };
@@ -860,25 +899,38 @@ partial class Shell {
         };
         // on a big screen everything scales up together, like a console menu on a TV (made for about 800 px high)
         var root = N<Border>("Root");
-        root.SizeChanged += (s, e) => {
-            double k = Math.Max(1.0, root.ActualHeight / 800.0);
-            foreach (var n in new[] { "Main", "NotesLayer", "SettingsLayer", "RomLayer", "UninstLayer", "ProfileLayer", "PlayersLayer", "CreatorLayer" }) {
+        root.SizeChanged += (s, e) => ApplyScale();
+    }
+    // TV mode (Settings > General): everything a quarter bigger, to read from the couch; Automatic in full screen
+    bool TvMode { get { string t = Settings.Get("TvMode"); return t == "on" || (t == "auto" && isFull); } }
+    void ApplyScale() {
+        var root = N<Border>("Root");
+        {
+            double k = Math.Max(1.0, root.ActualHeight / 800.0) * (TvMode ? 1.25 : 1);
+            foreach (var n in new[] { "Main", "NotesLayer", "SettingsLayer", "RomLayer", "UninstLayer", "ProfileLayer", "PlayersLayer", "CreatorLayer", "ColLayer", "OskLayer" }) {
                 var el = W.FindName(n) as FrameworkElement;
                 if (el != null) el.LayoutTransform = new ScaleTransform(k, k);
             }
             N<Border>("RomCard").MaxHeight = Math.Max(300, root.ActualHeight / k - 40);
             var art = N<Image>("HeroArt"); art.Width = root.ActualHeight * 0.85; art.Height = art.Width;
             QueueScroll();
-        };
+        }
     }
     bool AnyDialog() {
-        return CreatorOpen || PlayersOpen || ProfileOpen || N<Grid>("SettingsLayer").Visibility == Visibility.Visible || N<Grid>("RomLayer").Visibility == Visibility.Visible ||
+        return OskOpen || ColOpen || CreatorOpen || PlayersOpen || ProfileOpen || N<Grid>("SettingsLayer").Visibility == Visibility.Visible || N<Grid>("RomLayer").Visibility == Visibility.Visible ||
                N<Grid>("UninstLayer").Visibility == Visibility.Visible;
     }
     void OnKey(object s, KeyEventArgs e) {
         var k = e.Key; var box = N<TextBox>("SearchBox");
         bool notes = N<Grid>("NotesLayer").Visibility == Visibility.Visible;
         if (padUsed) { padUsed = false; HideRing(); SetHints(); }
+        if (OskOpen) { if (OskKeyDown(k)) e.Handled = true; return; }
+        if (ColOpen) {
+            if (k == Key.Escape) { CloseCollections(); e.Handled = true; return; }
+            int cb = k == Key.Up ? Pad.Up : k == Key.Down ? Pad.Down : k == Key.Left ? Pad.Left : k == Key.Right ? Pad.Right : k == Key.Enter || k == Key.Space ? Pad.A : 0;
+            if (cb != 0) { ColPad(cb); e.Handled = true; }
+            return;
+        }
         if (CreatorOpen) { if (!(Keyboard.FocusedElement is TextBox) && CreatorKey(k)) e.Handled = true; return; }
         if (N<Grid>("UninstLayer").Visibility == Visibility.Visible) { if (k == Key.Escape) { CloseUninstall(); e.Handled = true; } return; }
         if (FbVisible()) { if (FbKey(k)) e.Handled = true; return; }

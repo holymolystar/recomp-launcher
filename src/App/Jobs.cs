@@ -97,7 +97,11 @@ partial class Shell {
         int n = list.Count(g => g.State == State.Update), off = list.Count(g => g.State == State.Offline);
         int inst = list.Count(g => g.Inst != null);
         string old = usedOld ? "Some release pages could not be reached; showing the last known versions." : "";
-        if (n > 0) { SetStep(n == 1 ? "1 update available" : n + " updates available", Ui.Gold, old); SetProgress(0); }
+        if (n > 0) {
+            SetStep(n == 1 ? "1 update available" : n + " updates available", Ui.Gold, old); SetProgress(0);
+            var up = list.Where(g => g.State == State.Update).ToList();
+            Notify(n == 1 ? "An update is out" : n + " updates are out", string.Join(", ", up.Take(3).Select(g => g.Name + " " + g.Latest.Tag).ToArray()) + (n > 3 ? " and more" : ""));
+        }
         else if (off > 0) { SetStep("Couldn't reach the release pages", Ui.Red, "Check your internet connection, or add a GitHub token in Settings."); SetProgress(0); }
         else if (inst == 0) { SetStep("No games installed yet: pick one and press Install", Ui.Muted); SetProgress(0); }
         else { SetStep("Everything is up to date", Ui.Teal, old); SetProgress(1); }
@@ -420,7 +424,8 @@ partial class Shell {
         Engine.Start(file, args, playDir, hidden);
         SetStep("Starting " + g.Name + "...", Ui.Teal);
         Engine.StartPlaytime(g, playDir);
-        if (!running && Settings.On("CloseOnPlay")) CloseLauncher();
+        WatchGame(g);
+        if (!running) { string mode = OnPlayMode(); if (mode == "close") CloseLauncher(); else if (mode == "tray") WaitInTray(g); }
     }
     void CloseLauncher() {
         W.Topmost = false;
