@@ -75,13 +75,15 @@ partial class Shell {
         game.Children.Add(ovIcon); game.Children.Add(ovTitle); game.Children.Add(ovSub);
         DockPanel.SetDock(game, Dock.Top); dock.Children.Add(game);
         // hints at the bottom
-        var hints = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(-14, 20, 0, 0) };
+        var hints = ovHints = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(-14, 20, 0, 0) };
         hints.Children.Add(Hint("A", "Select")); hints.Children.Add(Hint("B", "Resume"));
         DockPanel.SetDock(hints, Dock.Bottom); dock.Children.Add(hints);
+        var music = BuildOverlayMusic();   // Spotify's song and Previous / Play / Next (Music.cs)
+        DockPanel.SetDock(music, Dock.Bottom); dock.Children.Add(music);
         ovNote = new TextBlock { FontSize = 12, Foreground = Ui.Brush(Ui.Muted), TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 14, 0, 0) };
         DockPanel.SetDock(ovNote, Dock.Bottom); dock.Children.Add(ovNote);
         // the choices
-        var list = new StackPanel();
+        var list = ovList = new StackPanel();
         foreach (var spec in new[] { new[] { "", "Resume" }, new[] { "", "Go to the launcher" }, new[] { "", "Close the game" } }) {
             var row = new StackPanel { Orientation = Orientation.Horizontal };
             row.Children.Add(new TextBlock { Text = spec[0], FontFamily = Ui.Mdl, FontSize = 18, Width = 34, VerticalAlignment = VerticalAlignment.Center });
@@ -91,12 +93,15 @@ partial class Shell {
             b.Click += (s, e) => { ovIdx = idx; OverlayChoose(); };
             ovButtons.Add(b); list.Children.Add(b);
         }
+        TextBlock unused;
+        list.Children.Add(OvRow("", "Quick settings", ovButtons, out unused));   // volume, sound output, Bluetooth (OverlayPages.cs)
+        list.Children.Add(OvRow("", "Power", ovButtons, out unused));            // sleep, restart, shut down
         dock.Children.Add(list);
         ovPanel.Child = dock;
         root.Children.Add(ovPanel);
         ov.Content = root;
         ov.PreviewKeyDown += (s, e) => {
-            int bit = e.Key == Key.Up ? Pad.Up : e.Key == Key.Down ? Pad.Down : e.Key == Key.Enter || e.Key == Key.Space ? Pad.A : e.Key == Key.Escape ? Pad.B : 0;
+            int bit = e.Key == Key.Up ? Pad.Up : e.Key == Key.Down ? Pad.Down : e.Key == Key.Left ? Pad.Left : e.Key == Key.Right ? Pad.Right : e.Key == Key.Enter || e.Key == Key.Space ? Pad.A : e.Key == Key.Escape ? Pad.B : 0;
             if (bit != 0) { OverlayPad(bit); e.Handled = true; }
         };
         ovTick = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
@@ -111,6 +116,7 @@ partial class Shell {
         ovIcon.Source = (ImageSource)g.Icon;
         ovIcon.Margin = new Thickness(0);
         ovIdx = 0; ovCloseStep = 0;
+        if (ovPage != "main") ShowOvPage("main");
         ((TextBlock)((StackPanel)ovButtons[2].Content).Children[1]).Text = "Close the game";
         ovNote.Text = "";
         // on the game's screen
@@ -152,6 +158,7 @@ partial class Shell {
         bool padChg; int pad = PadBatteryPercent(out padChg);
         if (pad >= 0) battery += "   \U0001F3AE " + (padChg ? "charging" : pad + "%");
         ovClock.Text = DateTime.Now.ToString("HH:mm") + battery;
+        UpdateOverlayMusic();
         // a close that didn't take: offer to force it
         if (ovCloseStep == 2 && (DateTime.Now - ovCloseAt).TotalSeconds > 5 && Engine.IsRunning(g)) {
             ovCloseStep = 3;
@@ -160,13 +167,16 @@ partial class Shell {
         }
     }
     void MarkOverlay() {
-        for (int i = 0; i < ovButtons.Count; i++) {
+        var rows = OvRows();
+        for (int i = 0; i < rows.Count; i++) {
             bool on = i == ovIdx;
-            ovButtons[i].Background = on ? Ui.Brush(Ui.Teal) : Ui.Brush("#1C252C");
-            ovButtons[i].Foreground = on ? Ui.Brush(Theme.Current.Light ? "#ffffff" : "#0A0E11") : Ui.Brush(Ui.Text);
+            rows[i].Background = on ? Ui.Brush(Ui.Teal) : Ui.Brush("#1C252C");
+            rows[i].Foreground = on ? Ui.Brush(Theme.Current.Light ? "#ffffff" : "#0A0E11") : Ui.Brush(Ui.Text);
         }
     }
     void OverlayPad(int bit) {
+        if (OverlayMusicPad(bit)) return;
+        if (OverlayPagePad(bit)) return;   // Quick settings and Power (OverlayPages.cs)
         if (bit == Pad.B) { ResumeGame(); return; }
         if (bit == Pad.A) { OverlayChoose(); return; }
         int was = ovIdx;
@@ -178,7 +188,10 @@ partial class Shell {
     }
     void OverlayChoose() {
         var g = playing;
+        if (ovPage != "main") { OverlayPageChoose(); return; }
         if (ovIdx == 0) { ResumeGame(); return; }
+        if (ovIdx == 3) { Sound.Play(Sfx.Open); ShowOvPage("quick"); return; }
+        if (ovIdx == 4) { Sound.Play(Sfx.Open); ShowOvPage("power"); return; }
         if (ovIdx == 1) { CloseOverlay(true); if (inTray) ComeBack(null); else { W.Show(); W.Activate(); BringToFront(new WindowInteropHelper(W).Handle); } return; }
         if (g == null) { CloseOverlay(false); return; }
         var label = (TextBlock)((StackPanel)ovButtons[2].Content).Children[1];

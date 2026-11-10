@@ -21,3 +21,4 @@ installer/Output/
 # The macOS launcher's build output
 mac/.build/
 mac/build/
+cache/

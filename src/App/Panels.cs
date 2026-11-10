@@ -236,17 +236,39 @@ partial class Shell {
 
     // ---------- settings ----------
     Toggle optFull, optStartup, optAuto;
-    PasswordBox tokenBox, steamKeyBox; TextBlock tokenCheck, remoteInfo; TextBox discordBox;
+    string autoHideWas, storesWas;
+    PasswordBox tokenBox, steamKeyBox; TextBlock tokenCheck, remoteInfo; TextBox discordBox; Image remoteQr;
     void FillRemoteInfo() {
         remoteInfo.Inlines.Clear();
         remoteInfo.Inlines.Add(new System.Windows.Documents.Run("On your phone, open  "));
         remoteInfo.Inlines.Add(new System.Windows.Documents.Run(RemoteAddress()) { FontFamily = Ui.Semi, Foreground = Ui.Brush(Ui.Teal) });
         remoteInfo.Inlines.Add(new System.Windows.Documents.Run("   PIN  "));
         remoteInfo.Inlines.Add(new System.Windows.Documents.Run(RemotePin()) { FontFamily = Ui.Semi, Foreground = Ui.Brush(Ui.Teal) });
+        remoteInfo.Inlines.Add(new System.Windows.Documents.Run("\nor scan this with your phone's camera:") { Foreground = Ui.Brush(Ui.Muted), FontSize = 12 });
+        string addr = RemoteAddress();
+        remoteQr.Source = addr.StartsWith("http") ? QrCode.Picture(addr + "/?pin=" + RemotePin()) : null;
     }
     readonly Dictionary<string, Toggle> showToggles = new Dictionary<string, Toggle>();
     readonly List<FolderRow> folderRows = new List<FolderRow>();
-    StackPanel showButtons; UniformGrid showGrid;
+    StackPanel showButtons, libStores; UniformGrid showGrid; TextBox libSearch; TextBlock libCount; string libStore = "all";
+    readonly List<FrameworkElement> extraStops = new List<FrameworkElement>();   // more buttons the controller can reach
+    // Settings > Library: only the switches of the games that match the search and the store picked
+    void FilterLibrary() {
+        if (showGrid == null) return;
+        string q = libSearch.Text.Trim();
+        int n = 0;
+        foreach (var g in Games) {
+            bool on = (libStore == "all" || StoreOf(g) == libStore) && (q.Length == 0 || g.Name.IndexOf(q, StringComparison.CurrentCultureIgnoreCase) >= 0);
+            showToggles[g.Id].Root.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+            if (on) n++;
+        }
+        foreach (Button b in libStores.Children) {
+            bool picked = (string)b.Tag == libStore;
+            if (picked) { b.Background = Ui.Brush(Ui.Teal); b.Foreground = Ui.Brush(Theme.Current.Light ? "#ffffff" : "#0A0E11"); }
+            else { b.ClearValue(Control.BackgroundProperty); b.ClearValue(Control.ForegroundProperty); }
+        }
+        libCount.Text = n + (n == 1 ? " game" : " games");
+    }
     static string StartupLink { get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Startup), "Recomp Launcher.lnk"); } }
     TextBlock Heading(string text, bool first) {
         return new TextBlock { Text = text, FontSize = 10.5, FontWeight = FontWeights.Bold, Foreground = Ui.Brush(Ui.Teal), Margin = new Thickness(0, first ? 4 : 18, 0, 4) };
@@ -263,14 +285,24 @@ partial class Shell {
         optStartup = NewToggle("Open when Windows starts", "Adds Recomp Launcher to your Startup folder.");
         optAuto = NewToggle("Check for updates every 3 hours", "While the launcher is open. Only installed games are checked.");
         foreach (var t in new[] { optFull, optStartup, optAuto }) rows.Children.Add(t.Root);
+        rows.Children.Add(ChoiceRow("AskWho", "Ask who's playing", "With more than one profile. Each game: before a game starts, so it always starts with the right player's saves. At start: once, when the launcher opens. Never: it stays the profile used last (LB on Home switches).", 0,
+            new[] { "game", "start", "never" }, new[] { "Each game", "At start", "Never" }));
         rows.Children.Add(ChoiceRow("StartAnim", "Start-up animation", "The logo and a short chime as the launcher opens (about a second; a click or any key skips it).", 0,
             new[] { "on", "off" }, new[] { "On", "Off" }));
         rows.Children.Add(ChoiceRow("TvMode", "Big screen (TV) mode", "Everything a quarter bigger, to read from across the room. Automatic: in full screen.", 0,
             new[] { "off", "auto", "on" }, new[] { "Off", "Automatic", "On" }));
-        rows.Children.Add(ChoiceRow("SteamLibrary", "Steam games", "Your library: every game you own on Steam gets a tile in All games (installed ones on Home too), installed and started through Steam. Changes show the next time the launcher opens.", 0,
+        rows.Children.Add(ChoiceRow("SteamLibrary", "Steam games", "Your library: every game you own on Steam gets a tile in All games (installed ones on Home too), installed and started through Steam. The launcher reopens when you save a change here.", 0,
             new[] { "library", "installed", "listed" }, new[] { "Your library", "Installed", "Only the launcher's" }));
-        rows.Children.Add(ChoiceRow("OtherStores", "Epic Games and GOG", "Your Epic Games library and your installed GOG games, each in a group of their own, installed and started through their store. Changes show the next time the launcher opens.", 0,
+        rows.Children.Add(ChoiceRow("OtherStores", "Epic Games and GOG", "Your Epic Games library and your installed GOG games, each in a group of their own, installed and started through their store. The launcher reopens when you save a change here.", 0,
             new[] { "on", "off" }, new[] { "Show", "Hide" }));
+        // the controller browser's browser, when more than one is installed
+        var browsers = InstalledBrowsers();
+        if (browsers.Count > 1) rows.Children.Add(ChoiceRow("Browser", "Browser", "Which browser the Browser button on Home opens. The controller works any of them like a mouse.", 0,
+            browsers.Select(b => b[0]).ToArray(), browsers.Select(b => b[1]).ToArray()));
+        rows.Children.Add(ChoiceRow("StoreAutoHide", "Store library games", "Hidden: games from your Steam, Epic and GOG libraries stay out of sight until you turn one on in Settings > Library (the store games the launcher lists itself, like Putt-Putt and Subnautica, always show).", 0,
+            new[] { "auto", "show" }, new[] { "Hidden", "Shown" }));
+        rows.Children.Add(ChoiceRow("StoreWindows", "Store windows", "When a Steam, Epic or GOG game starts, their own windows often pop up over it. Hide: the launcher minimises them for the first 30 seconds, so the game is in front.", 0,
+            new[] { "hide", "leave" }, new[] { "Hide", "Leave" }));
         rows.Children.Add(LauncherUpdateRow());
         rows = SetSection("Sound", "\uE767", "Little sounds as you move around, and the character creator's tune.");
         rows.Children.Add(VolumeRow());
@@ -302,7 +334,7 @@ partial class Shell {
         keySite.Click += (s, e) => Stores.Open("https://steamcommunity.com/dev/apikey");
         var kl = new Grid();
         kl.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); kl.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        Grid.SetColumn(keySite, 1); kl.Children.Add(steamKeyBox); kl.Children.Add(keySite);
+        extraStops.Add(keySite); Grid.SetColumn(keySite, 1); kl.Children.Add(steamKeyBox); kl.Children.Add(keySite);
         rows.Children.Add(kl);
 
         rows = SetSection("Phone remote", "\uE8EA", "Start and close games from your phone, on the same Wi-Fi.");
@@ -310,9 +342,13 @@ partial class Shell {
             new[] { "on", "off" }, new[] { "On", "Off" }));
         remoteInfo = new TextBlock { FontSize = 13, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 10, 0, 8) };
         rows.Children.Add(remoteInfo);
+        // scan it with the phone's camera: the address with the PIN in it, so nothing needs typing
+        remoteQr = new Image { Width = 170, Height = 170, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 0, 0, 10) };
+        RenderOptions.SetBitmapScalingMode(remoteQr, BitmapScalingMode.NearestNeighbor);
+        rows.Children.Add(remoteQr);
         var newPin = MakeButton("New PIN", 34); newPin.HorizontalAlignment = HorizontalAlignment.Left;
         newPin.Click += (s, e) => { NewRemotePin(); FillRemoteInfo(); Sound.Play(Sfx.Select); };
-        rows.Children.Add(newPin);
+        rows.Children.Add(newPin); extraStops.Add(newPin);
 
         rows = SetSection("Discord", "\uE8BD", "Optional: show what you play on your Discord profile.");
         rows.Children.Add(new TextBlock { TextWrapping = TextWrapping.Wrap, FontSize = 11.5, Foreground = Ui.Brush(Ui.Muted), Margin = new Thickness(0, 0, 0, 8),
@@ -323,18 +359,39 @@ partial class Shell {
         dSite.Click += (s, e) => Stores.Open("https://discord.com/developers/applications");
         var dl = new Grid();
         dl.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); dl.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        Grid.SetColumn(dSite, 1); dl.Children.Add(discordBox); dl.Children.Add(dSite);
+        extraStops.Add(dSite); Grid.SetColumn(dSite, 1); dl.Children.Add(discordBox); dl.Children.Add(dSite);
         rows.Children.Add(dl);
 
         rows = SetSection("Library", "\uE8F1", "Which games show up in the launcher.");
         rows.Children.Add(new TextBlock { TextWrapping = TextWrapping.Wrap, FontSize = 11.5, Foreground = Ui.Brush(Ui.Muted), Margin = new Thickness(0, 0, 0, 6),
             Text = "Turn a game off to hide it from the library. Nothing is uninstalled: turn it back on any time." });
+        // find games: a search (typed, or with the controller's keyboard) and a pill per store
+        var find = new Grid { Margin = new Thickness(0, 4, 0, 8) };
+        find.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); find.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        libSearch = new TextBox { Height = 36, FontSize = 13, Padding = new Thickness(10, 0, 10, 0), VerticalContentAlignment = VerticalAlignment.Center,
+            Background = Ui.Brush("#0A0E11"), Foreground = Ui.Brush(Ui.Text), BorderBrush = Ui.Brush("#26333C"), CaretBrush = Ui.Brush(Ui.Text) };
+        libSearch.TextChanged += (s, e) => FilterLibrary();
+        var typeBtn = MakeButton("Type", 36); typeBtn.Margin = new Thickness(8, 0, 0, 0);
+        typeBtn.Click += (s, e) => OpenOsk("Find a game", libSearch.Text, t => libSearch.Text = t, t => libSearch.Text = t ?? "", null);
+        Grid.SetColumn(typeBtn, 1); find.Children.Add(libSearch); find.Children.Add(typeBtn); extraStops.Add(typeBtn);
+        rows.Children.Add(find);
+        libStores = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 6) };
+        foreach (var st in new[] { new[] { "all", "All" }, new[] { "recomp", "Recomps" }, new[] { "steam", "Steam" }, new[] { "epic", "Epic Games" }, new[] { "gog", "GOG" } }) {
+            if (st[0] != "all" && st[0] != "recomp" && !Games.Any(g => StoreOf(g) == st[0])) continue;
+            var b = MakeButton(st[1], 32); b.FontSize = 12.5; b.Margin = new Thickness(0, 0, 8, 0); b.Tag = st[0];
+            b.Click += (s, e) => { libStore = (string)((Button)s).Tag; FilterLibrary(); };
+            libStores.Children.Add(b);
+        }
+        rows.Children.Add(libStores);
+        // these act on the games shown (after the search and store)
         showButtons = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 4) };
-        foreach (var sb in new[] { new[] { "Show all", "all" }, new[] { "Only installed", "installed" } }) {
+        foreach (var sb in new[] { new[] { "Show these", "on" }, new[] { "Hide these", "off" }, new[] { "Only installed", "installed" } }) {
             var b = MakeButton(sb[0], 32); b.FontSize = 12.5; b.Margin = new Thickness(0, 0, 8, 0); string mode = sb[1];
-            b.Click += (s, e) => { foreach (var g in Games) SetToggle(showToggles[g.Id], mode == "all" || g.Inst != null, false); };
+            b.Click += (s, e) => { foreach (var g in Games) if (showToggles[g.Id].Root.Visibility == Visibility.Visible) SetToggle(showToggles[g.Id], mode == "on" || (mode == "installed" && g.Inst != null), false); };
             showButtons.Children.Add(b);
         }
+        libCount = new TextBlock { FontSize = 11.5, Foreground = Ui.Brush(Ui.Muted), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(6, 0, 0, 0) };
+        showButtons.Children.Add(libCount);
         rows.Children.Add(showButtons);
         showGrid = new UniformGrid { Columns = 2 };
         foreach (var g in Games.OrderBy(Catalog.SeriesOf).ThenBy(x => x.Rank)) {
@@ -342,6 +399,7 @@ partial class Shell {
             showToggles[g.Id] = t; showGrid.Children.Add(t.Root);
         }
         rows.Children.Add(showGrid);
+        FilterLibrary();
 
         rows = SetSection("Game folders", "\uE8B7", "Where each game is (or will be) installed.");
         var defs = new List<FolderRow>();
@@ -460,6 +518,7 @@ partial class Shell {
         FillRemoteInfo();
         tokenCheck.Text = tokenBox.Password.Length > 0 ? "A token is saved." : ""; tokenCheck.Foreground = Ui.Brush(Ui.Muted);
         foreach (var g in Games) SetToggle(showToggles[g.Id], !g.Hidden, true);
+        autoHideWas = Settings.Get("StoreAutoHide"); storesWas = Settings.Get("SteamLibrary") + "|" + Settings.Get("OtherStores");
         PickTheme(Theme.Current.Id);
         fb.Visibility = Visibility.Collapsed;
         ShowCard("SettingsLayer", "SettingsCard");
@@ -496,13 +555,14 @@ partial class Shell {
             if (optStartup.On && !File.Exists(StartupLink)) MakeShortcut(StartupLink);
             else if (!optStartup.On && File.Exists(StartupLink)) File.Delete(StartupLink);
         } catch (Exception e) { Log("Couldn't change the Startup folder: " + e.Message, Ui.Red); }
-        foreach (var g in Games) g.Hidden = !showToggles[g.Id].On;
-        Settings.Set("Hidden", string.Join(",", Games.Where(g => g.Hidden).Select(g => g.Id)));
+        if (autoHideWas != Settings.Get("StoreAutoHide")) LoadHidden();   // switched: the store games all hide, or all show
+        else { foreach (var g in Games) g.Hidden = !showToggles[g.Id].On; SaveHidden(); }
         bool newTheme = pickedTheme != null && pickedTheme != Theme.Current.Id;
         if (newTheme) Settings.Set("Theme", pickedTheme);
         Settings.Save();
-        // a new theme: the launcher opens again in it (the window is built in its colours)
-        if (newTheme) {
+        // a new theme: the launcher opens again in it (the window is built in its colours); the same when the stores
+        // whose games it lists changed (the library is read as it opens)
+        if (newTheme || storesWas != Settings.Get("SteamLibrary") + "|" + Settings.Get("OtherStores")) {
             Settings.Set("LastGame", sel.Id); Settings.Save();
             try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(System.Reflection.Assembly.GetExecutingAssembly().Location, "-Select " + sel.Id) { WorkingDirectory = Paths.Root }); } catch { }
             W.Close();
@@ -547,8 +607,10 @@ partial class Shell {
         foreach (FrameworkElement b in volumeButtons.Children) all.Add(b);
         all.Add(optRumble.Root);
         all.Add(tokenSite);
-        foreach (FrameworkElement b in showButtons.Children) all.Add(b);
-        foreach (FrameworkElement c in showGrid.Children) all.Add(c);
+        all.AddRange(extraStops);
+        foreach (FrameworkElement b in libStores.Children) all.Add(b);
+        foreach (FrameworkElement b in showButtons.Children) if (b is Button) all.Add(b);
+        foreach (FrameworkElement c in showGrid.Children) if (c.Visibility == Visibility.Visible) all.Add(c);
         foreach (var r in folderRows) all.Add(r.Btn);
         var panel = setSections[setSection].Panel;
         var s = all.Where(el => el.IsDescendantOf(panel)).ToList();
@@ -653,6 +715,9 @@ partial class Shell {
             new[] { "on", "off" }, new[] { "On", "Off" }));
         optRumble = NewToggle("Vibration", "A short buzz when a game starts (Xbox controllers, and others through Steam Input).");
         rows.Children.Add(optRumble.Root);
+        var pair = MakeButton("Pair a controller", 38); pair.HorizontalAlignment = HorizontalAlignment.Left; pair.Margin = new Thickness(0, 10, 0, 0);
+        pair.Click += (s, e) => OpenBluetooth();   // Bluetooth.cs
+        rows.Children.Add(pair); extraStops.Add(pair);
         rows.Children.Add(new TextBlock { FontSize = 11.5, Foreground = Ui.Brush(Ui.Muted), TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 12, 0, 0),
             Text = "PlayStation (DualShock 4, DualSense) and Switch Pro controllers work without Steam: plug them in or pair them by Bluetooth. When Steam Input, DS4Windows or BetterJoy is running, the launcher uses that instead." });
     }
@@ -862,7 +927,7 @@ partial class Shell {
         g.RomPath = null;
         if (!skip && g.Rom.Kind != "none") { g.RomPath = N<TextBox>("RomPath").Text.Trim().Trim('"'); Roms.Set(g.Id, g.RomPath); }
         CloseRomPicker();
-        RunJobs(new List<Job> { new Job { G = g, Kind = g.Id == "totk" ? "setup" : "install" } });
+        RunJobs(new List<Job> { new Job { G = g, Kind = g.Id == "totk" || g.Setup != null ? "setup" : "install" } });
     }
 
     // ---------- NSP to exefs + romfs ----------

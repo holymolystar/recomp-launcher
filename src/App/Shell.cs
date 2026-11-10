@@ -79,7 +79,7 @@ partial class Shell {
         }
         sort = new[] { "default", "installed", "recent", "name" }.Contains(Settings.Get("SortMode")) ? Settings.Get("SortMode") : "default";
         view = ParseView(Settings.Get("ViewMode"));
-        foreach (var g in Games) g.Hidden = ("," + Settings.Get("Hidden") + ",").Contains("," + g.Id + ",");
+        LoadHidden();
         ApplySettings();
         foreach (var g in Games) { g.Inst = Engine.GetInstalled(g); g.State = g.Inst != null ? State.Checking : State.Missing; g.Latest = ReleaseCache.Get(g.Id); }
         BuildCards();
@@ -87,6 +87,7 @@ partial class Shell {
         BuildPanels();
         BuildController();
         WireEvents();
+        PrepareBoot();   // the logo, on screen from the first frame (Boot.cs)
         W.ContentRendered += (s, e) => Started();
         // shown as a normal window (not a dialog, which hiding would end), running until it's closed: the launcher
         // can wait hidden in the tray while a game runs
@@ -115,9 +116,11 @@ partial class Shell {
 
     void Started() {
         var root = N<Border>("Root");
-        root.BeginAnimation(UIElement.OpacityProperty, Anim(1, 350, 0));
-        var rs = (ScaleTransform)root.RenderTransform;
-        rs.BeginAnimation(ScaleTransform.ScaleXProperty, Anim(1, 450, 0.97)); rs.BeginAnimation(ScaleTransform.ScaleYProperty, Anim(1, 450, 0.97));
+        if (bootLayer == null) {   // with the start-up screen the window is whole from the start
+            root.BeginAnimation(UIElement.OpacityProperty, Anim(1, 350, 0));
+            var rs = (ScaleTransform)root.RenderTransform;
+            rs.BeginAnimation(ScaleTransform.ScaleXProperty, Anim(1, 450, 0.97)); rs.BeginAnimation(ScaleTransform.ScaleYProperty, Anim(1, 450, 0.97));
+        }
         // slowly drifting light behind the game: moved (no layout), 12 frames a second, only while the window is
         // in front
         foreach (var n in new[] { "Glow1", "Glow2" }) {
@@ -151,10 +154,11 @@ partial class Shell {
         if (args.OpenSettings) OpenSettings();
         if (args.OpenNotes) OpenNotes("notes");
         if (args.PadScript != null) PlayPadScript(args.PadScript);
-        if (args.Snapshot == null && args.PadScript == null && Settings.Get("StartAnim") != "off") PlayBootAnim();
+        // the start-up screen's animation, a moment after the set-up above has let go of the window (Boot.cs)
+        if (bootLayer != null) { var bt = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) }; bt.Tick += (s2, e2) => { bt.Stop(); StartBoot(); }; bt.Start(); }
         if (args.Snapshot == null) ApplyRemote();
-        // more than one profile: ask who's playing, as a console does
-        if (args.Snapshot == null && args.PadScript == null && Profiles.All.Count > 1) W.Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(OpenPlayers));
+        // the launcher opens as the profile used last; Settings > General > At start can ask who's playing instead
+        if (args.Snapshot == null && args.PadScript == null && Profiles.All.Count > 1 && AskWho() == "start") W.Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(OpenPlayers));
         if (args.Snapshot != null) {
             var t = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(args.SnapshotDelay) };
             t.Tick += (s, e) => { t.Stop(); Snapshot(args.Snapshot); W.Close(); };
@@ -854,8 +858,17 @@ partial class Shell {
     }
 
     // ---------- events ----------
+    // Who's playing? is asked before a game starts (Settings > General > Ask who's playing: "game", the default),
+    // when there's more than one profile: the game starts once a profile is picked, with that profile's saves.
+    Action afterPlayers; bool askSkip;
     void PrimaryAction(Game g) {
         if (g != sel) ShowGame(g);
+        if (!askSkip && g.Inst != null && !g.IsBusy && playing == null && Profiles.All.Count > 1 && AskWho() == "game") {
+            afterPlayers = () => { askSkip = true; try { PrimaryAction(g); } finally { askSkip = false; } };
+            OpenPlayers();
+            plTitle.Text = "Who's playing " + g.Name + "?";
+            return;
+        }
         if (g.ByStore) {
             if (g.Inst == null) StoreInstall(g);
             else { Sound.Play(Sfx.Launch); if (padUsed && Settings.On("PadRumble")) Pad.Rumble(0.45, 160); StoreStart(g); }
@@ -961,7 +974,7 @@ partial class Shell {
         }
     }
     bool AnyDialog() {
-        return OskOpen || ColOpen || FriendsOpen || AchievementsOpen || CreatorOpen || PlayersOpen || ProfileOpen || N<Grid>("SettingsLayer").Visibility == Visibility.Visible || N<Grid>("RomLayer").Visibility == Visibility.Visible ||
+        return OskOpen || ColOpen || FriendsOpen || AchievementsOpen || BrowserCardOpen || BtOpen || PowerOpen || PlazaOpen || CreatorOpen || PlayersOpen || ProfileOpen || N<Grid>("SettingsLayer").Visibility == Visibility.Visible || N<Grid>("RomLayer").Visibility == Visibility.Visible ||
                N<Grid>("UninstLayer").Visibility == Visibility.Visible;
     }
     void OnKey(object s, KeyEventArgs e) {
@@ -969,6 +982,17 @@ partial class Shell {
         bool notes = N<Grid>("NotesLayer").Visibility == Visibility.Visible;
         if (padUsed) { padUsed = false; HideRing(); SetHints(); }
         if (OskOpen) { if (OskKeyDown(k)) e.Handled = true; return; }
+        if (PlazaOpen) {
+            int pb = k == Key.Left ? Pad.Left : k == Key.Right ? Pad.Right : k == Key.Enter || k == Key.Space ? Pad.A : k == Key.Escape || k == Key.Back ? Pad.B : 0;
+            if (pb != 0) { PlazaPad(pb); e.Handled = true; }
+            return;
+        }
+        if (BtOpen || PowerOpen) {
+            int kb = k == Key.Up ? Pad.Up : k == Key.Down ? Pad.Down : k == Key.Left ? Pad.Left : k == Key.Right ? Pad.Right : k == Key.Enter || k == Key.Space ? Pad.A : k == Key.Escape || k == Key.Back ? Pad.B : 0;
+            if (kb != 0) { if (BtOpen) BtPad(kb); else PowerPad(kb); e.Handled = true; }
+            return;
+        }
+        if (BrowserCardOpen) { int bb = k == Key.Left ? Pad.Left : k == Key.Right ? Pad.Right : k == Key.Enter || k == Key.Space ? Pad.A : k == Key.Escape || k == Key.Back ? Pad.B : 0; if (bb != 0) { BrowserCardPad(bb); e.Handled = true; } return; }
         if (AchievementsOpen) { int ab = k == Key.Up ? Pad.Up : k == Key.Down ? Pad.Down : k == Key.Escape || k == Key.Enter || k == Key.Back ? Pad.B : 0; if (ab != 0) { AchievementsPad(ab); e.Handled = true; } return; }
         if (FriendsOpen) { if (k == Key.Escape || k == Key.Enter || k == Key.Back) { CloseFriends(); e.Handled = true; } return; }
         if (ColOpen) {

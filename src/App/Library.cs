@@ -35,10 +35,38 @@ partial class Shell {
         SetHints();
     }
 
+    // Which games are hidden. Games found in the store libraries (Steam, Epic, GOG) are hidden until you show them
+    // (Settings > General > Store library games: "auto", the default, or "show"): those you show are kept in
+    // ShownStore, the other hidden games in Hidden.
+    static bool AutoHideStores { get { return Settings.Get("StoreAutoHide") != "show"; } }
+    static bool InList(string key, string id) { return ("," + Settings.Get(key) + ",").Contains("," + id + ","); }
+    void LoadHidden() {
+        foreach (var g in Games) g.Hidden = g.FromLibrary && AutoHideStores ? !InList("ShownStore", g.Id) : InList("Hidden", g.Id);
+    }
+    void SaveHidden() {
+        Settings.Set("Hidden", string.Join(",", Games.Where(x => x.Hidden && !(x.FromLibrary && AutoHideStores)).Select(x => x.Id)));
+        Settings.Set("ShownStore", string.Join(",", Games.Where(x => x.FromLibrary && !x.Hidden).Select(x => x.Id)));
+    }
+    // Does the game keep the Xbox / PS / Home button for itself? Its games.json says so (OwnGuide, e.g. Super Mario
+    // Odyssey), and the game page's "In-game menu" button switches it per game (kept in GuideLeft / GuideTaken).
+    static bool GuideLeftTo(Game g) {
+        if (InList("GuideLeft", g.Id)) return true;
+        if (InList("GuideTaken", g.Id)) return false;
+        return g.OwnGuide;
+    }
+    void ToggleGuide(Game g) {
+        bool left = !GuideLeftTo(g);
+        Func<string, bool, string> with = (key, on) => string.Join(",", Settings.Get(key).Split(',').Where(x => x.Length > 0 && x != g.Id).Concat(on ? new[] { g.Id } : new string[0]));
+        Settings.Set("GuideLeft", with("GuideLeft", left)); Settings.Set("GuideTaken", with("GuideTaken", !left));
+        Settings.Save();
+        Sound.Play(Sfx.Select);
+        SetStep(left ? g.Name + " keeps the Xbox button: the launcher's in-game menu opens with View + Menu there." : "The Xbox button opens the launcher's in-game menu in " + g.Name + " (View + Menu works too).", Ui.Teal);
+        if (homePage == "game") UpdateGamePage();
+    }
     // hide a game from the library (Settings > Library brings it back); nothing is uninstalled
     void HideGame(Game g) {
         g.Hidden = true;
-        Settings.Set("Hidden", string.Join(",", Games.Where(x => x.Hidden).Select(x => x.Id)));
+        SaveHidden();
         Settings.Save();
         Sound.Play(Sfx.Back);
         SetStep(g.Name + " is hidden. Settings > Library shows it again.", Ui.Muted);

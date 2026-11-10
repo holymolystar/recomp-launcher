@@ -1,4 +1,4 @@
-// Games from the other stores, the same way as Steam's (Steam.cs): a tile each in their own group, installed, started
+﻿// Games from the other stores, the same way as Steam's (Steam.cs): a tile each in their own group, installed, started
 // and kept up to date by the store, and followed by their folder while they run (play time, the in-game menu).
 //  - Epic Games: the installed games from the launcher's manifests (ProgramData\Epic\EpicGamesLauncher\Data\Manifests,
 //    *.item), the rest of your library from its catalog cache (Data\Catalog\catcache.bin: base64 JSON). Install and
@@ -36,7 +36,7 @@ static class Stores {
         int rank = 2000;
         foreach (var g in found.OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase)) {
             if (Catalog.Find(g.Id) != null) continue;
-            g.SettingsLabel = g.Name; g.CheckFile = ""; g.Exe = ""; g.Rank = rank++;
+            g.FromLibrary = true; g.SettingsLabel = g.Name; g.CheckFile = ""; g.Exe = ""; g.Rank = rank++;
             if (!Catalog.SeriesRank.ContainsKey(g.Series)) Catalog.SeriesRank[g.Series] = g.Series == "epic" ? 10 : 11;
             Catalog.Games.Add(g);
         }
@@ -263,8 +263,38 @@ partial class Shell {
             }
         } catch { }
     }
+    // the stores' own windows (Steam, the Epic Games Launcher, GOG Galaxy) pop up when a game starts through them:
+    // for the first 30 seconds the launcher minimises any that show, so the game is what's in front.
+    // Settings > General > Store windows ("hide", the default, or "leave").
+    [System.Runtime.InteropServices.DllImport("user32.dll")] static extern bool EnumWindows(EnumProc f, IntPtr p);
+    delegate bool EnumProc(IntPtr h, IntPtr p);
+    [System.Runtime.InteropServices.DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr h);
+    [System.Runtime.InteropServices.DllImport("user32.dll")] static extern int GetWindowTextLength(IntPtr h);
+    [System.Runtime.InteropServices.DllImport("user32.dll", EntryPoint = "GetWindowThreadProcessId")] static extern uint WindowPid(IntPtr h, out uint pid);
+    static readonly string[] StoreApps = { "steam", "steamwebhelper", "EpicGamesLauncher", "EpicWebHelper", "GalaxyClient", "GalaxyClient Helper" };
+    System.Windows.Threading.DispatcherTimer storeHide; DateTime storeHideUntil;
+    void HideStoreWindows() {
+        if (Settings.Get("StoreWindows") == "leave") return;
+        storeHideUntil = DateTime.Now.AddSeconds(30);
+        if (storeHide == null) {
+            storeHide = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(700) };
+            storeHide.Tick += (s, e) => {
+                if (DateTime.Now > storeHideUntil) { storeHide.Stop(); return; }
+                var pids = new HashSet<uint>();
+                foreach (var n in StoreApps) foreach (var p in Process.GetProcessesByName(n)) { pids.Add((uint)p.Id); p.Dispose(); }
+                if (pids.Count == 0) return;
+                EnumWindows((h, _) => {
+                    uint pid; WindowPid(h, out pid);
+                    if (pids.Contains(pid) && IsWindowVisible(h) && !IsIconic(h) && GetWindowTextLength(h) > 0) ShowWindow(h, 6);   // SW_MINIMIZE
+                    return true;
+                }, IntPtr.Zero);
+            };
+        }
+        storeHide.Start();
+    }
     void StoreStart(Game g) {
         PrepareScummVm(g);
+        HideStoreWindows();
         if (g.Steam != null) { SteamStart(g); return; }
         if (g.Store == "epic") Stores.Open(EpicGames.Uri(g, "launch"));
         else {

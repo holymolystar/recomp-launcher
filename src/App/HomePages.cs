@@ -206,6 +206,7 @@ partial class Shell {
         AddPageButton("", "Language", () => { if (sel != null && sel.Steam != null) SteamLanguage(sel); });
         AddPageButton("\uED1A", "Hide", () => { if (sel != null) HideGame(sel); });
         AddPageButton("\uE9F9", "Achievements", () => { if (sel != null) OpenAchievements(sel); });
+        AddPageButton("\uE7FC", "In-game menu", () => { if (sel != null) ToggleGuide(sel); });
         right.Children.Add(gpButtonRow);
         gamePage.Children.Add(right);
         homeLayer.Children.Add(gamePage);
@@ -283,6 +284,9 @@ partial class Shell {
         SetPageButton(9, "\uED1A", "Hide", true, true);
         bool hasAch = ss != null && ss.AchTotal > 0;
         SetPageButton(10, "\uE9F9", hasAch ? "Achievements  (" + ss.Achieved + " / " + ss.AchTotal + ")" : "Achievements", hasAch, hasAch);
+        // which button opens the launcher's menu in this game (some games use the Xbox button themselves)
+        bool menuOn = g.Inst != null && Settings.Get("PadMenu") != "off";
+        SetPageButton(11, "\uE7FC", "In-game menu: " + (GuideLeftTo(g) ? "View + Menu" : "Xbox button"), menuOn, menuOn);
         if (g.ByStore) {
             SetPageButton(0, missing ? "\uE896" : "\uE768", missing ? "Install with " + (g.Store == "epic" ? "Epic" : g.StoreName) : "Start", playOk, true);
             SetPageButton(1, "", "", false, false);

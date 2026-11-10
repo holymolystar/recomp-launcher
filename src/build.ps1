@@ -1,4 +1,4 @@
-# -Out: build to another file name (for example while the launcher is open)
+﻿# -Out: build to another file name (for example while the launcher is open)
 param([string]$Out = '')
 # Builds "Recomp Launcher.exe" one folder up with the C# compiler that ships with Windows (.NET Framework 4).
 # Also draws the launcher's logo (a recompile loop around a play button): logo.png next to the exe for the
@@ -93,6 +93,16 @@ $refs = @('System.dll', 'System.Core.dll', 'System.Xml.dll', 'System.Xaml.dll', 
           (Join-Path $wpf 'WindowsBase.dll'), (Join-Path $wpf 'PresentationCore.dll'), (Join-Path $wpf 'PresentationFramework.dll')) |
         ForEach-Object { "/r:$_" }
 $res = Get-ChildItem $app -Filter *.xaml | ForEach-Object { "/resource:$($_.FullName),$($_.Name)" }
-& $csc /nologo /target:winexe /optimize+ /platform:anycpu /codepage:65001 /nowarn:618,649 "/win32icon:$ico" @refs @res `
+# Windows' own interfaces (Bluetooth pairing, Bluetooth.cs): their descriptions ship with every Windows 10 and 11
+# (System32\WinMetadata), so no Windows SDK is needed. Without them (older Windows) the launcher is built without
+# Bluetooth pairing and opens Windows' Bluetooth page instead.
+$wm = Join-Path $env:WINDIR 'System32\WinMetadata'
+$defines = @()
+if ((Test-Path (Join-Path $wm 'Windows.Devices.winmd')) -and (Test-Path (Join-Path $wm 'Windows.Foundation.winmd'))) {
+    $refs += "/r:$(Join-Path $fw 'System.Runtime.dll')", "/r:$(Join-Path $fw 'System.Runtime.InteropServices.WindowsRuntime.dll')",
+             "/r:$(Join-Path $wm 'Windows.Devices.winmd')", "/r:$(Join-Path $wm 'Windows.Foundation.winmd')"
+    $defines = @('/define:WINRT')
+}
+& $csc /nologo /target:winexe /optimize+ /platform:anycpu /codepage:65001 /nowarn:618,649 "/win32icon:$ico" @refs @res @defines `
     "/out:$(if ($Out) { $Out } else { Join-Path $root 'Recomp Launcher.exe' })" (Get-ChildItem $app -Filter *.cs | ForEach-Object { $_.FullName })
 exit $LASTEXITCODE

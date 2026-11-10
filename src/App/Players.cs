@@ -37,7 +37,8 @@ partial class Shell {
         var head = new Grid();
         var titles = new StackPanel();
         titles.Children.Add(new TextBlock { Text = "PROFILES", FontSize = 10.5, FontWeight = FontWeights.Bold, Foreground = Ui.Brush(Ui.Teal) });
-        titles.Children.Add(new TextBlock { Text = "Who's playing?", FontSize = 24, FontFamily = Ui.Semi, Margin = new Thickness(0, 2, 0, 0) });
+        plTitle = new TextBlock { Text = "Who's playing?", FontSize = 24, FontFamily = Ui.Semi, Margin = new Thickness(0, 2, 0, 0), TextWrapping = TextWrapping.Wrap };
+        titles.Children.Add(plTitle);
         head.Children.Add(titles);
         var close = new Button { Style = (Style)W.FindResource("Chrome"), Content = "", HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(0, -8, -14, 0) };
         close.Click += (s, e) => ClosePlayers();
@@ -129,15 +130,20 @@ partial class Shell {
     }
     PlayerProfile PlTarget { get { return plCardIdx < Profiles.All.Count ? Profiles.All[plCardIdx] : null; } }
 
+    TextBlock plTitle;
+    // when Who's playing? is asked: before each game ("game"), when the launcher opens ("start"), or never
+    static string AskWho() { string v = Settings.Get("AskWho"); return v == "start" || v == "never" ? v : "game"; }
     void OpenPlayers() {
         if (PlayersOpen) return;
         if (ProfileOpen) CloseProfile();
         BuildPlayers();
+        plTitle.Text = "Who's playing?";
         FillPlayers();
         PickPlayer(Profiles.All.IndexOf(Profiles.Current));
         ShowCard("PlayersLayer", "PlayersCard");
     }
     void ClosePlayers() {
+        afterPlayers = null;   // closed without picking: the game that was waiting doesn't start
         if (!PlayersOpen) return;
         HideCard("PlayersLayer", "PlayersCard");
     }
@@ -150,7 +156,9 @@ partial class Shell {
         ApplyAvatar();
         RefreshForProfile();
         SetStep("Playing as " + Profiles.DisplayName(p) + ".", Ui.Teal);
+        var then = afterPlayers;
         ClosePlayers();
+        if (then != null) then();   // the game this was asked for
     }
     void EditPicked() {
         var p = PlTarget; if (p == null) return;

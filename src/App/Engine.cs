@@ -99,6 +99,14 @@ static class Engine {
                 r.Sub = "Game " + Json.Str(inst, "version") + "  \u2022  " + Json.Str(inst, "lang");
                 return r;
             }
+            case "dkb": {   // built on TotK Recomp: the same kind of record, under its own name
+                var inst = Json.ReadFile(Path.Combine(g.Dir, "dkb-install.json"));
+                if (inst == null) return null;
+                r.Version = Regex.Replace(Json.Str(inst, "release") ?? "?", @"\+.*$", "");
+                string gv = Json.Str(inst, "version"), lang = Json.Str(inst, "lang");
+                r.Sub = (gv != null ? "Game " + gv : "") + (lang != null ? "  \u2022  " + lang : "");
+                return r;
+            }
             case "smo":
                 if (!File.Exists(exe)) return null;
                 r.Version = fileVer() ?? tagVer(mkTag) ?? "?";

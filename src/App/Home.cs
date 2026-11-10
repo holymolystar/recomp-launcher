@@ -80,10 +80,12 @@ partial class Shell {
             else if (!running && !checking) CheckAll(true);
         });
         AddHomeButton(row, "", "All games", "#2f8fe0", () => OpenHomeAll(null));
+        AddHomeButton(row, "\uE77B", "My character", "#e8453c", () => OpenPlaza());   // everyone's characters walking around; picking one edits it (Plaza.cs)
         AddHomeButton(row, "\uE716", "Friends", "#8fc93a", () => OpenFriends());
+        AddHomeButton(row, "\uE774", "Browser", "#2f8fe0", () => OpenBrowserCard());
         AddHomeButton(row, "", "Full screen", "#7d8a93", () => ToggleFullscreen());
         AddHomeButton(row, "", "Settings", "#7d8a93", () => { if (!running) OpenSettings(); });
-        AddHomeButton(row, "", "Close", "#7d8a93", () => W.Close());
+        AddHomeButton(row, "", "Power", "#7d8a93", () => OpenPower());   // close the launcher, sleep, restart, shut down (PowerCard.cs)
         homeLayer.Children.Add(row);
 
         // the bottom bar: a line across, a console glyph on the left (the button hints sit on the right)
@@ -328,10 +330,10 @@ partial class Shell {
         var lib = (FrameworkElement)N<ScrollViewer>("TileScroll").Parent;
         lib.Visibility = on ? Visibility.Collapsed : Visibility.Visible;
         // the status line and progress bar stay; on the home screen they are quieter
-        N<Grid>("Track").Visibility = on && !running ? Visibility.Hidden : Visibility.Visible;
+        N<Grid>("Track").Visibility = on && !running ? Visibility.Collapsed : Visibility.Visible;   // collapsed: the detail line under it moves up and fits
         // beside the console glyph in the bottom bar
         var status = (FrameworkElement)((FrameworkElement)N<TextBlock>("StepText").Parent).Parent;
-        status.Margin = on ? new Thickness(98, 20, 40, 0) : new Thickness(70, 4, 40, 0);
+        status.Margin = on ? new Thickness(98, 14, 40, 0) : new Thickness(70, 4, 40, 0);
         // a narrower status column on Home, so the button hints on the right have room
         ((Grid)status).ColumnDefinitions[0].Width = new GridLength(on ? 360 : 560);
         if (on) { StopDrift(); homeClockTimer.Start(); TickHomeClock(); }

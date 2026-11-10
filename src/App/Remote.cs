@@ -1,4 +1,4 @@
-// Phone remote (Settings > Phone remote): a small web page for your phone on the same Wi-Fi. It shows your installed
+﻿// Phone remote (Settings > Phone remote): a small web page for your phone on the same Wi-Fi. It shows your installed
 // games with their pictures and what's playing; tap a game to start it on the PC, or close the game that runs.
 // The launcher answers on port 8770 of this PC's home network address (Windows asks once whether to allow that).
 // A 6-digit PIN (shown in Settings) is needed for everything but the page itself, so others on the Wi-Fi can't use
@@ -98,6 +98,11 @@ partial class Shell {
             return;
         }
         if (method == "POST" && path.StartsWith("/api/start/")) { string msg = (string)W.Dispatcher.Invoke(new Func<string>(() => RemoteStart(path.Substring(11)))); Reply(s, 200, "text/plain; charset=utf-8", Encoding.UTF8.GetBytes(msg)); return; }
+        // volume, music and power (the same as Quick settings, the music bar and Power in the in-game menu)
+        if (method == "POST" && (path.StartsWith("/api/volume/") || path.StartsWith("/api/music/") || path.StartsWith("/api/power/"))) {
+            string msg = (string)W.Dispatcher.Invoke(new Func<string>(() => RemoteControl(path.Substring(5))));
+            Reply(s, 200, "text/plain; charset=utf-8", Encoding.UTF8.GetBytes(msg)); return;
+        }
         if (method == "POST" && path == "/api/close") { string msg = (string)W.Dispatcher.Invoke(new Func<string>(RemoteCloseGame)); Reply(s, 200, "text/plain; charset=utf-8", Encoding.UTF8.GetBytes(msg)); return; }
         Reply(s, 404, "text/plain", new byte[0]);
     }
@@ -111,6 +116,9 @@ partial class Shell {
         var games = Games.Where(g => !g.Hidden && g.Inst != null).OrderByDescending(LastPlayedAny).ThenBy(g => g.Name).Select(g => new Dictionary<string, object> {
             { "id", g.Id }, { "name", g.Name }, { "from", g.ByStore ? g.StoreName : "Recomp" } }).ToList();
         var d = new Dictionary<string, object> { { "games", games } };
+        d["volume"] = Audio.Level; d["muted"] = Audio.Muted;
+        string song, artist; bool paused;
+        if (Music.Spotify(out song, out artist, out paused)) { d["music"] = true; d["song"] = song ?? ""; d["artist"] = artist ?? ""; d["paused"] = paused; }
         if (playing != null) { d["playing"] = playing.Name; d["playingId"] = playing.Id; d["minutes"] = (int)(DateTime.Now - playingSince).TotalMinutes; }
         return new System.Web.Script.Serialization.JavaScriptSerializer().Serialize(d);
     }
@@ -137,8 +145,35 @@ partial class Shell {
         if (playing != null) return playing.Name + " is still running: close it first.";
         if (AnyDialog()) return "Something is open on the PC's screen: close it there first.";
         ShowGame(g);
-        PrimaryAction(g);
+        askSkip = true;   // from the phone: as the profile that's in use, without asking on the PC's screen
+        try { PrimaryAction(g); } finally { askSkip = false; }
         return "Starting " + g.Name + "...";
+    }
+    // "volume/up", "volume/down", "volume/mute", "music/prev|toggle|next", "power/sleep|restart|shutdown"
+    string RemoteControl(string what) {
+        switch (what) {
+            case "volume/up": Audio.SetMuted(false); Audio.SetLevel((Audio.Level / 5 + 1) * 5); return "Volume " + Audio.Level + "%";
+            case "volume/down": Audio.SetLevel(Math.Max(0, (Audio.Level + 4) / 5 - 1) * 5); return "Volume " + Audio.Level + "%";
+            case "volume/mute": Audio.SetMuted(!Audio.Muted); return Audio.Muted ? "Muted" : "Sound on";
+            case "music/prev": Music.PrevSong(); return "Previous song";
+            case "music/toggle": Music.Toggle(); return "Play / pause";
+            case "music/next": Music.NextSong(); return "Next song";
+            case "power/sleep": case "power/restart": case "power/shutdown": {
+                string kind = what.Substring(6);
+                // a moment later, so this answer still reaches the phone
+                var t = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(1.5) };
+                t.Tick += (s, e) => {
+                    t.Stop();
+                    try {
+                        if (kind == "sleep") SetSuspendState(false, false, false);
+                        else System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("shutdown", kind == "restart" ? "/r /t 0" : "/s /t 0") { CreateNoWindow = true, UseShellExecute = false });
+                    } catch { }
+                };
+                t.Start();
+                return kind == "sleep" ? "The PC is going to sleep." : kind == "restart" ? "The PC is restarting." : "The PC is shutting down.";
+            }
+        }
+        return "?";
     }
     string RemoteCloseGame() {
         var g = playing; if (g == null) return "Nothing is running.";
@@ -168,16 +203,22 @@ input{width:100%;font:inherit;padding:11px 14px;border-radius:14px;border:1px so
 .sheet.on{display:flex}.sheet>div{background:var(--card);width:100%;border-radius:22px 22px 0 0;padding:22px 18px 30px;text-align:center}
 .sheet img{width:120px;height:120px;border-radius:18px}.sheet b{display:block;font-size:19px;margin:12px 0 18px}
 .row{display:flex;gap:10px;justify-content:center}.msg{color:var(--muted);font-size:13px;min-height:20px;margin:-6px 0 10px}
+.ctl{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:6px 12px;margin-bottom:14px}
+.crow{display:flex;gap:8px;align-items:center;padding:8px 0}.crow+.crow{border-top:1px solid var(--line)}
+.crow button{padding:9px 13px}.song{flex:1;min-width:0}.song b,.song span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.song span{color:var(--muted);font-size:12.5px}
 .pin{max-width:320px;margin:60px auto;text-align:center}.pin input{text-align:center;font-size:26px;letter-spacing:.3em}
 </style></head><body>
 <div id='pinbox' class='pin' style='display:none'><h1>RECOMP LAUNCHER</h1><p>Type the PIN shown on the PC in Settings &gt; Phone remote.</p>
 <input id='pin' inputmode='numeric' maxlength='6' autocomplete='off'><button class='go' onclick='savePin()'>Connect</button><p class='msg' id='pinmsg'></p></div>
-<div id='app' style='display:none'><h1>RECOMP LAUNCHER</h1><div id='now'></div><div class='msg' id='msg'></div>
+<div id='app' style='display:none'><h1>RECOMP LAUNCHER</h1><div id='now'></div><div id='ctl'></div><div class='msg' id='msg'></div>
 <input id='q' placeholder='Search your games' oninput='draw()'><div class='grid' id='grid'></div></div>
 <div class='sheet' id='sheet' onclick='if(event.target===this)hide()'><div><img id='simg'><b id='sname'></b>
 <div class='row'><button onclick='hide()'>Cancel</button><button class='go' onclick='start()'>Start on the PC</button></div></div></div>
+<div class='sheet' id='psheet' onclick='if(event.target===this)this.classList.remove(&quot;on&quot;)'><div><b>Power</b><p class='msg'>Restart and Shut down close a running game without saving.</p>
+<div class='row'><button id='psleep' onclick='pw(&quot;sleep&quot;)'>Sleep</button><button id='prestart' onclick='pw(&quot;restart&quot;)'>Restart</button><button id='pshutdown' class='stop' onclick='pw(&quot;shutdown&quot;)'>Shut down</button></div></div></div>
 <script>
 let pin=localStorage.getItem('pin')||'',state=null,pick=null,closeArmed=false;
+const qp=new URLSearchParams(location.search).get('pin');if(qp){pin=qp;localStorage.setItem('pin',pin);history.replaceState(null,'','/');}
 const $=id=>document.getElementById(id),art=id=>'/art/'+encodeURIComponent(id)+'?pin='+pin;
 function savePin(){pin=$('pin').value.trim();localStorage.setItem('pin',pin);load();}
 async function api(p,post){const r=await fetch(p+(p.includes('?')?'&':'?')+'pin='+pin,{method:post?'POST':'GET'});
@@ -187,11 +228,17 @@ async function api(p,post){const r=await fetch(p+(p.includes('?')?'&':'?')+'pin=
 async function load(){try{state=await api('/api/state');draw();}catch(e){}}
 function draw(){if(!state)return;const q=$('q').value.toLowerCase();
  $('now').innerHTML=state.playing?`<div class='now'><img src='${art(state.playingId)}'><div style='flex:1'><span>Playing for ${state.minutes} min</span><b>${esc(state.playing)}</b></div><button class='stop' onclick='closeGame()'>${closeArmed?'Tap again':'Close'}</button></div>`:'';
+ $('ctl').innerHTML=`<div class='ctl'>${state.music?`<div class='crow'><div class='song'><b>${esc(state.song||'Spotify')}</b><span>${esc(state.artist||'')}${state.paused?' (paused)':''}</span></div><button onclick='ctl(&quot;music/prev&quot;)'>&#9664;&#9664;</button><button class='go' onclick='ctl(&quot;music/toggle&quot;)'>${state.paused?'&#9654;':'&#10074;&#10074;'}</button><button onclick='ctl(&quot;music/next&quot;)'>&#9654;&#9654;</button></div>`:''}
+ <div class='crow'><div class='song'><b>Volume</b><span>${state.volume<0?'no output':state.muted?'muted':state.volume+'%'}</span></div><button onclick='ctl(&quot;volume/down&quot;)'>&minus;</button><button onclick='ctl(&quot;volume/mute&quot;)'>${state.muted?'Unmute':'Mute'}</button><button onclick='ctl(&quot;volume/up&quot;)'>+</button><button onclick='power()'>Power</button></div></div>`;
  $('grid').innerHTML=state.games.filter(g=>g.name.toLowerCase().includes(q)).map(g=>`<div class='tile' onclick='ask(${JSON.stringify(g.id)})'><img loading='lazy' src='${art(g.id)}'><div>${esc(g.name)}</div></div>`).join('');}
 function esc(s){return s.replace(/[&<>']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',""'"":'&#39;'}[c]));}
 function ask(id){pick=state.games.find(g=>g.id===id);$('simg').src=art(id);$('sname').textContent=pick.name;$('sheet').classList.add('on');}
 function hide(){$('sheet').classList.remove('on');}
 async function start(){hide();try{$('msg').textContent=await api('/api/start/'+encodeURIComponent(pick.id),true);setTimeout(load,2500);}catch(e){}}
+async function ctl(what){try{$('msg').textContent=await api('/api/'+what,true);setTimeout(load,600);}catch(e){}}
+let armed='';function power(){armed='';$('psheet').classList.add('on');pdraw();}
+function pdraw(){for(const k of ['sleep','restart','shutdown'])$('p'+k).textContent=armed==k?'Tap again':({sleep:'Sleep',restart:'Restart',shutdown:'Shut down'})[k];}
+function pw(k){if(armed!=k){armed=k;pdraw();return}$('psheet').classList.remove('on');ctl('power/'+k);}
 async function closeGame(){if(!closeArmed){closeArmed=true;draw();setTimeout(()=>{closeArmed=false;draw()},4000);return}
  closeArmed=false;try{$('msg').textContent=await api('/api/close',true);setTimeout(load,3000);}catch(e){}}
 if(pin)load();else $('pinbox').style.display='block';setInterval(()=>{if(pin&&$('app').style.display!='none')load()},4000);

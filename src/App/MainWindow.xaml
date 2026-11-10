@@ -428,7 +428,7 @@
                 <Rectangle.RenderTransform><TranslateTransform X="-220"/></Rectangle.RenderTransform>
               </Rectangle>
             </Grid>
-            <TextBlock x:Name="DetailText" Grid.Row="2" Text="" FontSize="11.5" Foreground="#6E808B" Margin="0,6,0,0"/>
+            <TextBlock x:Name="DetailText" Grid.Row="2" Text="" FontSize="11.5" Foreground="#6E808B" Margin="0,6,0,0" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
           </Grid>
           <StackPanel x:Name="PadHints" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,2,0,0"/>
         </Grid>

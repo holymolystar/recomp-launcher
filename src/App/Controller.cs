@@ -89,9 +89,15 @@ partial class Shell {
         if (st.LT > 120) b |= Pad.LT;
         if (st.RT > 120) b |= Pad.RT;
         // the in-game menu: the Xbox / PS / Home button, or View and Menu together, while a game runs
-        bool menuKey = (b & Pad.Guide) != 0 || (b & (Pad.Back | Pad.Start)) == (Pad.Back | Pad.Start);
+        // (a game that uses the Xbox button itself keeps it: there only View + Menu opens the menu; once the menu is
+        // open the Xbox button closes it as usual)
+        bool guideOurs = playing == null || OverlayOpen || !GuideLeftTo(playing);
+        bool menuKey = (guideOurs && (b & Pad.Guide) != 0) || (b & (Pad.Back | Pad.Start)) == (Pad.Back | Pad.Start);
         if (menuKey && !menuKeyWas && playing != null && Settings.Get("PadMenu") != "off") { menuKeyWas = true; padPrev = b; ToggleOverlay(); return; }
+        if (menuKey && !menuKeyWas && browserMode && !OverlayOpen && !padActive && EdgeInFront()) { menuKeyWas = true; padPrev = b; LeaveBrowser(); return; }
         menuKeyWas = menuKey;
+        // the controller browser: while its Edge window is in front, the controller is its mouse and keys (Browser.cs)
+        if (browserMode && !OverlayOpen && !padActive && EdgeInFront()) { padPrev = 0; BrowserPad(st, b); return; }
         // the launcher answers the controller only while it's in front, or while its in-game menu is open
         if (!padActive && !OverlayOpen) { padPrev = 0; return; }
         // the left stick works like the d-pad
@@ -115,7 +121,7 @@ partial class Shell {
         if (Math.Abs((int)st.RY) > press) ScrollBy(-st.RY / 32768.0 * 24);
         if (pressed == 0) return;
         if (OverlayOpen) {
-            foreach (int bit in new[] { Pad.Up, Pad.Down, Pad.Left, Pad.Right, Pad.A, Pad.B })
+            foreach (int bit in new[] { Pad.Up, Pad.Down, Pad.Left, Pad.Right, Pad.A, Pad.B, Pad.X, Pad.LB, Pad.RB })
                 if ((pressed & bit) != 0) OverlayPad(bit);
             return;
         }
@@ -206,6 +212,10 @@ partial class Shell {
         if (OskOpen) { OskPad(bit); return; }
         if (ColOpen) { ColPad(bit); SetHints(); return; }
         if (AchievementsOpen) { AchievementsPad(bit); SetHints(); return; }
+        if (BrowserCardOpen) { BrowserCardPad(bit); SetHints(); return; }
+        if (PlazaOpen) { PlazaPad(bit); SetHints(); return; }
+        if (BtOpen) { BtPad(bit); SetHints(); return; }
+        if (PowerOpen) { PowerPad(bit); SetHints(); return; }
         if (FriendsOpen) {
             if (bit == Pad.A && Settings.Get("SteamApiKey").Trim().Length == 0) Stores.Open("https://steamcommunity.com/dev/apikey");
             else if (bit == Pad.B || bit == Pad.A || bit == Pad.Start) CloseFriends();
@@ -334,6 +344,10 @@ partial class Shell {
             else if (OskOpen) { }
             else if (ColOpen) { spec.Add(new[] { "A", "Select" }); spec.Add(new[] { "B", "Done" }); }
             else if (FriendsOpen) { spec.Add(new[] { "B", "Done" }); }
+            else if (PlazaOpen) { spec.Add(new[] { "A", "Edit" }); spec.Add(new[] { "Y", "Who's playing" }); spec.Add(new[] { "B", "Back" }); }
+            else if (BtOpen) { spec.Add(new[] { "A", "Pair / remove" }); spec.Add(new[] { "B", "Done" }); }
+            else if (PowerOpen) { spec.Add(new[] { "A", "Select" }); spec.Add(new[] { "B", "Back" }); }
+            else if (BrowserCardOpen) { spec.Add(new[] { "A", "Open" }); spec.Add(new[] { "X", "Change" }); spec.Add(new[] { "B", "Close" }); }
             else if (AchievementsOpen) { spec.Add(new[] { "↕", "Scroll" }); spec.Add(new[] { "B", "Done" }); }
             else if (PlayersOpen) { spec.Add(new[] { "A", plIdx < Profiles.All.Count ? "Play as" : plIdx == Profiles.All.Count ? "New profile" : "Select" }); spec.Add(new[] { "X", "Edit" }); spec.Add(new[] { "B", "Close" }); }
             else if (ProfileOpen) { spec.Add(new[] { "A", "Select" }); spec.Add(new[] { "B", "Close" }); }

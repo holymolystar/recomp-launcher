@@ -35,6 +35,7 @@
   "sf64",
   "bk",
   "dk64",
+  "dkb",
   "conker",
   "pikmin",
   "pikmin2",
@@ -136,7 +137,8 @@
      "Update": false,
      "Hint": "Your Super Mario Odyssey NSP, version 1.0.0 (the base game, [v0], no update). hactool unpacks it with your keys: about 5 GB, a minute or two."
     }
-   }
+   },
+   "OwnGuide": true
   },
   {
    "Id": "wwhd",
@@ -1385,6 +1387,32 @@
      ".v64"
     ],
     "Filter": "N64 ROM (*.z64;*.n64;*.v64)|*.z64;*.n64;*.v64"
+   }
+  },
+  {
+   "Id": "dkb",
+   "Name": "Donkey Kong Bananza",
+   "Short": "DKB",
+   "Source": "DKB RECOMP  •  GITHUB",
+   "Exe": "dkb.exe",
+   "Proc": "dkb",
+   "SettingsKey": "DkbDir",
+   "Repo": "Lucas-blip-png/dkb-pc-recomp",
+   "Asset": "*windows*.zip",
+   "Setup": "DKB-Setup.exe",
+   "Accent": "#C8691E",
+   "Accent2": "#F2C230",
+   "Needs": "Early and not fully playable yet (the tutorial and first stage, and it can crash). Your own Donkey Kong Bananza 1.0.0 or 3.2.0, dumped from your own Switch 2 as a .nup file or ExeFS and RomFS folders. Install opens the DKB setup, which builds the game on this PC from them (it needs about 24 GB of memory and page file); choose the folder from Settings as its install folder.",
+   "DefaultDir": "C:\\Games\\DKB",
+   "Series": "nintendo",
+   "SettingsLabel": "Donkey Kong Bananza",
+   "CheckFile": "dkb.exe",
+   "Pre": true,
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".nup"
+    ]
    }
   },
   {

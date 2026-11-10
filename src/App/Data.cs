@@ -129,10 +129,13 @@ class Game {
     public string Id, Name, Short, Source, Exe, Proc, SettingsKey, Launch, Repo, Asset, NotAsset, Accent, Accent2;
     public string Backup, Keep, Replace, FirstRun, SetupArg, Rebuild, Needs, DefaultDir, Series, SettingsLabel, CheckFile, Saves;
     public bool Pre, NoSha, Console;
+    public bool OwnGuide;                         // the game uses the Xbox / PS / Home button itself (the in-game menu then opens with View + Menu only)
     public string Steam;                          // a Steam game: its app id (Steam.cs)
+    public string Setup;                          // the game's own setup program in its download ("DKB-Setup.exe"): Install runs it
     public string[] Languages = new string[0];    // the languages Steam has it in
     // a game from Epic or GOG (Stores.cs): the store, its id there, and what the store needs to start it
     public string Store, StoreId, StoreNs, StoreItem, StoreExe, StoreArgs, StoreUninstall, StoreArt, StoreHero;
+    public bool FromLibrary;   // found in a store library (Steam.cs, Stores.cs), not listed in games.json
     public bool ByStore { get { return Steam != null || Store != null; } }
     public string StoreName { get { return Steam != null ? "Steam" : Store == "epic" ? "Epic Games" : Store == "gog" ? "GOG" : null; } }
     public RomSpec Rom = new RomSpec();
@@ -174,8 +177,8 @@ static class Catalog {
                 SetupArg = Json.Str(d, "SetupArg"), Rebuild = Json.Str(d, "Rebuild"), Needs = Json.Str(d, "Needs") ?? "",
                 DefaultDir = Json.Str(d, "DefaultDir"), Series = Json.Str(d, "Series") ?? "nintendo",
                 SettingsLabel = Json.Str(d, "SettingsLabel"), CheckFile = Json.Str(d, "CheckFile"), Saves = Json.Str(d, "Saves"),
-                Pre = Json.Bool(d, "Pre"), NoSha = Json.Bool(d, "NoSha"), Console = Json.Bool(d, "Console"),
-                Steam = Json.Str(d, "Steam"), Languages = Json.Strings(d, "Languages")
+                OwnGuide = Json.Bool(d, "OwnGuide"), Pre = Json.Bool(d, "Pre"), NoSha = Json.Bool(d, "NoSha"), Console = Json.Bool(d, "Console"),
+                Setup = Json.Str(d, "Setup"), Steam = Json.Str(d, "Steam"), Languages = Json.Strings(d, "Languages")
             };
             if (g.SettingsLabel == null) g.SettingsLabel = g.Name;
             if (g.CheckFile == null) g.CheckFile = g.Exe;

@@ -1,4 +1,4 @@
-// Steam games in the launcher (games.json "Steam": the app id): bought on Steam, installed, started and kept up to date
+﻿// Steam games in the launcher (games.json "Steam": the app id): bought on Steam, installed, started and kept up to date
 // by Steam. The launcher reads Steam's own files: steamapps\libraryfolders.vdf for the libraries and
 // appmanifest_<id>.acf for whether a game is installed, where, its build and its language. Install, Start and Uninstall
 // hand over to Steam (steam://install, rungameid, uninstall); while Steam installs, the launcher looks every 5 seconds
@@ -184,7 +184,7 @@ static class SteamGames {
             }
         }
         int rank = 1000;
-        foreach (var g in found.OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase)) { g.SettingsLabel = g.Name; g.CheckFile = ""; g.Rank = rank++; Catalog.Games.Add(g); }
+        foreach (var g in found.OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase)) { g.FromLibrary = true; g.SettingsLabel = g.Name; g.CheckFile = ""; g.Rank = rank++; Catalog.Games.Add(g); }
     }
     // appinfo.vdf (binary): app id -> name, for the apps whose type is "game". Versions 27-29 (29 keeps its key names
     // in a table at the end of the file).
