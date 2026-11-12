@@ -96,6 +96,7 @@ partial class Shell {
         TextBlock unused;
         list.Children.Add(OvRow("", "Quick settings", ovButtons, out unused));   // volume, sound output, Bluetooth (OverlayPages.cs)
         list.Children.Add(OvRow("", "Power", ovButtons, out unused));            // sleep, restart, shut down
+        list.Children.Add(OvRow("", "Take a screenshot", ovButtons, out unused));   // into the Album (Album.cs)
         dock.Children.Add(list);
         ovPanel.Child = dock;
         root.Children.Add(ovPanel);
@@ -108,19 +109,39 @@ partial class Shell {
         ovTick.Tick += (s, e) => OverlayTick();
     }
 
+    // a globe for the menu's picture over the browser
+    static ImageSource browserGlyph;
+    static ImageSource BrowserGlyph() {
+        if (browserGlyph != null) return browserGlyph;
+        var dg = new DrawingGroup();
+        using (var dc = dg.Open()) {
+            dc.DrawRoundedRectangle(new LinearGradientBrush(Color.FromRgb(0x2f, 0x8f, 0xe0), Color.FromRgb(0x3f, 0xb8, 0xa0), 45), null, new Rect(0, 0, 120, 120), 22, 22);
+            var ft = new FormattedText("\uE774", System.Globalization.CultureInfo.InvariantCulture, FlowDirection.LeftToRight, new Typeface("Segoe MDL2 Assets"), 60, Brushes.White);
+            dc.DrawText(ft, new Point(60 - ft.Width / 2, 60 - ft.Height / 2));
+        }
+        dg.Freeze(); browserGlyph = new DrawingImage(dg); browserGlyph.Freeze();
+        return browserGlyph;
+    }
     void ToggleOverlay() { if (OverlayOpen) ResumeGame(); else OpenOverlay(); }
+    bool ovBrowser;   // the menu is over the browser inside the launcher, not a game
+    void OvLabel(int i, string text) { ((TextBlock)((StackPanel)ovButtons[i].Content).Children[1]).Text = text; }
     void OpenOverlay() {
-        var g = playing; if (g == null) return;
+        var g = playing;
+        ovBrowser = BrowserViewOpen && padActive;
+        if (g == null && !ovBrowser) return;
         BuildOverlay();
-        ovTitle.Text = g.Name;
-        ovIcon.Source = (ImageSource)g.Icon;
+        ovTitle.Text = ovBrowser ? "Browser" : g.Name;
+        ovIcon.Source = ovBrowser ? BrowserGlyph() : (ImageSource)g.Icon;
         ovIcon.Margin = new Thickness(0);
         ovIdx = 0; ovCloseStep = 0;
         if (ovPage != "main") ShowOvPage("main");
-        ((TextBlock)((StackPanel)ovButtons[2].Content).Children[1]).Text = "Close the game";
+        OvLabel(0, ovBrowser ? "Back to the browser" : "Resume");
+        OvLabel(1, ovBrowser ? "Close the browser" : "Go to the launcher");
+        OvLabel(2, "Close the game");
+        ovButtons[2].Visibility = ovBrowser ? Visibility.Collapsed : Visibility.Visible;
         ovNote.Text = "";
-        // on the game's screen
-        ovGameWindow = Engine.Processes(g).Select(p => { try { return p.MainWindowHandle; } catch { return IntPtr.Zero; } }).FirstOrDefault(h => h != IntPtr.Zero);
+        // on the game's screen (the browser: the launcher's)
+        ovGameWindow = ovBrowser ? new WindowInteropHelper(W).Handle : Engine.Processes(g).Select(p => { try { return p.MainWindowHandle; } catch { return IntPtr.Zero; } }).FirstOrDefault(h => h != IntPtr.Zero);
         var screen = ovGameWindow != IntPtr.Zero ? System.Windows.Forms.Screen.FromHandle(ovGameWindow) : System.Windows.Forms.Screen.PrimaryScreen;
         double scale = 1;
         var src = PresentationSource.FromVisual(W);
@@ -128,7 +149,7 @@ partial class Shell {
         ov.Left = screen.Bounds.Left / scale; ov.Top = screen.Bounds.Top / scale; ov.Width = screen.Bounds.Width / scale; ov.Height = screen.Bounds.Height / scale;
         // exclusive full screen: the game in front has the screen to itself; minimise it so the menu can show
         // (its screen is worked out above, before: a minimised window has none)
-        ovExclusive = ExclusiveFullScreen();
+        ovExclusive = !ovBrowser && ExclusiveFullScreen();
         if (ovExclusive) {
             var fg = GetForegroundWindow();
             if (ovGameWindow == IntPtr.Zero) ovGameWindow = fg;
@@ -146,9 +167,13 @@ partial class Shell {
         ovTick.Start();
     }
     void OverlayTick() {
-        var g = playing; if (g == null) return;
-        var played = DateTime.Now - playingSince;
-        ovSub.Text = "Playing for " + Playtime.Format(played.TotalSeconds) + "  •  " + Playtime.Format(Playtime.Total(g.Id) + played.TotalSeconds) + " in all";
+        var g = playing;
+        if (ovBrowser) ovSub.Text = bvTitle != null ? bvTitle.Text : "";
+        else if (g == null) return;
+        else {
+            var played = DateTime.Now - playingSince;
+            ovSub.Text = "Playing for " + Playtime.Format(played.TotalSeconds) + "  •  " + Playtime.Format(Playtime.Total(g.Id) + played.TotalSeconds) + " in all";
+        }
         string battery = "";
         try {
             var ps = System.Windows.Forms.SystemInformation.PowerStatus;
@@ -160,7 +185,7 @@ partial class Shell {
         ovClock.Text = DateTime.Now.ToString("HH:mm") + battery;
         UpdateOverlayMusic();
         // a close that didn't take: offer to force it
-        if (ovCloseStep == 2 && (DateTime.Now - ovCloseAt).TotalSeconds > 5 && Engine.IsRunning(g)) {
+        if (!ovBrowser && ovCloseStep == 2 && (DateTime.Now - ovCloseAt).TotalSeconds > 5 && Engine.IsRunning(g)) {
             ovCloseStep = 3;
             ((TextBlock)((StackPanel)ovButtons[2].Content).Children[1]).Text = "Force close";
             ovNote.Text = g.Name + " didn't close. Force close ends it at once: anything not saved is lost.";
@@ -183,6 +208,7 @@ partial class Shell {
         if (bit == Pad.Up) ovIdx = Math.Max(0, ovIdx - 1);
         else if (bit == Pad.Down) ovIdx = Math.Min(ovButtons.Count - 1, ovIdx + 1);
         else return;
+        if (ovBrowser && ovIdx == 2) ovIdx = bit == Pad.Up ? 1 : 3;   // no Close the game over the browser
         Sound.Play(ovIdx != was ? Sfx.Move : Sfx.Bump);
         MarkOverlay();
     }
@@ -192,6 +218,8 @@ partial class Shell {
         if (ovIdx == 0) { ResumeGame(); return; }
         if (ovIdx == 3) { Sound.Play(Sfx.Open); ShowOvPage("quick"); return; }
         if (ovIdx == 4) { Sound.Play(Sfx.Open); ShowOvPage("power"); return; }
+        if (ovIdx == 5) { TakeScreenshot(); return; }
+        if (ovIdx == 1 && ovBrowser) { CloseOverlay(true); CloseBrowserView(); BringToFront(new WindowInteropHelper(W).Handle); W.Activate(); return; }
         if (ovIdx == 1) { CloseOverlay(true); if (inTray) ComeBack(null); else { W.Show(); W.Activate(); BringToFront(new WindowInteropHelper(W).Handle); } return; }
         if (g == null) { CloseOverlay(false); return; }
         var label = (TextBlock)((StackPanel)ovButtons[2].Content).Children[1];
@@ -217,6 +245,7 @@ partial class Shell {
         if (!OverlayOpen) return;
         CloseOverlay(true);
         Sound.Play(Sfx.Back);
+        if (ovBrowser) { BringToFront(new WindowInteropHelper(W).Handle); W.Activate(); FocusBrowserView(); return; }
         // a game stepped aside from exclusive full screen goes back to it
         if (ovGameWindow != IntPtr.Zero && (ovExclusive || IsIconic(ovGameWindow))) ShowWindow(ovGameWindow, 9);   // SW_RESTORE
         BringToFront(ovGameWindow);

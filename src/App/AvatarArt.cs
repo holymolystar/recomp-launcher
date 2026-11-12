@@ -16,7 +16,9 @@ class AvatarState {
     public int Mood = -1;      // -1: the character's own mood setting; 0: its plain face
     public int Pose = -1;      // -1: its own pose
     public bool Blink;
-    public double Walk;        // 0: standing; else where it is in its step (radians): the feet lift in turn
+    public double Walk;        // 0: standing; else where it is in its step (radians): the feet lift in turn, the arms swing
+    public bool Held;          // picked up: arms up, legs kicking (with Walk)
+    public bool NoShadow;      // no shadow on the ground (the plaza draws its own, which stays on the floor)
     public bool Backdrop;      // draw its background colour and pattern
 }
 
@@ -35,6 +37,7 @@ static class AvatarArt {
         }
     }
     public static ImageSource Render(AvatarDef d, AvatarState st, Crop c, int pxW, int pxH) {
+        if (c != Crop.Features) { try { return Avatar3D.Render(d, st, c, pxW, pxH); } catch { } }   // 3D (Avatar3D.cs); flat if that fails
         var dv = new DrawingVisual();
         var r = CropRect(d, c);
         using (var dc = dv.RenderOpen()) {
@@ -49,6 +52,40 @@ static class AvatarArt {
         bmp.Render(dv); bmp.Freeze();
         return bmp;
     }
+    // ---------- for the 3D characters (Avatar3D.cs) ----------
+    // the backdrop alone, framed like Render
+    public static ImageSource BackdropImage(AvatarDef d, Crop c, int pxW, int pxH) {
+        var dv = new DrawingVisual();
+        var r = CropRect(d, c);
+        using (var dc = dv.RenderOpen()) {
+            double k = Math.Max(pxW / r.Width, pxH / r.Height);
+            dc.PushTransform(new TranslateTransform(pxW / 2.0, pxH / 2.0)); dc.PushTransform(new ScaleTransform(k, k));
+            dc.PushTransform(new TranslateTransform(-(r.X + r.Width / 2), -(r.Y + r.Height / 2)));
+            Backdrop(dc, d);
+            dc.Pop(); dc.Pop(); dc.Pop();
+        }
+        var bmp = new RenderTargetBitmap(pxW, pxH, 96, 96, PixelFormats.Pbgra32); bmp.Render(dv); bmp.Freeze();
+        return bmp;
+    }
+    // the face, drawn flat to be printed on the front of the 3D head: the head's 2D space, -110..110 both ways,
+    // on a clear background (no skin, hair or hat: those are 3D)
+    public static ImageSource FaceDecal(AvatarDef d, int mood, bool blink, int px) {
+        var dv = new DrawingVisual();
+        using (var dc = dv.RenderOpen()) {
+            double k = px / 220.0;
+            dc.PushTransform(new ScaleTransform(k, k)); dc.PushTransform(new TranslateTransform(110, 110));
+            string skin = d.C("skin");
+            if (mood < 0) mood = d.I("mood");
+            FaceDetails(dc, d, skin); Beard(dc, d); Nose(dc, d, skin); Mouth(dc, d, mood); Eyes(dc, d, mood, blink); Brows(dc, d, mood); Glasses(dc, d);
+            dc.Pop(); dc.Pop();
+        }
+        var bmp = new RenderTargetBitmap(px, px, 96, 96, PixelFormats.Pbgra32); bmp.Render(dv); bmp.Freeze();
+        return bmp;
+    }
+    // the arm angles of each pose (degrees from hanging down, outward): upper arm, forearm, for left then right
+    public static double[] PoseArms(int pose) { return (double[])PoseAngles[Math.Max(0, Math.Min(PoseAngles.Length - 1, pose))].Clone(); }
+    public static string[] TopNames { get { return AvatarSpec.ByKey["top"].Names; } }
+
     // the round profile picture: head and shoulders over the backdrop, in the character's mood
     public static ImageSource Portrait(AvatarDef d, int px) { return Render(d, new AvatarState { Backdrop = true }, Crop.Portrait, px, px); }
 
@@ -117,17 +154,22 @@ static class AvatarArt {
         int mood = st.Mood >= 0 ? st.Mood : d.I("mood");
         if (st.Backdrop) Backdrop(dc, d);
         // a soft shadow on the ground, so the character stands on something
-        var ground = new RadialGradientBrush(Color.FromArgb(90, 0, 0, 0), Color.FromArgb(0, 0, 0, 0)); ground.Freeze();
-        dc.DrawEllipse(ground, null, new Point(200, Ground - 2), 86 * L.Bld + 20, 15);
+        if (!st.NoShadow) {
+            var ground = new RadialGradientBrush(Color.FromArgb(90, 0, 0, 0), Color.FromArgb(0, 0, 0, 0)); ground.Freeze();
+            dc.DrawEllipse(ground, null, new Point(200, Ground - 2), 86 * L.Bld + 20, 15);
+        }
+        // walking: arms down and swinging against the legs; held: arms up
+        double swing = 0;
+        if (st.Held) pose = 2;
+        else if (st.Walk != 0) { pose = 0; swing = Math.Sin(st.Walk) * 20; }
         // the character itself, drawn once into a picture of its own...
+        bool simple = d.I("style") == 0;
         var fig = new DrawingGroup();
         using (var c = fig.Open()) {
             BackThings(c, d, L);
             HeadBack(c, d, L);
-            LegsWalking(c, d, L, st.Walk);
-            Torso(c, d, L);
-            Neck(c, d, L);
-            Arms(c, d, L, pose);
+            if (simple) { SimpleLegs(c, d, L, st.Walk); SimpleTorso(c, d, L); Neck(c, d, L); SimpleArms(c, d, L, pose, swing); }
+            else { LegsWalking(c, d, L, st.Walk); Torso(c, d, L); Neck(c, d, L); Arms(c, d, L, pose, swing); }
             Head(c, d, L, mood, st.Blink);
         }
         fig.Freeze();
@@ -139,8 +181,80 @@ static class AvatarArt {
         var mask = new DrawingBrush(fig) { Stretch = Stretch.None, ViewboxUnits = BrushMappingMode.Absolute, Viewbox = b, ViewportUnits = BrushMappingMode.Absolute, Viewport = b };
         mask.Freeze();
         dc.PushOpacityMask(mask);
-        dc.DrawRectangle(BodyLight, null, b);
+        dc.DrawRectangle(simple ? SoftLight : BodyLight, null, b);
         dc.Pop();
+    }
+    // the simple style's light: gentler, like smooth plastic
+    static readonly Brush SoftLight = MakeSoftLight();
+    static Brush MakeSoftLight() {
+        var g = new LinearGradientBrush { StartPoint = new Point(0.15, 0), EndPoint = new Point(0.85, 1) };
+        g.GradientStops.Add(new GradientStop(Color.FromArgb(30, 255, 255, 255), 0));
+        g.GradientStops.Add(new GradientStop(Color.FromArgb(0, 255, 255, 255), 0.5));
+        g.GradientStops.Add(new GradientStop(Color.FromArgb(34, 20, 20, 40), 1));
+        g.Freeze(); return g;
+    }
+    // a soft round shine, for the simple style's head and body
+    static Brush Shine(byte a) {
+        var g = new RadialGradientBrush(Color.FromArgb(a, 255, 255, 255), Color.FromArgb(0, 255, 255, 255)); g.Freeze(); return g;
+    }
+
+    // ---------- the simple style: one smooth shape each, no folds or prints ----------
+    // the body: a rounded capsule in the top's colour, a little narrower at the waist
+    static Geometry SimpleTorsoShape(Layout L) {
+        double sy = L.ShoulderY, hy = L.HipY, sw = L.ShoulderW, hw = L.HipW;
+        return G(F("M {0},{1} C {0},{2} {3},{2} 200,{2} C {4},{2} {5},{2} {5},{1} L {6},{7} C {6},{8} {9},{8} 200,{8} C {10},{8} {11},{8} {11},{7} Z",
+            200 - sw, sy + 16, sy - 4, 200 - sw * 0.5, 200 + sw * 0.5, 200 + sw, 200 + hw + 2, hy - 4, hy + 14, 200 + hw * 0.5, 200 - hw * 0.5, 200 - hw - 2));
+    }
+    static void SimpleTorso(DrawingContext dc, AvatarDef d, Layout L) {
+        string c = d.C("topCol");
+        var shape = SimpleTorsoShape(L);
+        dc.DrawRectangle(Shade(d.C("skin"), 0.9), null, new Rect(188, L.ShoulderY - 20, 24, 26));   // the neck
+        dc.DrawGeometry(B(c), null, shape);
+        dc.PushClip(shape);
+        var b = shape.Bounds;
+        // round, like a capsule: darker at the sides, a soft shine up and to the left
+        var side = new LinearGradientBrush { StartPoint = new Point(0, 0.5), EndPoint = new Point(1, 0.5) };
+        side.GradientStops.Add(new GradientStop(Color.FromArgb(40, 10, 10, 30), 0)); side.GradientStops.Add(new GradientStop(Color.FromArgb(0, 10, 10, 30), 0.3));
+        side.GradientStops.Add(new GradientStop(Color.FromArgb(0, 10, 10, 30), 0.7)); side.GradientStops.Add(new GradientStop(Color.FromArgb(56, 10, 10, 30), 1));
+        side.Freeze();
+        dc.DrawRectangle(side, null, b);
+        dc.DrawEllipse(Shine(70), null, new Point(b.Left + b.Width * 0.34, b.Top + b.Height * 0.28), b.Width * 0.26, b.Height * 0.3);
+        dc.Pop();
+    }
+    // the arms: sleeves all the way, round hands (no fingers)
+    static void SimpleArms(DrawingContext dc, AvatarDef d, Layout L, int pose, double swing) {
+        var a = (double[])PoseAngles[Math.Max(0, Math.Min(PoseAngles.Length - 1, pose))].Clone();
+        a[0] += swing; a[1] += swing * 0.6; a[2] -= swing; a[3] -= swing * 0.6;
+        string c = d.C("topCol"); var skin = d.C("skin");
+        double t = L.ArmT + 4;
+        for (int i = 0; i < 2; i++) {
+            int s = i == 0 ? -1 : 1;
+            double a1 = a[i * 2] * Math.PI / 180, a2 = a[i * 2 + 1] * Math.PI / 180;
+            var sh = new Point(200 + s * (L.ShoulderW - t / 2 + 2), L.ShoulderY + t / 2 + 2);
+            var el = new Point(sh.X + s * Math.Sin(a1) * L.Upper, sh.Y + Math.Cos(a1) * L.Upper);
+            var hd = new Point(el.X + s * Math.Sin(a2) * L.Fore, el.Y + Math.Cos(a2) * L.Fore);
+            var pen = P(B(c), t);
+            dc.DrawLine(pen, sh, el); dc.DrawLine(pen, el, hd);
+            dc.DrawLine(P(A(Color.FromRgb(255, 255, 255), 40), t * 0.3), new Point(sh.X - s * t * 0.18, sh.Y), new Point(el.X - s * t * 0.18, el.Y));   // a soft shine along it
+            double r = t * 0.72;
+            dc.DrawEllipse(B(skin), null, hd, r, r);
+            dc.DrawEllipse(Shine(90), null, new Point(hd.X - r * 0.3, hd.Y - r * 0.3), r * 0.55, r * 0.55);
+        }
+    }
+    // the legs: two smooth rounded columns, rounded feet; walking lifts each foot in turn
+    static void SimpleLegs(DrawingContext dc, AvatarDef d, Layout L, double walk) {
+        string bc = d.C("bottomCol"), sc = d.C("shoeCol");
+        double t = L.LegT + 2, gap = L.HipW - t / 2 - 2;
+        for (int s = -1; s <= 1; s += 2) {
+            double lift = walk == 0 ? 0 : Math.Max(0, s * Math.Sin(walk)) * 14;
+            double x = 200 + s * gap, top = L.HipY - 6, foot = L.AnkleY - lift;
+            dc.DrawRoundedRectangle(B(bc), null, new Rect(x - t / 2, top, t, foot - top + 4), t / 2, t / 2);
+            dc.DrawRoundedRectangle(A(Color.FromRgb(255, 255, 255), 30), null, new Rect(x - t * 0.3, top + 8, t * 0.22, foot - top - 16), t * 0.11, t * 0.11);
+            dc.DrawRoundedRectangle(Shade(bc, 0.78), null, new Rect(x + t * 0.18, top + 6, t * 0.26, foot - top - 6), t * 0.13, t * 0.13);
+            // the foot
+            dc.DrawEllipse(B(sc), null, new Point(x + s * 4, foot + 10), t * 0.66, t * 0.4);
+            dc.DrawEllipse(Shine(70), null, new Point(x + s * 2 - 4, foot + 6), t * 0.3, t * 0.16);
+        }
     }
     // light from the top left to shade at the bottom right, over the whole character
     static readonly Brush BodyLight = MakeBodyLight();
@@ -434,8 +548,10 @@ static class AvatarArt {
         new double[] { 18, -150, 12, -96 },    // thinking
         new double[] { 30, 100, 30, 100 },     // shrug
     };
-    static void Arms(DrawingContext dc, AvatarDef d, Layout L, int pose) {
-        var a = PoseAngles[Math.Max(0, Math.Min(PoseAngles.Length - 1, pose))];
+    static void Arms(DrawingContext dc, AvatarDef d, Layout L, int pose, double swing = 0) {
+        var a = (double[])PoseAngles[Math.Max(0, Math.Min(PoseAngles.Length - 1, pose))].Clone();
+        // the swing: one arm out while the other comes in, and back
+        a[0] += swing; a[1] += swing * 0.6; a[2] -= swing; a[3] -= swing * 0.6;
         int top = d.I("top");
         bool sleeveless = top == 5 || top == 8;
         bool longSleeve = top == 1 || top == 2 || top == 3 || top == 4;
@@ -529,7 +645,13 @@ static class AvatarArt {
         dc.DrawGeometry(B(skin), null, face);
         // the head as a ball: its highlight and rim shade, and a soft shadow at the chin
         dc.PushClip(face);
-        dc.DrawRectangle(HeadLight, null, new Rect(-112, -112, 224, 224));
+        if (d.I("style") == 0) {
+            // simple: smooth and evenly lit, with a soft shine up and to the left
+            var rim = new RadialGradientBrush { GradientOrigin = new Point(0.4, 0.35), Center = new Point(0.5, 0.48), RadiusX = 0.62, RadiusY = 0.62 };
+            rim.GradientStops.Add(new GradientStop(Color.FromArgb(0, 40, 20, 30), 0.6)); rim.GradientStops.Add(new GradientStop(Color.FromArgb(44, 40, 20, 30), 1)); rim.Freeze();
+            dc.DrawRectangle(rim, null, new Rect(-112, -112, 224, 224));
+            dc.DrawEllipse(Shine(70), null, new Point(-34, -50), 40, 30);
+        } else dc.DrawRectangle(HeadLight, null, new Rect(-112, -112, 224, 224));
         dc.DrawEllipse(A(Shade(Col(skin), 0.8), 60), null, new Point(0, 104), 90, 26);
         dc.Pop();
 
@@ -549,7 +671,7 @@ static class AvatarArt {
 
     static void FaceDetails(DrawingContext dc, AvatarDef d, string skin) {
         int ex = d.I("extra");
-        byte blush = (byte)(ex == 2 ? 120 : 55);
+        byte blush = (byte)(ex == 2 ? 120 : d.I("style") == 0 ? 0 : 55);   // the simple style: clean cheeks unless Blush is chosen
         var bl = B(Color.FromArgb(blush, 255, 110, 120));
         double ey = 12 + d.D("eyeY");
         dc.DrawEllipse(bl, null, new Point(-58, ey + 34), 18, 11);

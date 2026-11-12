@@ -83,6 +83,16 @@ partial class Shell {
         }
         if (!ok) { padPrev = 0; return; }
         int b = st.Buttons;
+        // any button: the screensaver goes (that press does nothing else), and the idle clock starts again
+        if (b != 0) {
+            lastPadInput = now;
+            if (SaverOn) { HideSaver(); padPrev = b | Pad.A | Pad.B; return; }
+        }
+        // Home's Power button held: Sleep, ready to confirm (Extras.cs)
+        if (powerHeldSince != DateTime.MinValue) {
+            if ((b & Pad.A) == 0) powerHeldSince = DateTime.MinValue;
+            else if ((now - powerHeldSince).TotalMilliseconds > 800) { powerHeldSince = DateTime.MinValue; PowerHeld(); }
+        }
         // the right face button picks (Nintendo style): A and B change places
         if (PadStyle.ConfirmRight) { int ab = b & (Pad.A | Pad.B); b = (b & ~(Pad.A | Pad.B)) | ((ab & Pad.A) != 0 ? Pad.B : 0) | ((ab & Pad.B) != 0 ? Pad.A : 0); }
         // the triggers as buttons (letter jumps in All games)
@@ -93,9 +103,11 @@ partial class Shell {
         // open the Xbox button closes it as usual)
         bool guideOurs = playing == null || OverlayOpen || !GuideLeftTo(playing);
         bool menuKey = (guideOurs && (b & Pad.Guide) != 0) || (b & (Pad.Back | Pad.Start)) == (Pad.Back | Pad.Start);
-        if (menuKey && !menuKeyWas && playing != null && Settings.Get("PadMenu") != "off") { menuKeyWas = true; padPrev = b; ToggleOverlay(); return; }
+        if (menuKey && !menuKeyWas && (playing != null || (BrowserViewOpen && padActive)) && (Settings.Get("PadMenu") != "off" || BrowserViewOpen)) { menuKeyWas = true; padPrev = b; ToggleOverlay(); return; }
         if (menuKey && !menuKeyWas && browserMode && !OverlayOpen && !padActive && EdgeInFront()) { menuKeyWas = true; padPrev = b; LeaveBrowser(); return; }
         menuKeyWas = menuKey;
+        // the browser inside the launcher: the controller is its mouse and keys (BrowserView.cs)
+        if (BrowserViewOpen && padActive && !OverlayOpen && !OskOpen) { padPrev = 0; BrowserPad(st, b); return; }
         // the controller browser: while its Edge window is in front, the controller is its mouse and keys (Browser.cs)
         if (browserMode && !OverlayOpen && !padActive && EdgeInFront()) { padPrev = 0; BrowserPad(st, b); return; }
         // the launcher answers the controller only while it's in front, or while its in-game menu is open
@@ -117,6 +129,7 @@ partial class Shell {
         }
         padPrev = b;
         if (padDiagram != null && padDiagram.IsVisible) padDiagram.Show(b);
+        ControllersShow(b);   // the Controllers page's test (ControllersCard.cs)
         // right stick: scroll
         if (Math.Abs((int)st.RY) > press) ScrollBy(-st.RY / 32768.0 * 24);
         if (pressed == 0) return;
@@ -213,6 +226,11 @@ partial class Shell {
         if (ColOpen) { ColPad(bit); SetHints(); return; }
         if (AchievementsOpen) { AchievementsPad(bit); SetHints(); return; }
         if (BrowserCardOpen) { BrowserCardPad(bit); SetHints(); return; }
+        if (ControllersOpen) { ControllersPad(bit); SetHints(); return; }
+        if (BoardOpen) { BoardPad(bit); SetHints(); return; }
+        if (AlbumOpen) { AlbumPad(bit); SetHints(); return; }
+        if (ListPageOpen) { ListPagePad(bit); SetHints(); return; }   // Mail, System, Storage (ListPages.cs)
+        if (NewsOpen) { NewsPad(bit); SetHints(); return; }
         if (PlazaOpen) { PlazaPad(bit); SetHints(); return; }
         if (BtOpen) { BtPad(bit); SetHints(); return; }
         if (PowerOpen) { PowerPad(bit); SetHints(); return; }
@@ -271,12 +289,14 @@ partial class Shell {
         if (PlayersOpen) { PlayersPad(bit); SetHints(); return; }
         if (ProfileOpen) { ProfilePad(bit); SetHints(); return; }
         // main screen
+        if (DropOpen) { DropPad(bit); SetHints(); return; }   // a Discover dropdown (Discover.cs)
         if (view == View.Home) {
             if (bit == Pad.LB && homePage == "home") { OpenPlayers(); SetHints(); return; }
-            if (bit == Pad.RB && homePage == "home" && homeZone == "tiles" && sel != null) { ToggleFavourite(sel); return; }
+            if (bit == Pad.RB && homePage == "home" && homeZone == "tiles" && sel != null && !IsFolder(sel) && !IsFolderBack(sel)) { ToggleFavourite(sel); return; }
             if (homeAll) {
                 if (bit == Pad.RB) { OpenSearch(); return; }
-                if (bit == Pad.LB) { CycleFilter(1); SetHints(); return; }
+                if (bit == Pad.LB) { OpenDrop(0); SetHints(); return; }   // the Show dropdown (Discover.cs)
+                if (bit == Pad.LS) { OpenDrop(1); SetHints(); return; }   // the console dropdown
                 if (bit == Pad.LT || bit == Pad.RT) { JumpLetter(bit == Pad.RT ? 1 : -1); return; }
                 if (bit == Pad.B && SearchText().Length > 0) { ClearSearch(); return; }
             }
@@ -344,7 +364,14 @@ partial class Shell {
             else if (OskOpen) { }
             else if (ColOpen) { spec.Add(new[] { "A", "Select" }); spec.Add(new[] { "B", "Done" }); }
             else if (FriendsOpen) { spec.Add(new[] { "B", "Done" }); }
-            else if (PlazaOpen) { spec.Add(new[] { "A", "Edit" }); spec.Add(new[] { "Y", "Who's playing" }); spec.Add(new[] { "B", "Back" }); }
+            else if (ListPageOpen) ListPageHints(spec);
+            else if (NewsOpen) { spec.Add(new[] { "A", "Read" }); spec.Add(new[] { "B", "Close" }); }
+            else if (AlbumOpen) { spec.Add(new[] { "LB", "Game" }); spec.Add(new[] { "A", "View" }); spec.Add(new[] { "B", "Back" }); }
+            else if (BoardOpen) { spec.Add(new[] { "↔", "Day" }); spec.Add(new[] { "X", "Write a note" }); spec.Add(new[] { "B", "Close" }); }
+            else if (ControllersOpen) { spec.Add(new[] { "A", "Select" }); spec.Add(new[] { "B", "Close" }); }
+            else if (PlazaOpen && PlazaCardOpen) { spec.Add(new[] { "A", "Select" }); spec.Add(new[] { "B", "Close" }); }
+            else if (DropOpen) { spec.Add(new[] { "A", "Pick" }); spec.Add(new[] { "LB", "Menu" }); spec.Add(new[] { "RB", "Menu" }); spec.Add(new[] { "B", "Close" }); }
+            else if (PlazaOpen) { spec.Add(new[] { "A", "Profile" }); spec.Add(new[] { "LB", "Throw" }); spec.Add(new[] { "X", "New" }); spec.Add(new[] { "Y", "Who's playing" }); spec.Add(new[] { "B", "Back" }); }
             else if (BtOpen) { spec.Add(new[] { "A", "Pair / remove" }); spec.Add(new[] { "B", "Done" }); }
             else if (PowerOpen) { spec.Add(new[] { "A", "Select" }); spec.Add(new[] { "B", "Back" }); }
             else if (BrowserCardOpen) { spec.Add(new[] { "A", "Open" }); spec.Add(new[] { "X", "Change" }); spec.Add(new[] { "B", "Close" }); }
@@ -355,19 +382,19 @@ partial class Shell {
                 // every button that does something here, as the other views list theirs
                 bool install = sel != null && sel.State == State.Missing;
                 if (homePage != "game") {
-                    spec.Add(new[] { "RS", homeAll ? "Layout" : "All games" });
+                    spec.Add(new[] { "RS", homeAll ? "Layout" : "Discover" });
                     spec.Add(new[] { "LB", homeAll ? "Filter" : "Profiles" });
-                    if (homeAll) spec.Add(new[] { "RB", "Search" });
-                    else if (homeZone == "tiles" && sel != null) spec.Add(new[] { "RB", Profiles.IsFav(sel.Id) ? "Unfavourite" : "Favourite" });
+                    if (homeAll) spec.Add(new[] { "RB", "Search" });   // LB and LS show next to their dropdowns
+                    else if (homeZone == "tiles" && sel != null && !IsFolder(sel) && !IsFolderBack(sel)) spec.Add(new[] { "RB", Profiles.IsFav(sel.Id) ? "Unfavourite" : "Favourite" });
                     spec.Add(new[] { "≡", "Settings" });
                 }
                 if (sel != null && sel.State == State.Update && homeZone == "tiles" && homePage != "game") spec.Add(new[] { "X", "Update" });
                 if (homePage == "game") spec.Add(new[] { "A", "OK" });
                 else {
                     spec.Add(new[] { "Y", "Game page" });
-                    spec.Add(new[] { "A", homeZone == "buttons" && !homeAll ? "OK" : install ? "Install" : "Start" });
+                    spec.Add(new[] { "A", homeZone == "profile" ? "Profile" : homeZone == "buttons" && !homeAll ? "OK" : install ? "Install" : "Start" });
                 }
-                if (homePage != "home" || homeZone == "buttons") spec.Add(new[] { "B", "Back" });
+                if (homePage != "home" || homeZone == "buttons" || homeZone == "profile" || homeFolder != null) spec.Add(new[] { "B", "Back" });
             }
             else {
                 bool install = sel != null && sel.State == State.Missing;

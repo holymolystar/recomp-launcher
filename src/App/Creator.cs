@@ -19,37 +19,37 @@ using System.Windows.Threading;
 
 namespace RecompLauncher {
 
-// the character on the stage: drawn in vector, framed by a camera that glides between the whole body and the face
-class AvatarView : FrameworkElement {
+// the character on the stage, in 3D and moving (Avatar3D.cs): it blinks and breathes, hops when something changes,
+// turns when dragged (or LT / RT), and the camera glides between the whole body and the face
+class AvatarView : Grid {
     public AvatarDef Def;
     public readonly AvatarState State = new AvatarState();
-    Rect cam = new Rect(0, 40, 400, 560), from, to; DateTime start; bool moving;
-    public void Aim(Rect target, bool now) {
-        if (now) { cam = target; moving = false; InvalidateVisual(); return; }
-        from = cam; to = target; start = DateTime.Now;
-        if (!moving) { moving = true; CompositionTarget.Rendering += Step; }
+    public readonly Avatar3DView View3D = new Avatar3DView();
+    string shown; int shownMood = -99; DateTime lastBuild = DateTime.MinValue;
+    double yawTarget; bool dragging; Point dragFrom; DateTime turnedAt = DateTime.MinValue;
+    public AvatarView() {
+        Background = Brushes.Transparent;
+        Children.Add(View3D);
+        CompositionTarget.Rendering += Check;
+        MouseLeftButtonDown += (s, e) => { dragging = true; dragFrom = e.GetPosition(this); CaptureMouse(); };
+        MouseMove += (s, e) => { if (!dragging) return; var p = e.GetPosition(this); yawTarget += (p.X - dragFrom.X) * 0.7; dragFrom = p; turnedAt = DateTime.Now; };
+        MouseLeftButtonUp += (s, e) => { dragging = false; ReleaseMouseCapture(); };
     }
-    void Step(object s, EventArgs e) {
-        double t = Math.Min(1, (DateTime.Now - start).TotalMilliseconds / 420);
-        double k = 1 - Math.Pow(1 - t, 3);
-        cam = new Rect(from.X + (to.X - from.X) * k, from.Y + (to.Y - from.Y) * k, from.Width + (to.Width - from.Width) * k, from.Height + (to.Height - from.Height) * k);
-        InvalidateVisual();
-        if (t >= 1) { moving = false; CompositionTarget.Rendering -= Step; }
-    }
-    protected override void OnRender(DrawingContext dc) {
-        if (Def == null || ActualWidth <= 0 || ActualHeight <= 0) return;
-        double k = Math.Min(ActualWidth / cam.Width, ActualHeight / cam.Height);
-        dc.PushClip(new RectangleGeometry(new Rect(0, 0, ActualWidth, ActualHeight)));
-        dc.PushTransform(new TranslateTransform(ActualWidth / 2, ActualHeight / 2));
-        dc.PushTransform(new ScaleTransform(k, k));
-        dc.PushTransform(new TranslateTransform(-(cam.X + cam.Width / 2), -(cam.Y + cam.Height / 2)));
-        if (!State.Backdrop) {
-            var shadow = new SolidColorBrush(Color.FromArgb(50, 0, 0, 0)); shadow.Freeze();
-            dc.DrawEllipse(shadow, null, new Point(200, AvatarArt.Ground + 2), 96, 14);
+    // the character changes in place: built again (at most about nine times a second, while a slider moves)
+    void Check(object s, EventArgs e) {
+        if (!IsVisible || Def == null) return;
+        string k = Def.ToString();
+        if ((k != shown || State.Mood != shownMood) && (DateTime.Now - lastBuild).TotalMilliseconds > 110) {
+            shown = k; shownMood = State.Mood; lastBuild = DateTime.Now;
+            View3D.Mood = State.Mood; View3D.Rebuild(Def);
         }
-        AvatarArt.Draw(dc, Def, State);
-        dc.Pop(); dc.Pop(); dc.Pop(); dc.Pop();
+        // a turn eases in, and after a while it turns back to face you
+        if (!dragging && (DateTime.Now - turnedAt).TotalSeconds > 4) yawTarget *= 0.97;
+        View3D.Yaw += (yawTarget - View3D.Yaw) * 0.15;
     }
+    public void Turn(double deg) { yawTarget += deg; turnedAt = DateTime.Now; }
+    public void Hop() { View3D.Play(Anim3D.Jump, 1.05); }
+    public void Aim(Rect target, bool now) { bool face = target.Height < 540; View3D.Aim(face ? AvatarArt.Crop.Head : AvatarArt.Crop.Full, face ? 0.78 : 0.92, now); }
 }
 
 partial class Shell {
@@ -207,6 +207,7 @@ partial class Shell {
         if (!crWasFull) SetFullscreen(false);
         ApplyAvatar();
         if (ProfileOpen) { FillProfile(); MarkProfile(); }
+        if (plazaReturn) { plazaReturn = false; OpenPlaza(); }
     }
     // leaving without saving asks first when something changed
     void CrLeave() {
@@ -215,6 +216,7 @@ partial class Shell {
         CloseCreator(false);
     }
     void StartCrIdle() {
+        return;   // the 3D character breathes and sways by itself
         var tg = (TransformGroup)crView.RenderTransform;
         var breathe = new DoubleAnimation(1, 1.012, TimeSpan.FromSeconds(1.6)) { AutoReverse = true, RepeatBehavior = RepeatBehavior.Forever, EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut } };
         ((ScaleTransform)tg.Children[0]).BeginAnimation(ScaleTransform.ScaleYProperty, breathe);
@@ -223,6 +225,7 @@ partial class Shell {
     }
     // a little hop when something changes
     void CrPop() {
+        crView.Hop(); return;
         var st = (ScaleTransform)((TransformGroup)crView.RenderTransform).Children[1];
         var a = new DoubleAnimation(1.035, 1, TimeSpan.FromMilliseconds(260)) { EasingFunction = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.6 } };
         st.BeginAnimation(ScaleTransform.ScaleXProperty, a); st.BeginAnimation(ScaleTransform.ScaleYProperty, a);
@@ -355,8 +358,16 @@ partial class Shell {
         if (!crInTabs && crIdx < crStops.Count) crStops[crIdx].BringIntoView();
     }
     // each part's picture: your character wearing that choice
+    readonly Queue<object[]> crThumbQueue = new Queue<object[]>(); DispatcherTimer crThumbStep;
     void RenderCrThumbs() {
-        foreach (var t in crThumbs) {
+        crThumbQueue.Clear(); foreach (var t in crThumbs) crThumbQueue.Enqueue(t);
+        if (crThumbStep == null) { crThumbStep = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(15) }; crThumbStep.Tick += (s, e) => RenderCrThumbStep(); }
+        crThumbStep.Start();
+    }
+    void RenderCrThumbStep() {
+        if (crThumbQueue.Count == 0 || !CreatorOpen) { crThumbStep.Stop(); return; }
+        for (int n = 0; n < 2 && crThumbQueue.Count > 0; n++) {
+            var t = crThumbQueue.Dequeue();
             var img = (Image)t[0]; var it = (AvatarItem)t[1]; int i = (int)t[2];
             var d = crDef.Clone(); d.Set(it.Key, i);
             var st = new AvatarState { Mood = it.Key == "mood" ? i : 0, Pose = it.Key == "pose" ? i : -1, Backdrop = it.Thumb == 2 || it.Key == "pose" };
@@ -430,6 +441,7 @@ partial class Shell {
         if (bit == Pad.LB || bit == Pad.RB) { Sound.Play(Sfx.Move); SelectCrTab(crTab + (bit == Pad.LB ? -1 : 1)); return; }
         if (bit == Pad.X) { CrRandom(); return; }
         if (bit == Pad.Y) { CrUndo(); return; }
+        if (bit == Pad.LT || bit == Pad.RT) { crView.Turn(bit == Pad.RT ? 45 : -45); return; }   // turn the character round
         if (bit == Pad.Start) { CloseCreator(true); return; }
         if (bit == Pad.B) { if (!crInTabs) { crInTabs = true; Sound.Play(Sfx.Back); MarkCr(); } else CrLeave(); return; }
         if (crInTabs) {

@@ -86,6 +86,20 @@ static class Pad {
                      LB = 0x100, RB = 0x200, A = 0x1000, B = 0x2000, X = 0x4000, Y = 0x8000, Guide = 0x400,
                      LT = 0x10000, RT = 0x20000;   // the triggers, as buttons (made from how far they're pulled)
     // the first connected controller (the one that answered last is asked first)
+    // what's in slot i (0-3): connected or not, and its battery (percent, -1 wired or unknown)
+    public static bool Slot(int i, out int battery) {
+        battery = -1;
+        if (none) return false;
+        try {
+            State s; int r = legacy ? Get910(i, out s) : Get14(i, out s);
+            if (r != 0) return false;
+            if (!legacy) {
+                BatteryInfo b;
+                if (Bat14(i, 0, out b) == 0 && b.Type != 0 && b.Type != 1 && b.Type != 0xFF) battery = b.Level == 0 ? 5 : b.Level == 1 ? 25 : b.Level == 2 ? 60 : 100;
+            }
+            return true;
+        } catch { return false; }
+    }
     public static bool TryGet(out State s) {
         s = new State();
         if (none) return false;

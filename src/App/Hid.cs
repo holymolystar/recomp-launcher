@@ -1,7 +1,7 @@
 ﻿// PlayStation and Switch controllers read straight from Windows (HID), for when nothing turns them into an Xbox
 // controller (Steam Input, DS4Windows, BetterJoy do; then XInput is used and these readers stay idle).
 //   DualShock 4 and DualSense, by USB or Bluetooth;  Switch Pro Controller, by Bluetooth or USB (USB needs a short
-//   handshake, sent here).
+//   handshake, sent here);  Joy-Cons by Bluetooth: a pair is one controller, a single one is held sideways.
 // Each report becomes the same State XInput gives (buttons in XInput's bits, sticks -32768..32767, up positive), so the
 // rest of the launcher doesn't know the difference. Buttons are matched by where they sit: the bottom face button is A
 // (Cross on PlayStation, B on Switch), as on an Xbox controller.
@@ -42,7 +42,8 @@ static class HidPads {
 
     const ushort Sony = 0x054C, Nintendo = 0x057E;
     static readonly ushort[] SonyPads = { 0x05C4, 0x09CC, 0x0BA0, 0x0CE6, 0x0DF2 };   // DS4 v1, DS4 v2, DS4 dongle, DualSense, DualSense Edge
-    static readonly ushort[] NintendoPads = { 0x2009 };                              // Switch Pro Controller
+    static readonly ushort[] NintendoPads = { 0x2009, 0x2006, 0x2007 };              // Switch Pro Controller, Joy-Con (L), Joy-Con (R)
+    const ushort JoyConL = 0x2006, JoyConR = 0x2007;
 
     class Dev { public string Path; public ushort Vid, Pid; public int InLen; }
 
@@ -99,17 +100,21 @@ static class HidPads {
     public static bool TryGet(out Pad.State s, out PadKind kind) {
         s = new Pad.State(); kind = PadKind.None;
         if (!readerOk && DateTime.Now >= nextOpen) { nextOpen = DateTime.Now.AddSeconds(2); Open(); }
+        // a second Joy-Con turned on after the first: the two become a pair
+        else if (joyMode && !(joyCons[0].Alive && joyCons[1].Alive) && DateTime.Now >= nextOpen) { nextOpen = DateTime.Now.AddSeconds(3); try { OpenJoyCons(Find()); } catch { } }
         if (!readerOk) return false;
         lock (gate) {
+            if (joyMode) { kind = PadKind.Switch; return JoinJoyCons(out s); }
             if ((DateTime.Now - latestAt).TotalSeconds > 1.5) return false;   // nothing new for a while: gone or asleep
             s = latest; kind = latestKind;
         }
         return true;
     }
     static void Open() {
-        Dev dev;
-        try { dev = Find().FirstOrDefault(); } catch { return; }
-        if (dev == null) return;
+        Dev dev; List<Dev> all;
+        try { all = Find(); } catch { return; }
+        dev = all.FirstOrDefault(d => d.Pid != JoyConL && d.Pid != JoyConR);
+        if (dev == null) { OpenJoyCons(all); return; }
         var h = CreateFile(dev.Path, 0xC0000000, 3, IntPtr.Zero, 3, 0, IntPtr.Zero);   // read and write, shared, existing
         if (h.IsInvalid) { h = CreateFile(dev.Path, 0x80000000, 3, IntPtr.Zero, 3, 0, IntPtr.Zero); if (h.IsInvalid) return; }
         IntPtr pre; var caps = new Caps();
@@ -204,11 +209,100 @@ static class HidPads {
         try {
             int len = Math.Max(outLen, 64);
             Action<byte[]> send = data => { var r = new byte[len]; Array.Copy(data, r, data.Length); fs.Write(r, 0, r.Length); fs.Flush(); };
-            send(new byte[] { 0x80, 0x02 });   // handshake
-            send(new byte[] { 0x80, 0x04 });   // USB only, no Bluetooth timeout
+            try { send(new byte[] { 0x80, 0x02 }); } catch { }   // handshake (USB)
+            try { send(new byte[] { 0x80, 0x04 }); } catch { }   // USB only, no Bluetooth timeout
             send(new byte[] { 0x01, 0x00, 0x00, 0x01, 0x40, 0x40, 0x00, 0x01, 0x40, 0x40, 0x03, 0x30 });   // reports at full rate (0x30)
-        } catch { }   // by Bluetooth these writes aren't needed
+        } catch { }
     }
+    // ---------- Joy-Cons ----------
+    // each Joy-Con is read on its own; TryGet joins them: a pair is one controller, one alone is held sideways
+    class JoyCon { public bool Left; public int R, M, L, X, Y; public DateTime At = DateTime.MinValue; public volatile bool Alive; }
+    static readonly JoyCon[] joyCons = { new JoyCon { Left = true }, new JoyCon { Left = false } };
+    static bool joyMode;
+    static void OpenJoyCons(List<Dev> all) {
+        bool any = false;
+        foreach (var jc in joyCons) {
+            if (jc.Alive) { any = true; continue; }
+            var dev = all.FirstOrDefault(d => d.Pid == (jc.Left ? JoyConL : JoyConR));
+            if (dev == null) continue;
+            var h = CreateFile(dev.Path, 0xC0000000, 3, IntPtr.Zero, 3, 0, IntPtr.Zero);
+            if (h.IsInvalid) continue;
+            IntPtr pre; var caps = new Caps();
+            if (HidD_GetPreparsedData(h, out pre)) { HidP_GetCaps(pre, ref caps); HidD_FreePreparsedData(pre); }
+            int inLen = Math.Max((int)caps.InputReportByteLength, 64), outLen = caps.OutputReportByteLength;
+            var me = jc; me.Alive = true; any = true;
+            new Thread(() => ReadJoyCon(h, inLen, outLen, me)) { IsBackground = true, Name = "Joy-Con" }.Start();
+        }
+        if (!any) return;
+        joyMode = true; readerOk = true;
+        bool l = joyCons[0].Alive, r = joyCons[1].Alive;
+        Model = l && r ? "Joy-Con pair" : l ? "Joy-Con (L)" : "Joy-Con (R)";
+    }
+    static void ReadJoyCon(SafeFileHandle h, int inLen, int outLen, JoyCon jc) {
+        try {
+            using (var fs = new FileStream(h, FileAccess.ReadWrite, Math.Max(inLen, 64), false)) {
+                SwitchHello(fs, outLen);
+                var b = new byte[inLen];
+                while (true) {
+                    int n = fs.Read(b, 0, b.Length);
+                    if (n <= 0) break;
+                    if (b[0] != 0x30 || n < 12) continue;
+                    lock (gate) {
+                        jc.R = b[3]; jc.M = b[4]; jc.L = b[5];
+                        if (jc.Left) { jc.X = b[6] | ((b[7] & 0x0F) << 8); jc.Y = (b[7] >> 4) | (b[8] << 4); }
+                        else { jc.X = b[9] | ((b[10] & 0x0F) << 8); jc.Y = (b[10] >> 4) | (b[11] << 4); }
+                        jc.At = DateTime.Now; latestAt = DateTime.Now; latestKind = PadKind.Switch;
+                        int bat = b[2] >> 4; battery = Math.Min(100, (bat & 0x0E) * 100 / 8); charging = (bat & 1) != 0;
+                    }
+                }
+            }
+        } catch { }
+        finally { jc.Alive = false; try { h.Dispose(); } catch { } if (!joyCons.Any(x => x.Alive)) { joyMode = false; readerOk = false; } }
+    }
+    // the Joy-Cons now, as one controller (called with the lock held)
+    static bool JoinJoyCons(out Pad.State s) {
+        s = new Pad.State();
+        var l = joyCons[0]; var r = joyCons[1];
+        bool hasL = l.Alive && (DateTime.Now - l.At).TotalSeconds < 1.5, hasR = r.Alive && (DateTime.Now - r.At).TotalSeconds < 1.5;
+        if (!hasL && !hasR) return false;
+        int btn = 0;
+        if (hasL && hasR) {
+            // a pair: as a Pro Controller
+            int rb = r.R, m = l.M | r.M, lb = l.L;
+            if ((rb & 0x04) != 0) btn |= Pad.A; if ((rb & 0x08) != 0) btn |= Pad.B; if ((rb & 0x01) != 0) btn |= Pad.X; if ((rb & 0x02) != 0) btn |= Pad.Y;
+            if ((rb & 0x40) != 0) btn |= Pad.RB; if ((lb & 0x40) != 0) btn |= Pad.LB;
+            if ((lb & 0x80) != 0) s.LT = 255; if ((rb & 0x80) != 0) s.RT = 255;
+            if ((lb & 0x02) != 0) btn |= Pad.Up; if ((lb & 0x01) != 0) btn |= Pad.Down; if ((lb & 0x08) != 0) btn |= Pad.Left; if ((lb & 0x04) != 0) btn |= Pad.Right;
+            if ((m & 0x01) != 0) btn |= Pad.Back; if ((m & 0x02) != 0) btn |= Pad.Start; if ((m & 0x08) != 0) btn |= Pad.LS; if ((m & 0x04) != 0) btn |= Pad.RS;
+            if ((m & 0x10) != 0) btn |= Pad.Guide;
+            s.LX = Axis12(l.X, false); s.LY = Axis12(l.Y, false); s.RX = Axis12(r.X, false); s.RY = Axis12(r.Y, false);
+        } else if (hasL) {
+            // one left Joy-Con on its side (rail up): the arrow buttons are the face buttons, SL / SR the shoulders
+            int lb = l.L, m = l.M;
+            if ((lb & 0x08) != 0) btn |= Pad.A;   // left arrow, now at the bottom
+            if ((lb & 0x01) != 0) btn |= Pad.B;   // down arrow, now on the right
+            if ((lb & 0x02) != 0) btn |= Pad.X;   // up arrow, now on the left
+            if ((lb & 0x04) != 0) btn |= Pad.Y;   // right arrow, now at the top
+            if ((lb & 0x20) != 0) btn |= Pad.LB; if ((lb & 0x10) != 0) btn |= Pad.RB;
+            if ((lb & 0x40) != 0) s.LT = 255; if ((lb & 0x80) != 0) s.RT = 255;
+            if ((m & 0x01) != 0) btn |= Pad.Start; if ((m & 0x08) != 0) btn |= Pad.LS; if ((m & 0x20) != 0) btn |= Pad.Guide;   // minus, stick, capture
+            s.LX = Neg(Axis12(l.Y, false)); s.LY = Axis12(l.X, false);
+        } else {
+            // one right Joy-Con on its side
+            int rb = r.R, m = r.M;
+            if ((rb & 0x08) != 0) btn |= Pad.A;   // A, now at the bottom
+            if ((rb & 0x02) != 0) btn |= Pad.B;   // X, now on the right
+            if ((rb & 0x04) != 0) btn |= Pad.X;   // B, now on the left
+            if ((rb & 0x01) != 0) btn |= Pad.Y;   // Y, now at the top
+            if ((rb & 0x20) != 0) btn |= Pad.LB; if ((rb & 0x10) != 0) btn |= Pad.RB;
+            if ((rb & 0x40) != 0) s.LT = 255; if ((rb & 0x80) != 0) s.RT = 255;
+            if ((m & 0x02) != 0) btn |= Pad.Start; if ((m & 0x04) != 0) btn |= Pad.LS; if ((m & 0x10) != 0) btn |= Pad.Guide;   // plus, stick, home
+            s.LX = Axis12(r.Y, false); s.LY = Neg(Axis12(r.X, false));
+        }
+        s.Buttons = (ushort)btn;
+        return true;
+    }
+    static short Neg(short v) { return (short)Math.Max(-32767, Math.Min(32767, -(int)v)); }
     static short Axis12(int v, bool flip) { int x = (v - 2048) * 20; if (flip) x = -x; return (short)Math.Max(-32768, Math.Min(32767, x)); }
     static bool ParseSwitch(byte[] b, int n, out Pad.State s) {
         s = new Pad.State();

@@ -103,6 +103,13 @@ partial class Shell {
             string msg = (string)W.Dispatcher.Invoke(new Func<string>(() => RemoteControl(path.Substring(5))));
             Reply(s, 200, "text/plain; charset=utf-8", Encoding.UTF8.GetBytes(msg)); return;
         }
+        if (path == "/api/album") { Reply(s, 200, "application/json; charset=utf-8", Encoding.UTF8.GetBytes(new System.Web.Script.Serialization.JavaScriptSerializer().Serialize(
+            Album.All().Take(40).Select((x, i) => new Dictionary<string, object> { { "id", i }, { "game", x.Item2 } }).ToList()))); return; }
+        if (path.StartsWith("/shot/")) {
+            int n; var all = Album.All();
+            if (!int.TryParse(path.Substring(6), out n) || n < 0 || n >= Math.Min(40, all.Count)) { Reply(s, 404, "text/plain", new byte[0]); return; }
+            Reply(s, 200, "image/png", File.ReadAllBytes(all[n].Item1)); return;
+        }
         if (method == "POST" && path == "/api/close") { string msg = (string)W.Dispatcher.Invoke(new Func<string>(RemoteCloseGame)); Reply(s, 200, "text/plain; charset=utf-8", Encoding.UTF8.GetBytes(msg)); return; }
         Reply(s, 404, "text/plain", new byte[0]);
     }
@@ -113,7 +120,7 @@ partial class Shell {
     }
     // ---------- on the launcher's thread ----------
     string RemoteState() {
-        var games = Games.Where(g => !g.Hidden && g.Inst != null).OrderByDescending(LastPlayedAny).ThenBy(g => g.Name).Select(g => new Dictionary<string, object> {
+        var games = Games.Where(g => !g.Hidden && g.Inst != null && g.App == null).OrderByDescending(LastPlayedAny).ThenBy(g => g.Name).Select(g => new Dictionary<string, object> {
             { "id", g.Id }, { "name", g.Name }, { "from", g.ByStore ? g.StoreName : "Recomp" } }).ToList();
         var d = new Dictionary<string, object> { { "games", games } };
         d["volume"] = Audio.Level; d["muted"] = Audio.Muted;
@@ -211,7 +218,7 @@ input{width:100%;font:inherit;padding:11px 14px;border-radius:14px;border:1px so
 <div id='pinbox' class='pin' style='display:none'><h1>RECOMP LAUNCHER</h1><p>Type the PIN shown on the PC in Settings &gt; Phone remote.</p>
 <input id='pin' inputmode='numeric' maxlength='6' autocomplete='off'><button class='go' onclick='savePin()'>Connect</button><p class='msg' id='pinmsg'></p></div>
 <div id='app' style='display:none'><h1>RECOMP LAUNCHER</h1><div id='now'></div><div id='ctl'></div><div class='msg' id='msg'></div>
-<input id='q' placeholder='Search your games' oninput='draw()'><div class='grid' id='grid'></div></div>
+<input id='q' placeholder='Search your games' oninput='draw()'><div class='grid' id='grid'></div><h1 style='margin-top:22px'>ALBUM</h1><div class='grid' id='album'></div></div>
 <div class='sheet' id='sheet' onclick='if(event.target===this)hide()'><div><img id='simg'><b id='sname'></b>
 <div class='row'><button onclick='hide()'>Cancel</button><button class='go' onclick='start()'>Start on the PC</button></div></div></div>
 <div class='sheet' id='psheet' onclick='if(event.target===this)this.classList.remove(&quot;on&quot;)'><div><b>Power</b><p class='msg'>Restart and Shut down close a running game without saving.</p>
@@ -225,7 +232,8 @@ async function api(p,post){const r=await fetch(p+(p.includes('?')?'&':'?')+'pin=
  if(r.status==401){$('app').style.display='none';$('pinbox').style.display='block';$('pinmsg').textContent=pin?'That PIN is not right.':'';throw 0}
  if(r.status==429){$('pinmsg').textContent='Too many tries: wait a minute.';throw 0}
  $('pinbox').style.display='none';$('app').style.display='block';return post?r.text():r.json();}
-async function load(){try{state=await api('/api/state');draw();}catch(e){}}
+async function load(){try{state=await api('/api/state');draw();if(!albumDone)loadAlbum();}catch(e){}}
+let albumDone=false;async function loadAlbum(){albumDone=true;try{const a=await api('/api/album');$('album').innerHTML=a.length?a.map(x=>`<a class='tile' href='/shot/${x.id}?pin=${pin}' target='_blank'><img loading='lazy' src='/shot/${x.id}?pin=${pin}'><div>${esc(x.game)}</div></a>`).join(''):`<p class='msg'>No screenshots yet.</p>`;}catch(e){}}
 function draw(){if(!state)return;const q=$('q').value.toLowerCase();
  $('now').innerHTML=state.playing?`<div class='now'><img src='${art(state.playingId)}'><div style='flex:1'><span>Playing for ${state.minutes} min</span><b>${esc(state.playing)}</b></div><button class='stop' onclick='closeGame()'>${closeArmed?'Tap again':'Close'}</button></div>`:'';
  $('ctl').innerHTML=`<div class='ctl'>${state.music?`<div class='crow'><div class='song'><b>${esc(state.song||'Spotify')}</b><span>${esc(state.artist||'')}${state.paused?' (paused)':''}</span></div><button onclick='ctl(&quot;music/prev&quot;)'>&#9664;&#9664;</button><button class='go' onclick='ctl(&quot;music/toggle&quot;)'>${state.paused?'&#9654;':'&#10074;&#10074;'}</button><button onclick='ctl(&quot;music/next&quot;)'>&#9654;&#9654;</button></div>`:''}

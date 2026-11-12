@@ -78,6 +78,7 @@ static class Engine {
     public static void SaveMarker(Game g, Dictionary<string, object> m) { try { Json.WriteFile(Path.Combine(g.Dir, "recomp-launcher.json"), m); } catch { } }
 
     public static Installed GetInstalled(Game g) {
+        if (g.App != null) return Shell.AppInstalledInfo;   // the launcher's own pages are always there
         try { return Detect(g); } catch { return null; }
     }
     static Installed Detect(Game g) {

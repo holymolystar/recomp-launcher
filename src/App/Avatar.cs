@@ -91,6 +91,7 @@ static class AvatarSpec {
         Col("beardCol", "Colour", Hair, "#5a3825");
 
         Tab("Body", "🧍", false);
+        Part("style", "Style", 1, 0, "Simple", "Detailed");
         Slide("height", "Height", 0.85, 1.2, 1, true);
         Slide("build", "Build", 0.8, 1.3, 1, true);
         Col("skin", "Skin", Skin, "#f5c9a3");

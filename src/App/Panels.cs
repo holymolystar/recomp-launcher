@@ -236,7 +236,7 @@ partial class Shell {
 
     // ---------- settings ----------
     Toggle optFull, optStartup, optAuto;
-    string autoHideWas, storesWas;
+    string autoHideWas, storesWas, renderWas, monitorWas;
     PasswordBox tokenBox, steamKeyBox; TextBlock tokenCheck, remoteInfo; TextBox discordBox; Image remoteQr;
     void FillRemoteInfo() {
         remoteInfo.Inlines.Clear();
@@ -253,11 +253,13 @@ partial class Shell {
     StackPanel showButtons, libStores; UniformGrid showGrid; TextBox libSearch; TextBlock libCount; string libStore = "all";
     readonly List<FrameworkElement> extraStops = new List<FrameworkElement>();   // more buttons the controller can reach
     // Settings > Library: only the switches of the games that match the search and the store picked
+    // the games (and the launcher's pages) Settings > Library lists: not Home's folders (Folders.cs)
+    IEnumerable<Game> LibGames() { return Games.Where(g => showToggles.ContainsKey(g.Id)); }
     void FilterLibrary() {
         if (showGrid == null) return;
         string q = libSearch.Text.Trim();
         int n = 0;
-        foreach (var g in Games) {
+        foreach (var g in LibGames()) {
             bool on = (libStore == "all" || StoreOf(g) == libStore) && (q.Length == 0 || g.Name.IndexOf(q, StringComparison.CurrentCultureIgnoreCase) >= 0);
             showToggles[g.Id].Root.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
             if (on) n++;
@@ -282,15 +284,35 @@ partial class Shell {
         rows.Children.Add(ChoiceRow("OnPlay", "When a game starts", "Play time is counted either way. In the tray the launcher uses almost no memory, and it comes back by itself when the game closes.", 1,
             new[] { "stay", "close", "tray" }, new[] { "Stay open", "Close", "Wait in the tray" }));
         optFull = NewToggle("Open in full screen", "F11, the full screen button or View on a controller switch it any time.");
-        optStartup = NewToggle("Open when Windows starts", "Adds Recomp Launcher to your Startup folder.");
+        optStartup = NewToggle("Start with Windows, as your console", "Opens full screen on Home straight after you sign in, like a console. Windows' usual few seconds' wait before startup apps is turned off.");
         optAuto = NewToggle("Check for updates every 3 hours", "While the launcher is open. Only installed games are checked.");
-        foreach (var t in new[] { optFull, optStartup, optAuto }) rows.Children.Add(t.Root);
+        foreach (var t in new[] { optStartup, optAuto }) rows.Children.Add(t.Root);   // full screen is under Display
         rows.Children.Add(ChoiceRow("AskWho", "Ask who's playing", "With more than one profile. Each game: before a game starts, so it always starts with the right player's saves. At start: once, when the launcher opens. Never: it stays the profile used last (LB on Home switches).", 0,
             new[] { "game", "start", "never" }, new[] { "Each game", "At start", "Never" }));
+        // the weather: a town, and the unit
+        var wrow = new Grid { Margin = new Thickness(0, 8, 0, 8) };
+        wrow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); wrow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(220) });
+        var wtext = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 16, 0) };
+        wtext.Children.Add(new TextBlock { Text = "Weather", FontSize = 13, FontFamily = Ui.Semi });
+        wtext.Children.Add(new TextBlock { Text = "Your town, for the weather by the clock on Home (from Open-Meteo, free, no account). Empty: no weather.", FontSize = 11.5, Foreground = Ui.Brush(Ui.Muted), TextWrapping = TextWrapping.Wrap });
+        wrow.Children.Add(wtext);
+        weatherBox = new TextBox { Height = 34, FontSize = 13, Padding = new Thickness(8, 0, 8, 0), VerticalContentAlignment = VerticalAlignment.Center,
+            Background = Ui.Brush("#0A0E11"), Foreground = Ui.Brush(Ui.Text), BorderBrush = Ui.Brush("#26333C"), CaretBrush = Ui.Brush(Ui.Text) };
+        Grid.SetColumn(weatherBox, 1); wrow.Children.Add(weatherBox);
+        rows.Children.Add(wrow);
+        rows.Children.Add(ChoiceRow("WeatherUnit", "Temperature in", "", 0, new[] { "c", "f" }, new[] { "°C", "°F" }));
+        rows.Children.Add(ChoiceRow("HomeStrollers", "Characters on Home", "Now and then a profile's character strolls along the bottom of Home.", 0,
+            new[] { "on", "off" }, new[] { "On", "Off" }));
+        rows.Children.Add(ChoiceRow("HomeFolders", "Home in folders", "For a big library: Home's row holds a folder for each console (GBA, NDS, Switch...), sorted by themselves, with your favourites on their own before them. A opens a folder, B goes back.", 0,
+            new[] { "off", "on" }, new[] { "Off", "On" }));
+        rows.Children.Add(ChoiceRow("TilePreviews", "Tile previews", "The picked game's picture slowly zooms; a Steam game's trailer plays in its tile, silent.", 0,
+            new[] { "on", "off" }, new[] { "On", "Off" }));
+        rows.Children.Add(ChoiceRow("BreakAfter", "Break reminder", "A gentle note in the corner of the screen after this long playing, and again each time that much more has passed.", 0,
+            new[] { "off", "30", "60", "90", "120" }, new[] { "Off", "30 min", "1 h", "1 h 30", "2 h" }));
+        rows.Children.Add(ChoiceRow("Screensaver", "Screensaver", "After this long untouched on Home, the screen dims to a clock. Any button wakes it.", 2,
+            new[] { "off", "3", "5", "10" }, new[] { "Off", "3 min", "5 min", "10 min" }));
         rows.Children.Add(ChoiceRow("StartAnim", "Start-up animation", "The logo and a short chime as the launcher opens (about a second; a click or any key skips it).", 0,
             new[] { "on", "off" }, new[] { "On", "Off" }));
-        rows.Children.Add(ChoiceRow("TvMode", "Big screen (TV) mode", "Everything a quarter bigger, to read from across the room. Automatic: in full screen.", 0,
-            new[] { "off", "auto", "on" }, new[] { "Off", "Automatic", "On" }));
         rows.Children.Add(ChoiceRow("SteamLibrary", "Steam games", "Your library: every game you own on Steam gets a tile in All games (installed ones on Home too), installed and started through Steam. The launcher reopens when you save a change here.", 0,
             new[] { "library", "installed", "listed" }, new[] { "Your library", "Installed", "Only the launcher's" }));
         rows.Children.Add(ChoiceRow("OtherStores", "Epic Games and GOG", "Your Epic Games library and your installed GOG games, each in a group of their own, installed and started through their store. The launcher reopens when you save a change here.", 0,
@@ -304,8 +326,28 @@ partial class Shell {
         rows.Children.Add(ChoiceRow("StoreWindows", "Store windows", "When a Steam, Epic or GOG game starts, their own windows often pop up over it. Hide: the launcher minimises them for the first 30 seconds, so the game is in front.", 0,
             new[] { "hide", "leave" }, new[] { "Hide", "Leave" }));
         rows.Children.Add(LauncherUpdateRow());
-        rows = SetSection("Sound", "\uE767", "Little sounds as you move around, and the character creator's tune.");
-        rows.Children.Add(VolumeRow());
+        rows = SetSection("Display", "\uE7F4", "Which screen, how big, how sharp, how much moves.");
+        // the screens Windows has, as "1: 2560 x 1440 (main)"
+        var screens = System.Windows.Forms.Screen.AllScreens;
+        if (screens.Length > 1)
+            rows.Children.Add(ChoiceRow("Monitor", "Monitor", "The screen the launcher opens on (and goes full screen on). Automatic: where it was last.", 0,
+                new[] { "auto" }.Concat(screens.Select(x => x.DeviceName)).ToArray(),
+                new[] { "Automatic" }.Concat(screens.Select((x, i) => (i + 1) + ": " + x.Bounds.Width + " \u00D7 " + x.Bounds.Height + (x.Primary ? " (main)" : ""))).ToArray()));
+        rows.Children.Add(optFull.Root);
+        rows.Children.Add(ChoiceRow("TvMode", "Big screen (TV) mode", "Everything a quarter bigger, to read from across the room. Automatic: in full screen.", 0,
+            new[] { "off", "auto", "on" }, new[] { "Off", "Automatic", "On" }));
+        rows.Children.Add(ChoiceRow("UiScale", "Interface size", "Everything in the launcher, bigger or smaller (Big screen mode adds a quarter on top).", 1,
+            new[] { "90", "100", "110", "125", "150" }, new[] { "Smaller", "Normal", "Larger", "Large", "Largest" }));
+        rows.Children.Add(ChoiceRow("ArtQuality", "Picture quality", "How sharp the games' pictures are drawn. High: double resolution, for 4K screens and TVs. Low: half, for less memory.", 1,
+            new[] { "low", "normal", "high" }, new[] { "Low", "Normal", "High" }));
+        rows.Children.Add(ChoiceRow("Motion", "Motion", "Reduced: no drifting light behind the games, no slow zoom on the picked tile, no strolling characters.", 0,
+            new[] { "full", "reduced" }, new[] { "Full", "Reduced" }));
+        rows.Children.Add(ChoiceRow("Render", "Rendering", "Graphics card: smooth and light on the processor. Processor: for an old or troublesome graphics driver. The launcher reopens when you save a change here.", 0,
+            new[] { "gpu", "cpu" }, new[] { "Graphics card", "Processor" }));
+
+        rows = SetSection("Sound", "\uE767", "Little sounds as you move around, and Home's music.");
+        SoundRows(rows);
+        MusicRows(rows);   // Home music: on or off, the tune, its volume (HomeMusic.cs)
         rows = SetSection("Controller", "\uE7FC", "Xbox, PlayStation and Switch Pro controllers: button names, which button picks, and how it moves.");
         BuildPadSection(rows);
 
@@ -325,6 +367,15 @@ partial class Shell {
         tokenCheck = new TextBlock { FontSize = 11.5, Margin = new Thickness(2, 6, 0, 0), TextWrapping = TextWrapping.Wrap };
         rows.Children.Add(tokenCheck);
 
+        rows = SetSection("Friends", "\uE716", "Friend codes, and what your friends are playing.");
+        rows.Children.Add(new TextBlock { TextWrapping = TextWrapping.Wrap, FontSize = 11.5, Foreground = Ui.Brush(Ui.Muted), Margin = new Thickness(0, 0, 0, 8),
+            Text = "Friends go through a small server of your own, free on Cloudflare (the steps are in server\\friends\\README.md). Paste its address here. Friends who install your build get the same address." });
+        friendsServerBox = new TextBox { Height = 38, FontSize = 13, Padding = new Thickness(10, 0, 10, 0), VerticalContentAlignment = VerticalAlignment.Center,
+            Background = Ui.Brush("#0A0E11"), Foreground = Ui.Brush(Ui.Text), BorderBrush = Ui.Brush("#26333C"), CaretBrush = Ui.Brush(Ui.Text) };
+        rows.Children.Add(friendsServerBox);
+        rows.Children.Add(ChoiceRow("FriendsShare", "Show what I'm playing", "Off: friends only see that you're online.", 0, new[] { "on", "off" }, new[] { "On", "Off" }));
+        friendsCodeText = new TextBlock { FontSize = 13, FontFamily = Ui.Semi, Margin = new Thickness(0, 8, 0, 0), TextWrapping = TextWrapping.Wrap };
+        rows.Children.Add(friendsCodeText);
         rows = SetSection("Steam friends", "", "Optional: who's online, on the Friends button on Home.");
         rows.Children.Add(new TextBlock { TextWrapping = TextWrapping.Wrap, FontSize = 11.5, Foreground = Ui.Brush(Ui.Muted), Margin = new Thickness(0, 0, 0, 8),
             Text = "Steam shares who's online with a Web API key of your own. Sign in at steamcommunity.com/dev/apikey, type any domain name (localhost is fine), agree, and copy the key here. It only reads what your profile and your friends' profiles show; keep it to yourself like a password." });
@@ -387,14 +438,14 @@ partial class Shell {
         showButtons = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 4) };
         foreach (var sb in new[] { new[] { "Show these", "on" }, new[] { "Hide these", "off" }, new[] { "Only installed", "installed" } }) {
             var b = MakeButton(sb[0], 32); b.FontSize = 12.5; b.Margin = new Thickness(0, 0, 8, 0); string mode = sb[1];
-            b.Click += (s, e) => { foreach (var g in Games) if (showToggles[g.Id].Root.Visibility == Visibility.Visible) SetToggle(showToggles[g.Id], mode == "on" || (mode == "installed" && g.Inst != null), false); };
+            b.Click += (s, e) => { foreach (var g in LibGames()) if (showToggles[g.Id].Root.Visibility == Visibility.Visible) SetToggle(showToggles[g.Id], mode == "on" || (mode == "installed" && g.Inst != null), false); };
             showButtons.Children.Add(b);
         }
         libCount = new TextBlock { FontSize = 11.5, Foreground = Ui.Brush(Ui.Muted), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(6, 0, 0, 0) };
         showButtons.Children.Add(libCount);
         rows.Children.Add(showButtons);
         showGrid = new UniformGrid { Columns = 2 };
-        foreach (var g in Games.OrderBy(Catalog.SeriesOf).ThenBy(x => x.Rank)) {
+        foreach (var g in Games.Where(x => !IsFolder(x) && !IsFolderBack(x)).OrderBy(Catalog.SeriesOf).ThenBy(x => x.Rank)) {
             var t = NewToggle(g.Name, null); t.Root.Margin = new Thickness(0, 4, 18, 4);
             showToggles[g.Id] = t; showGrid.Children.Add(t.Root);
         }
@@ -404,7 +455,7 @@ partial class Shell {
         rows = SetSection("Game folders", "\uE8B7", "Where each game is (or will be) installed.");
         var defs = new List<FolderRow>();
         foreach (var g in Games.OrderBy(Catalog.SeriesOf).ThenBy(x => x.Rank)) {
-            if (g.ByStore) continue;   // the store decides where its games go
+            if (g.ByStore || g.App != null) continue;   // the store decides where its games go; the launcher's pages have none
             defs.Add(new FolderRow { G = g, Key = g.SettingsKey, Label = g.SettingsLabel, File = g.CheckFile, New = true });
             if (g.Id == "totk") defs.Add(new FolderRow { Key = "TotkUpdaterDir", Label = "TotK Updater (installs TotK updates)", File = "update-worker.ps1", New = false });
         }
@@ -437,34 +488,17 @@ partial class Shell {
             } else foreach (var r in folderRows) r.Box.Text = Settings.Default(r.Key);
         };
     }
-    // ---------- sound volume: Off and four levels, each one plays a chime at its loudness when picked ----------
-    StackPanel volumeButtons; int pickedVolume = 50;
-    FrameworkElement VolumeRow() {
-        var row = new Grid { Margin = new Thickness(0, 6, 0, 6) };
-        row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 16, 0) };
-        text.Children.Add(new TextBlock { Text = "Sounds", FontSize = 13, FontFamily = Ui.Semi });
-        text.Children.Add(new TextBlock { Text = "Little clicks and chimes as you move around and start games. No music.", FontSize = 11.5, Foreground = Ui.Brush(Ui.Muted), TextWrapping = TextWrapping.Wrap });
-        volumeButtons = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-        foreach (int v in Sound.Levels) {
-            var b = MakeButton(v == 0 ? "Off" : v + "%", 30); b.FontSize = 12; b.Padding = new Thickness(11, 0, 11, 0); b.Margin = new Thickness(6, 0, 0, 0); b.Tag = v;
-            int level = v;
-            b.Click += (s, e) => { PickVolume(level); Sound.Play(Sfx.Select, level); };
-            volumeButtons.Children.Add(b);
-        }
-        Grid.SetColumn(volumeButtons, 1);
-        row.Children.Add(text); row.Children.Add(volumeButtons);
-        return row;
+    // ---------- the interface sounds: on or off, and a volume meter like the music's (HomeMusic.cs) ----------
+    // SoundVolume is what plays (0 when they're off); SoundLevel keeps the meter's level while they're off
+    Toggle optSounds; readonly List<Button> soundBars = new List<Button>(); TextBlock soundVolText; int pickedVolume = 50;
+    void SoundRows(StackPanel rows) {
+        optSounds = NewToggle("Sounds", "Little clicks and chimes as you move around and start games.");
+        rows.Children.Add(optSounds.Root); extraStops.Add(optSounds.Root);
+        rows.Children.Add(MeterRow("Sounds volume", soundBars, out soundVolText, v => { PickVolume(v); Sound.Play(Sfx.Select, pickedVolume); }));
     }
     void PickVolume(int v) {
-        // the nearest level, for a value typed into settings.json by hand
-        pickedVolume = Sound.Levels.OrderBy(l => Math.Abs(l - v)).First();
-        foreach (Button b in volumeButtons.Children) {
-            bool on = (int)b.Tag == pickedVolume;
-            if (on) { b.Background = Ui.Brush(Ui.Teal); b.Foreground = Ui.Brush(Theme.Current.Light ? "#ffffff" : "#0A0E11"); }
-            else { b.ClearValue(Control.BackgroundProperty); b.ClearValue(Control.ForegroundProperty); }
-        }
+        pickedVolume = Math.Max(10, Math.Min(100, (int)Math.Round(v / 10.0) * 10));
+        PaintMeter(soundBars, soundVolText, pickedVolume);
     }
     // ---------- theme picker: a small preview of each theme in its own colours ----------
     UniformGrid themeGrid; string pickedTheme;
@@ -509,16 +543,20 @@ partial class Shell {
         foreach (var c in setChoices) PickChoice(c, c.Key == "OnPlay" ? OnPlayMode() : Settings.Get(c.Key).Length > 0 ? Settings.Get(c.Key) : c.Values[c.Def]);
         SetToggle(optRumble, Settings.On("PadRumble"), true);
         SetToggle(optFull, Settings.Get("Fullscreen") == "True", true);
-        SetToggle(optStartup, File.Exists(StartupLink), true);
+        SetToggle(optStartup, StartsWithWindows(), true);
         SetToggle(optAuto, Settings.On("AutoCheck"), true);
-        PickVolume(Sound.Volume);
+        { int lv; SetToggle(optSounds, Sound.Volume > 0, true); PickVolume(Sound.Volume > 0 ? Sound.Volume : int.TryParse(Settings.Get("SoundLevel"), out lv) ? lv : 50); }
+        SetToggle(optMusic, MusicOnSaved, true); PickMusicVolume(MusicVolumeSaved);
         tokenBox.Password = Settings.Get("GitHubToken");
         steamKeyBox.Password = Settings.Get("SteamApiKey");
+        friendsServerBox.Text = FriendsNet.Server ?? "";
+        friendsCodeText.Text = FriendsNet.MyCode != null ? "Your friend code: " + FriendsNet.MyCode : FriendsNet.Server != null ? "Your friend code is made the first time you open Friends." : "";
         discordBox.Text = Settings.Get("DiscordAppId");
+        weatherBox.Text = Settings.Get("WeatherCity");
         FillRemoteInfo();
         tokenCheck.Text = tokenBox.Password.Length > 0 ? "A token is saved." : ""; tokenCheck.Foreground = Ui.Brush(Ui.Muted);
-        foreach (var g in Games) SetToggle(showToggles[g.Id], !g.Hidden, true);
-        autoHideWas = Settings.Get("StoreAutoHide"); storesWas = Settings.Get("SteamLibrary") + "|" + Settings.Get("OtherStores");
+        foreach (var g in LibGames()) SetToggle(showToggles[g.Id], !g.Hidden, true);
+        autoHideWas = Settings.Get("StoreAutoHide"); renderWas = Settings.Get("Render"); monitorWas = Settings.Get("Monitor"); storesWas = Settings.Get("SteamLibrary") + "|" + Settings.Get("OtherStores");
         PickTheme(Theme.Current.Id);
         fb.Visibility = Visibility.Collapsed;
         ShowCard("SettingsLayer", "SettingsCard");
@@ -537,32 +575,45 @@ partial class Shell {
         }
     }
     void SaveSettingsPanel() {
-        Sound.Play(Sfx.Select, pickedVolume);
+        Sound.Play(Sfx.Select, optSounds.On ? pickedVolume : 0);
         foreach (var r in folderRows) Settings.Set(r.Key, r.Box.Text.Trim().TrimEnd('\\'));
         foreach (var c in setChoices) Settings.Set(c.Key, c.Picked);
         Settings.Set("PadRumble", optRumble.On ? "on" : "off");
         Settings.Set("AutoCheck", optAuto.On ? "on" : "off");
-        Sound.Volume = pickedVolume; Settings.Set("SoundVolume", pickedVolume.ToString());
+        Sound.Volume = optSounds.On ? pickedVolume : 0; Settings.Set("SoundVolume", Sound.Volume.ToString()); Settings.Set("SoundLevel", pickedVolume.ToString());
+        Settings.Set("HomeMusicOn", optMusic.On ? "on" : "off"); Settings.Set("HomeMusicVolume", pickedMusicVolume.ToString());
         ApplyPadSettings();
         ApplyScale();
         Settings.Set("Fullscreen", optFull.On ? "True" : "");
         if (optFull.On != isFull) SetFullscreen(optFull.On);
         Settings.Set("GitHubToken", tokenBox.Password.Trim());
+        bool newTown = Settings.Get("WeatherCity") != weatherBox.Text.Trim();
+        Settings.Set("WeatherCity", weatherBox.Text.Trim());
+        W.Dispatcher.BeginInvoke(new Action(() => FetchWeather()));   // with the unit saved below too
+        {
+            // the friends server: kept in settings and beside the launcher (friends-server.txt), so an installer carries it
+            string fs = friendsServerBox.Text.Trim().TrimEnd('/');
+            if (fs.Length > 0 && !fs.StartsWith("http")) fs = "https://" + fs;
+            if (fs != (FriendsNet.Server ?? "")) {
+                Settings.Set("FriendsServer", fs);
+                try { string f = Path.Combine(Paths.Root, "friends-server.txt"); if (fs.Length > 0) File.WriteAllText(f, fs); else if (File.Exists(f)) File.Delete(f); } catch { }
+                W.Dispatcher.BeginInvoke(new Action(SendPresence));
+            }
+        }
         Settings.Set("DiscordAppId", new string(discordBox.Text.Where(char.IsDigit).ToArray()));
         W.Dispatcher.BeginInvoke(new Action(ApplyRemote));   // after the choices below are saved too
         if (Settings.Get("SteamApiKey") != steamKeyBox.Password.Trim()) { Settings.Set("SteamApiKey", steamKeyBox.Password.Trim()); frLast = null; frAt = DateTime.MinValue; }
         try {
-            if (optStartup.On && !File.Exists(StartupLink)) MakeShortcut(StartupLink);
-            else if (!optStartup.On && File.Exists(StartupLink)) File.Delete(StartupLink);
+            if (optStartup.On != StartsWithWindows() || (optStartup.On && File.Exists(StartupLink))) SetStartsWithWindows(optStartup.On);   // SystemPage.cs
         } catch (Exception e) { Log("Couldn't change the Startup folder: " + e.Message, Ui.Red); }
         if (autoHideWas != Settings.Get("StoreAutoHide")) LoadHidden();   // switched: the store games all hide, or all show
-        else { foreach (var g in Games) g.Hidden = !showToggles[g.Id].On; SaveHidden(); }
+        else { foreach (var g in LibGames()) g.Hidden = !showToggles[g.Id].On; SaveHidden(); }
         bool newTheme = pickedTheme != null && pickedTheme != Theme.Current.Id;
         if (newTheme) Settings.Set("Theme", pickedTheme);
         Settings.Save();
         // a new theme: the launcher opens again in it (the window is built in its colours); the same when the stores
         // whose games it lists changed (the library is read as it opens)
-        if (newTheme || storesWas != Settings.Get("SteamLibrary") + "|" + Settings.Get("OtherStores")) {
+        if (newTheme || renderWas != Settings.Get("Render") || storesWas != Settings.Get("SteamLibrary") + "|" + Settings.Get("OtherStores")) {
             Settings.Set("LastGame", sel.Id); Settings.Save();
             try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(System.Reflection.Assembly.GetExecutingAssembly().Location, "-Select " + sel.Id) { WorkingDirectory = Paths.Root }); } catch { }
             W.Close();
@@ -570,6 +621,9 @@ partial class Shell {
         }
         SetAutoCheck();
         ApplySettings();
+        homeFolder = null; ApplySort(true); ApplyFilter();   // Home in folders, or not
+        if (monitorWas != Settings.Get("Monitor")) MoveToMonitor();
+        ApplyScale();
         foreach (var g in Games) { Icons.Load(g); ApplyIcon(g); }
         CloseSettings();
         ShowGame(sel);
@@ -604,7 +658,6 @@ partial class Shell {
         foreach (FrameworkElement b in themeGrid.Children) all.Add(b);
         foreach (var c in setChoices) all.AddRange(c.Buttons);
         foreach (var t in new[] { optFull, optStartup, optAuto }) all.Add(t.Root);
-        foreach (FrameworkElement b in volumeButtons.Children) all.Add(b);
         all.Add(optRumble.Root);
         all.Add(tokenSite);
         all.AddRange(extraStops);
@@ -619,7 +672,7 @@ partial class Shell {
         s.Add(N<Button>("BtnSetCancel")); s.Add(N<Button>("BtnSetSave"));
         return s;
     }
-    Button tokenSite;
+    Button tokenSite; TextBox friendsServerBox; TextBlock friendsCodeText;
 
     // ---------- the sections (LB / RB on a controller) ----------
     class SetSec { public string Name, Desc; public StackPanel Panel; public Border Tab; }

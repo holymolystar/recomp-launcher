@@ -51,6 +51,7 @@ partial class Shell {
         foreach (var g in Games) {
             if (g.IsBusy) continue;
             g.Inst = Engine.GetInstalled(g);
+            if (g.App != null) { g.State = State.Current; g.Latest = null; continue; }   // nothing to update
             if (g.ByStore) { g.State = g.Inst == null ? State.Missing : State.Current; g.Latest = Stores.Note(g); continue; }
             if (g.Inst == null) { g.State = State.Missing; g.Latest = ReleaseCache.Get(g.Id); continue; }
             var c = ReleaseCache.Get(g.Id);
@@ -223,8 +224,11 @@ partial class Shell {
             else {
                 string dest = j.Kind == "setup" ? SetupDirOf(g) : g.Dir;
                 bool pattern = g.Exe.IndexOfAny(new[] { '*', '?' }) >= 0;
-                // a pattern Exe is a single-file release: it keeps the download's own name, older copies are removed
-                string exe = j.Kind == "setup" ? SetupExeOf(g) : pattern ? Path.GetFileName(new Uri(g.Latest.Url).LocalPath) : g.Exe;
+                // a pattern Exe is a single-file release: it keeps the download's own name, older copies are removed; in a
+                // zip or tarball the pattern finds the exe (named after its version), and the older ones go too
+                string file = Path.GetFileName(new Uri(g.Latest.Url).LocalPath).ToLowerInvariant();
+                bool archive = file.EndsWith(".zip") || file.EndsWith(".tar.gz") || file.EndsWith(".tgz");
+                string exe = j.Kind == "setup" ? SetupExeOf(g) : pattern && !archive ? Path.GetFileName(new Uri(g.Latest.Url).LocalPath) : g.Exe;
                 a = "-Mode " + j.Kind + " -Game " + Engine.Q(dest) + " -Url " + Engine.Q(g.Latest.Url) + " -Tag " + Engine.Q(g.Latest.Tag) +
                     " -Sha256 " + Engine.Q(g.Latest.Sha ?? "") + " -Log " + Engine.Q(log) + " -Exe " + Engine.Q(exe) + " -BackupDir " + Engine.Q(g.Backups) +
                     " -Backup " + Engine.Q(g.Backup ?? "") + " -Keep " + Engine.Q(g.Keep ?? "") + " -Replace " + Engine.Q(g.Replace ?? "");
@@ -309,12 +313,13 @@ partial class Shell {
             switch (job) {
                 case "update":
                     Log(g.Name + " updated to " + g.Latest.Tag + ". Saves and settings were kept.", Ui.Teal);
+                    Board.Add("update", null, g.Id, g.Name + " was updated to " + g.Latest.Tag + ".");
                     if (backup != null) Log("Backup: " + backup, Ui.Muted);
                     if (g.Id == "smo") Log("The first start after an update can rebuild the game code (a few minutes).", Ui.Muted);
                     if (g.SetupArg != null) Log("The next Play runs the game's setup once, to rebuild the game for this version.", Ui.Muted);
                     if (g.Rebuild != null) Log("The next Play opens the builder once: build over the same folder with the same game to update it.", Ui.Muted);
                     break;
-                case "install": Log(g.Name + " " + g.Latest.Tag + " is in " + g.Dir + ".", Ui.Teal); StartFirstRun(g); break;
+                case "install": Log(g.Name + " " + g.Latest.Tag + " is in " + g.Dir + ".", Ui.Teal); StartFirstRun(g); MailInstalled(g); break;
                 case "uninstall": Log(g.Name + " is uninstalled.", Ui.Teal); if (backup != null) Log("Saves and settings kept in " + backup, Ui.Muted); break;
                 case "convert":
                     Log(g.Name + ": exefs and romfs are in " + outDir + ".", Ui.Teal);

@@ -73,6 +73,7 @@ partial class Shell {
     void FillPlayers() {
         plCards.Children.Clear(); plStops.Clear();
         foreach (var p in Profiles.All) plCards.Children.Add(PlayerCard(p));
+        plCards.Children.Add(PlayerCard(Profiles.Guest));
         plCards.Children.Add(PlayerCard(null));
         // the buttons are stops too, after the cards
         plStops.Add(plDelete); plStops.Add(plEdit); plStops.Add(plPlay);
@@ -91,7 +92,11 @@ partial class Shell {
             pic.Children.Add(new Border { Margin = new Thickness(7), CornerRadius = new CornerRadius(14), Child = img, ClipToBounds = true,
                 Clip = new RectangleGeometry(new Rect(0, 0, 98, 146), 14, 14) });
         } else pic.Children.Add(new Ellipse { StrokeThickness = 4 });
-        if (p != null && !body) pic.Children.Add(new Ellipse { Margin = new Thickness(8), Fill = AvatarBrush(p) });
+        if (p == Profiles.Guest) {
+            pic.Children.Add(new Ellipse { Margin = new Thickness(8), Fill = Ui.Gradient("#7d8a93", "#b4bec6") });
+            pic.Children.Add(new TextBlock { Text = "\uE77B", FontFamily = Ui.Mdl, FontSize = 40, Foreground = Brushes.White, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center });
+        }
+        else if (p != null && !body) pic.Children.Add(new Ellipse { Margin = new Thickness(8), Fill = AvatarBrush(p) });
         else if (p == null) {
             pic.Children.Add(new Ellipse { Margin = new Thickness(8), Fill = Ui.Brush("#1C252C"), Stroke = Ui.Brush("#26333C"), StrokeThickness = 1.5, StrokeDashArray = new DoubleCollection { 3, 2 } });
             pic.Children.Add(new TextBlock { Text = "", FontFamily = Ui.Mdl, FontSize = 26, Foreground = Ui.Brush(Ui.Muted), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center });
@@ -99,8 +104,8 @@ partial class Shell {
         card.Children.Add(pic);
         card.Children.Add(new TextBlock { Text = p != null ? Profiles.DisplayName(p) : "New profile", FontSize = 14, FontFamily = Ui.Semi, HorizontalAlignment = HorizontalAlignment.Center,
             TextTrimming = TextTrimming.CharacterEllipsis, Margin = new Thickness(0, 8, 0, 0) });
-        card.Children.Add(new TextBlock { Text = p == Profiles.Current ? "Playing now" : "", FontSize = 11, Foreground = Ui.Brush(Ui.Teal), HorizontalAlignment = HorizontalAlignment.Center });
-        if (p != null) {
+        card.Children.Add(new TextBlock { Text = p == Profiles.Current ? "Playing now" : p == Profiles.Guest ? "Nothing is kept" : "", FontSize = 11, Foreground = Ui.Brush(Ui.Teal), HorizontalAlignment = HorizontalAlignment.Center });
+        if (p != null && p != Profiles.Guest) {
             string top; double secs = Playtime.TotalIn(Profiles.PlaytimeFile(p), out top);
             var topGame = top != null ? Catalog.Find(top) : null;
             card.Children.Add(new TextBlock { Text = secs > 60 ? Playtime.Format(secs) + (topGame != null ? "\n" + (topGame.Short ?? topGame.Name) + " most" : "") : "", FontSize = 11, Foreground = Ui.Brush(Ui.Muted),
@@ -114,7 +119,7 @@ partial class Shell {
     void PickPlayer(int i) {
         plIdx = Math.Max(0, Math.Min(plStops.Count - 1, i));
         plConfirm = false;
-        int cards = Profiles.All.Count + 1;
+        int cards = PlCards;
         if (plIdx < cards) plCardIdx = plIdx;
         for (int k = 0; k < cards; k++) {
             var ring = (Shape)((Grid)((StackPanel)plStops[k]).Children[0]).Children[0];
@@ -123,12 +128,15 @@ partial class Shell {
         for (int k = 0; k < plStops.Count; k++) plStops[k].Effect = padUsed && k == plIdx && k >= cards ? SetGlow : null;
         bool isNew = plCardIdx == cards - 1;
         plPlay.Content = isNew ? "New profile" : "Play as " + Profiles.DisplayName(PlTarget);
-        plEdit.IsEnabled = !isNew;
+        plEdit.IsEnabled = !isNew && PlTarget != Profiles.Guest;
         plDelete.Content = "Delete profile"; plDelete.Foreground = Ui.Brush(Ui.Muted);
-        plDelete.Visibility = Profiles.All.Count > 1 && !isNew ? Visibility.Visible : Visibility.Hidden;
+        plDelete.Visibility = Profiles.All.Count > 1 && !isNew && PlTarget != Profiles.Guest ? Visibility.Visible : Visibility.Hidden;
         plStops[plIdx].BringIntoView();
     }
-    PlayerProfile PlTarget { get { return plCardIdx < Profiles.All.Count ? Profiles.All[plCardIdx] : null; } }
+    PlayerProfile PlTarget { get { return plCardIdx < Profiles.All.Count ? Profiles.All[plCardIdx] : plCardIdx == Profiles.All.Count ? Profiles.Guest : null; } }
+    // the profiles, Guest, then New profile
+    int PlCards { get { return Profiles.All.Count + 2; } }
+    static int PlIndexOf(PlayerProfile p) { return p == Profiles.Guest ? Profiles.All.Count : Math.Max(0, Profiles.All.IndexOf(p)); }
 
     TextBlock plTitle;
     // when Who's playing? is asked: before each game ("game"), when the launcher opens ("start"), or never
@@ -139,7 +147,7 @@ partial class Shell {
         BuildPlayers();
         plTitle.Text = "Who's playing?";
         FillPlayers();
-        PickPlayer(Profiles.All.IndexOf(Profiles.Current));
+        PickPlayer(PlIndexOf(Profiles.Current));
         ShowCard("PlayersLayer", "PlayersCard");
     }
     void ClosePlayers() {
@@ -148,20 +156,21 @@ partial class Shell {
         HideCard("PlayersLayer", "PlayersCard");
     }
     void PlayPicked() {
-        int cards = Profiles.All.Count + 1;
+        int cards = PlCards;
         if (plCardIdx == cards - 1) { NewPlayer(); return; }
         var p = PlTarget;
         Sound.Play(Sfx.Select);
         Profiles.Switch(p);
         ApplyAvatar();
         RefreshForProfile();
-        SetStep("Playing as " + Profiles.DisplayName(p) + ".", Ui.Teal);
+        SendPresence();   // the friends server knows who's here now
+        SetStep(p == Profiles.Guest ? "Playing as Guest: play time and favourites aren't kept." : "Playing as " + Profiles.DisplayName(p) + ".", Ui.Teal);
         var then = afterPlayers;
         ClosePlayers();
         if (then != null) then();   // the game this was asked for
     }
     void EditPicked() {
-        var p = PlTarget; if (p == null) return;
+        var p = PlTarget; if (p == null || p == Profiles.Guest) return;
         Profiles.Switch(p); ApplyAvatar(); RefreshForProfile();
         HideCard("PlayersLayer", "PlayersCard");
         OpenProfile();
@@ -175,7 +184,7 @@ partial class Shell {
     // pressed twice: the first press asks
     void DeletePicked() {
         var p = PlTarget;
-        if (p == null || Profiles.All.Count < 2) return;
+        if (p == null || p == Profiles.Guest || Profiles.All.Count < 2) return;
         if (!plConfirm) { plConfirm = true; plDelete.Content = "Delete " + Profiles.DisplayName(p) + "? Press again"; plDelete.Foreground = Ui.Brush(Ui.Red); Sound.Play(Sfx.Bump); return; }
         string name = Profiles.DisplayName(p);
         Profiles.Remove(p);
@@ -183,11 +192,11 @@ partial class Shell {
         plDelete.Foreground = Ui.Brush(Ui.Muted);
         ApplyAvatar();
         FillPlayers();
-        PickPlayer(Profiles.All.IndexOf(Profiles.Current));
+        PickPlayer(PlIndexOf(Profiles.Current));
         plNote.Text = name + " is off the list. Their saves are kept in the profiles folder (profiles\\" + p.Id + ").";
     }
     void PlayersPad(int bit) {
-        int cards = Profiles.All.Count + 1;
+        int cards = PlCards;
         bool onCard = plIdx < cards;
         if (bit == Pad.B || bit == Pad.Y) { ClosePlayers(); return; }
         if (bit == Pad.X) { if (plCardIdx != cards - 1) EditPicked(); return; }

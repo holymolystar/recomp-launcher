@@ -29,6 +29,7 @@ class Args {
                 case "view": r.View = next(); break;
                 case "theme": r.Theme = next(); break;
                 case "full": r.Full = true; break;
+                case "startup": r.Full = true; break;   // started with Windows: full screen on Home
                 case "opennotes": r.OpenNotes = true; break;
                 case "opensettings": r.OpenSettings = true; break;
                 case "drawnicons": r.DrawnIcons = true; break;
@@ -59,6 +60,7 @@ static class Program {
             Directory.CreateDirectory(Paths.Logs);
             Catalog.Load(Path.Combine(root, "games.json"));
             Settings.Load(Path.Combine(root, "settings.json"));
+            if (Settings.Get("Render") == "cpu") System.Windows.Media.RenderOptions.ProcessRenderMode = System.Windows.Interop.RenderMode.SoftwareOnly;   // Settings > Display > Rendering
             SteamGames.AddInstalled();   // your Steam library (Settings > General > Steam games)
             Stores.AddLibraries();       // Epic Games and GOG (Settings > General > Other stores)
             Theme.Use(Settings.Get("Theme"));

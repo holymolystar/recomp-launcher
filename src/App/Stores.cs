@@ -120,7 +120,7 @@ static class Stores {
     public static ImageSource Square(string file, bool tall) {
         try {
             var img = new BitmapImage();
-            img.BeginInit(); img.UriSource = new Uri(file); img.CacheOption = BitmapCacheOption.OnLoad; img.DecodePixelWidth = 320; img.EndInit(); img.Freeze();
+            img.BeginInit(); img.UriSource = new Uri(file); img.CacheOption = BitmapCacheOption.OnLoad; img.DecodePixelWidth = (int)(320 * Icons.Quality); img.EndInit(); img.Freeze();
             var dv = new DrawingVisual();
             using (var dc = dv.RenderOpen()) {
                 var rect = new System.Windows.Rect(0, 0, 256, 256);
@@ -129,7 +129,7 @@ static class Stores {
                 dc.DrawImage(img, new System.Windows.Rect((256 - dw) / 2, tall && h > w ? 0 : (256 - dh) / 2, dw, dh));
                 dc.Pop();
             }
-            var bmp = new RenderTargetBitmap(256, 256, 96, 96, PixelFormats.Pbgra32);
+            var bmp = Icons.Canvas256();
             bmp.Render(dv); bmp.Freeze();
             return bmp;
         } catch { return null; }

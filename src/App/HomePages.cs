@@ -313,6 +313,7 @@ partial class Shell {
     }
     void OpenGamePage() {
         if (sel == null || homeLayer == null) return;
+        if (sel.App != null) { PrimaryAction(sel); return; }   // an app has no game page: it opens
         if (homePage != "game") Sound.Play(Sfx.Open);
         gameBack = homePage == "game" ? gameBack : homePage;
         homePage = "game";

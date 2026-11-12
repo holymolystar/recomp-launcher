@@ -77,8 +77,10 @@ partial class Shell {
             b.BeginInit(); b.UriSource = new Uri(logo); b.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad; b.EndInit(); b.Freeze();
             N<Image>("LogoImg").Source = b; W.Icon = b;
         }
-        sort = new[] { "default", "installed", "recent", "name" }.Contains(Settings.Get("SortMode")) ? Settings.Get("SortMode") : "default";
+        sort = new[] { "default", "installed", "recent", "played", "name" }.Contains(Settings.Get("SortMode")) ? Settings.Get("SortMode") : "default";
         view = ParseView(Settings.Get("ViewMode"));
+        AddApps();   // the launcher's own pages as tiles at the end of Home's row (Apps.cs)
+        AddFolders();   // Home's folders, one per console, when they're on (Folders.cs)
         LoadHidden();
         ApplySettings();
         foreach (var g in Games) { g.Inst = Engine.GetInstalled(g); g.State = g.Inst != null ? State.Checking : State.Missing; g.Latest = ReleaseCache.Get(g.Id); }
@@ -99,7 +101,7 @@ partial class Shell {
     void ApplySettings() {
         foreach (var g in Games) {
             // a Steam game is wherever Steam put it
-            g.Dir = g.Steam != null ? (SteamGames.InstallDir(g) ?? "") : g.Store != null ? "" : Paths.Expand(Settings.Get(g.SettingsKey));
+            g.Dir = g.Steam != null ? (SteamGames.InstallDir(g) ?? "") : g.Store != null || g.App != null ? "" : Paths.Expand(Settings.Get(g.SettingsKey));
             g.Worker = Path.Combine(Paths.Root, "recomp-worker.ps1");
             g.Backups = Path.Combine(Paths.Backups, g.Id);
         }
@@ -115,6 +117,13 @@ partial class Shell {
     static string ViewName(View v) { return v == View.Grid ? "grid" : v == View.Compact ? "compact" : v == View.List ? "list" : v == View.Home ? "home" : "row"; }
 
     void Started() {
+        StartHomeMusic();   // Home's music (HomeMusic.cs)
+        StartFriendsBeat();   // tells your friends you're here (FriendList.cs)
+        W.Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(ShowWhatsNewIfUpdated));   // after a launcher update (SystemPage.cs)
+        StartSaverWatch();   // the screensaver (Extras.cs)
+        if (Settings.Get("Monitor") != "auto" && Settings.Get("Monitor").Length > 0) MoveToMonitor();   // Settings > Display > Monitor
+        StartStrollers();    // characters strolling along Home (HomeFx.cs)
+        StartWeather();      // the weather by the clock (Weather.cs)
         var root = N<Border>("Root");
         if (bootLayer == null) {   // with the start-up screen the window is whole from the start
             root.BeginAnimation(UIElement.OpacityProperty, Anim(1, 350, 0));
@@ -167,7 +176,7 @@ partial class Shell {
     }
     bool drifting;
     void StartDrift() {
-        if (drifting || args.Snapshot != null || view == View.Home) return;
+        if (drifting || args.Snapshot != null || view == View.Home || Settings.Get("Motion") == "reduced") return;
         drifting = true;
         Func<double, double, AnimationTimeline> d = (to, ms) => {
             var a = Anim(to, ms, null, EasingMode.EaseInOut); a.AutoReverse = true; a.RepeatBehavior = RepeatBehavior.Forever;
@@ -207,6 +216,7 @@ partial class Shell {
         if (Profiles.Get("Avatar") == "game:" + g.Id) ApplyAvatar();
         if (u.HomeAll != null) { u.HomeAll.Icon.Source = src; u.HomeAll.Icon.Margin = new Thickness(g.IconIsArt ? 0 : AllTileSize * 0.24); }
         if (g == sel) { N<Image>("HeroIcon").Source = src; N<Image>("HeroArt").Source = src; N<Image>("GridIcon").Source = src; }
+        if (g.App == null) QueueFolderRefresh();   // a folder shows its games' pictures (Folders.cs)
     }
     void Snapshot(string file) {
         var root = N<Border>("Root");
@@ -234,7 +244,7 @@ partial class Shell {
             u.Name.Text = g.Name; u.Sub.Text = "";
             u.GlowFx.Color = Ui.Col(g.Accent); u.Glow.Background = Ui.Brush(g.Accent);
             u.Face.Background = Ui.Gradient(g.Accent, g.Accent2);
-            g.Icon = null;
+            if (g.App == null) g.Icon = null;   // the pictures load a moment later (the launcher's own pages have theirs already)
             t.Tag = g;
             t.MouseEnter += (s, e) => {
                 if (g == sel) return;
@@ -451,12 +461,13 @@ partial class Shell {
     }
 
     // ---------- library order, filter and view ----------
-    List<Game> Listed() { return Games.Where(g => !g.Hidden).ToList(); }
+    List<Game> Listed() { return Games.Where(g => !g.Hidden && g.App == null).ToList(); }
     List<Game> Sorted() {
         IEnumerable<Game> l = Games;
         switch (sort) {
             case "installed": return l.OrderBy(Catalog.SeriesOf).ThenBy(g => g.Inst == null ? 1 : 0).ThenBy(g => g.Rank).ToList();
             case "name": return l.OrderBy(g => System.Text.RegularExpressions.Regex.Replace(g.Name, "^The ", ""), StringComparer.CurrentCultureIgnoreCase).ToList();
+            case "played": return l.OrderByDescending(PlayedSeconds).ThenBy(Catalog.SeriesOf).ThenBy(g => g.Rank).ToList();   // the most played first
             case "recent": {
                 // the most recently played first, then the never-played in the library's order
                 return l.OrderByDescending(g => Playtime.Last(g.Id)).ThenBy(Catalog.SeriesOf).ThenBy(g => g.Rank).ToList();
@@ -464,7 +475,7 @@ partial class Shell {
             default: return l.OrderBy(Catalog.SeriesOf).ThenBy(g => g.Rank).ToList();
         }
     }
-    static string SortLabel(string s) { return s == "installed" ? "Installed first" : s == "recent" ? "Recently played" : s == "name" ? "A–Z" : "Series"; }
+    static string SortLabel(string s) { return s == "installed" ? "Installed first" : s == "recent" ? "Recently played" : s == "played" ? "Most played" : s == "name" ? "A–Z" : "Series"; }
     Panel ViewPanel() {
         switch (view) {
             case View.Grid: return N<WrapPanel>("GridTiles");
@@ -488,12 +499,13 @@ partial class Shell {
         if (homeTiles != null) { homeTiles.Children.Clear(); homeAllTiles.Children.Clear(); }
         if (view == View.Home) {
             // the home row: favourites first, then the games played most recently ("continue playing"), then the rest
-            var row = Games.OrderByDescending(g => Profiles.IsFav(g.Id)).ThenByDescending(g => Playtime.Last(g.Id)).ThenBy(Catalog.SeriesOf).ThenBy(g => g.Rank).ToList();
+            var row = FoldersOn ? FolderRow() : Games.OrderByDescending(g => g == playing).ThenByDescending(g => Profiles.IsFav(g.Id)).ThenByDescending(g => Playtime.Last(g.Id)).ThenBy(Catalog.SeriesOf).ThenBy(g => g.Rank).ToList();
             foreach (var g in row) homeTiles.Children.Add(((GameUi)g.Ui).Home.Root);
+            if (FoldersOn) RefreshFolders();
             // All games: the games played last first, under "Continue playing" (in the launcher, or Steam's own count)
             var recent = o.Where(g => LastPlayedAny(g) > DateTime.MinValue).OrderByDescending(LastPlayedAny).Take(6).ToList();
             allHeaders.Clear();
-            if (recent.Count >= 2) {
+            if (recent.Count >= 2 && sort == "default") {
                 homeAllTiles.Children.Add(AllHeader("Continue playing"));
                 foreach (var g in recent) homeAllTiles.Children.Add(AllElement(g));
                 homeAllTiles.Children.Add(AllHeader("All games"));
@@ -516,11 +528,17 @@ partial class Shell {
     }
     bool Shown(Game g) {
         if (g.Hidden) return false;
-        // the home row holds only installed games (and one being installed); the rest are in All games
-        if (view == View.Home && homePage == "home") return g.Inst != null || g.IsBusy;
+        // the home row holds only installed games (and one being installed), and the launcher's own pages at its end;
+        // the games are all in All games
+        if (view == View.Home && homePage == "home") {
+            if (FoldersOn) return ShownInFolders(g);
+            if (IsFolder(g) || IsFolderBack(g)) return false;
+            return g.Inst != null || g.IsBusy;
+        }
+        if (g.App != null) return false;
         string q = N<TextBox>("SearchBox").Text.Trim();
         if (q.Length > 0 && (g.Name + " " + g.Short).IndexOf(q, StringComparison.CurrentCultureIgnoreCase) < 0) return false;
-        return InFilter(g, filter);
+        return InFilter(g, filter) && InConsole(g);
     }
     // when a game was last played: in the launcher, or (a Steam game) in Steam
     static DateTime LastPlayedAny(Game g) {
@@ -536,11 +554,11 @@ partial class Shell {
     }
     // the headers show with the whole library (no filter, no search), as wide as the page so each starts a line
     void UpdateAllHeaders() {
-        bool on = filter == "all" && N<TextBox>("SearchBox").Text.Trim().Length == 0;
+        bool on = filter == "all" && consoleFilter == "all" && N<TextBox>("SearchBox").Text.Trim().Length == 0;
         double w = homeAllScroll != null && homeAllScroll.ViewportWidth > 0 ? homeAllScroll.ViewportWidth - 110 : 1000;
         foreach (var h in allHeaders) { h.Visibility = on ? Visibility.Visible : Visibility.Collapsed; h.Width = Math.Max(200, w); }
     }
-    static string StoreOf(Game g) { return g.Steam != null ? "steam" : g.Store ?? "recomp"; }
+    static string StoreOf(Game g) { return g.App != null ? "app" : g.Steam != null ? "steam" : g.Store ?? "recomp"; }
     bool InFilter(Game g, string f) {
         switch (f) {
             case "installed": return g.Inst != null;
@@ -556,10 +574,7 @@ partial class Shell {
         var l = FilterDefs.ToList();
         if (Profiles.Current.Favs.Count > 0) l.Add(new[] { "fav", "\u2605 Favourites" });
         foreach (var c in Profiles.CollectionNames()) l.Add(new[] { "col:" + c, c });
-        // the stores, when there are games from more than one place (a second row of pills)
-        var stores = new[] { new[] { "store:recomp", "Recomps" }, new[] { "store:steam", "Steam" }, new[] { "store:epic", "Epic Games" }, new[] { "store:gog", "GOG" } }
-            .Where(s => Games.Any(g => !g.Hidden && StoreOf(g) == s[0].Substring(6))).ToList();
-        if (stores.Count > 1) l.AddRange(stores);
+        // the stores are under PC in the console dropdown (Discover.cs)
         return l;
     }
     // the profile changed: its favourites, collections and play time
@@ -601,7 +616,7 @@ partial class Shell {
     }
     void CycleSort() {
         Sound.Play(Sfx.Move);
-        var ids = new[] { "default", "installed", "recent", "name" };
+        var ids = new[] { "default", "installed", "recent", "played", "name" };
         SetSort(ids[(Array.IndexOf(ids, sort) + 1) % ids.Length]);
     }
 
@@ -832,6 +847,22 @@ partial class Shell {
         }
         QueueScroll(); QueueRing();
     }
+    // Settings > Display > Monitor: the window goes to that screen (full screen on it when full screen)
+    void MoveToMonitor() {
+        string want = Settings.Get("Monitor");
+        var target = System.Windows.Forms.Screen.AllScreens.FirstOrDefault(x => x.DeviceName == want);
+        if (target == null) return;
+        bool full = isFull;
+        if (full) SetFullscreen(false);
+        var src = PresentationSource.FromVisual(W);
+        var m = src != null ? src.CompositionTarget.TransformFromDevice : Matrix.Identity;
+        var wa = target.WorkingArea;
+        var tl = m.Transform(new Point(wa.Left, wa.Top)); var br = m.Transform(new Point(wa.Right, wa.Bottom));
+        double w = Math.Min(W.Width, br.X - tl.X), h = Math.Min(W.Height, br.Y - tl.Y);
+        W.Left = tl.X + (br.X - tl.X - w) / 2; W.Top = tl.Y + (br.Y - tl.Y - h) / 2; W.Width = w; W.Height = h;
+        normalRect = new Rect(W.Left, W.Top, W.Width, W.Height);
+        if (full) SetFullscreen(true);
+    }
     void ToggleFullscreen() { Sound.Play(Sfx.Select); SetFullscreen(!isFull); Settings.Set("Fullscreen", isFull ? "True" : ""); Settings.Save(); }
 
     // ---------- progress and status line ----------
@@ -863,6 +894,8 @@ partial class Shell {
     Action afterPlayers; bool askSkip;
     void PrimaryAction(Game g) {
         if (g != sel) ShowGame(g);
+        if (g.App != null) { Sound.Play(Sfx.Select); g.App(); return; }   // one of the launcher's own pages (Apps.cs)
+        if (playing != null && g == playing) { ResumePlaying(g); return; }   // the suspended game: back to it
         if (!askSkip && g.Inst != null && !g.IsBusy && playing == null && Profiles.All.Count > 1 && AskWho() == "game") {
             afterPlayers = () => { askSkip = true; try { PrimaryAction(g); } finally { askSkip = false; } };
             OpenPlayers();
@@ -962,8 +995,10 @@ partial class Shell {
     bool TvMode { get { string t = Settings.Get("TvMode"); return t == "on" || (t == "auto" && isFull); } }
     void ApplyScale() {
         var root = N<Border>("Root");
+        TextOptions.SetTextHintingMode(W, TextHintingMode.Fixed);   // text stays sharp while things move and zoom
         {
-            double k = Math.Max(1.0, root.ActualHeight / 800.0) * (TvMode ? 1.25 : 1);
+            int ui; if (!int.TryParse(Settings.Get("UiScale"), out ui) || ui < 50) ui = 100;   // Settings > Display > Interface size
+            double k = Math.Max(1.0, root.ActualHeight / 800.0) * (TvMode ? 1.25 : 1) * ui / 100.0;
             foreach (var n in new[] { "Main", "NotesLayer", "SettingsLayer", "RomLayer", "UninstLayer", "ProfileLayer", "PlayersLayer", "CreatorLayer", "ColLayer", "OskLayer" }) {
                 var el = W.FindName(n) as FrameworkElement;
                 if (el != null) el.LayoutTransform = new ScaleTransform(k, k);
@@ -974,7 +1009,7 @@ partial class Shell {
         }
     }
     bool AnyDialog() {
-        return OskOpen || ColOpen || FriendsOpen || AchievementsOpen || BrowserCardOpen || BtOpen || PowerOpen || PlazaOpen || CreatorOpen || PlayersOpen || ProfileOpen || N<Grid>("SettingsLayer").Visibility == Visibility.Visible || N<Grid>("RomLayer").Visibility == Visibility.Visible ||
+        return ListPageOpen || OskOpen || ColOpen || FriendsOpen || AchievementsOpen || BrowserCardOpen || BtOpen || PowerOpen || PlazaOpen || ControllersOpen || BoardOpen || AlbumOpen || NewsOpen || CreatorOpen || PlayersOpen || ProfileOpen || N<Grid>("SettingsLayer").Visibility == Visibility.Visible || N<Grid>("RomLayer").Visibility == Visibility.Visible ||
                N<Grid>("UninstLayer").Visibility == Visibility.Visible;
     }
     void OnKey(object s, KeyEventArgs e) {
@@ -982,6 +1017,31 @@ partial class Shell {
         bool notes = N<Grid>("NotesLayer").Visibility == Visibility.Visible;
         if (padUsed) { padUsed = false; HideRing(); SetHints(); }
         if (OskOpen) { if (OskKeyDown(k)) e.Handled = true; return; }
+        if (ListPageOpen) {
+            int lb = k == Key.Up ? Pad.Up : k == Key.Down ? Pad.Down : k == Key.Enter || k == Key.Space ? Pad.A : k == Key.Escape || k == Key.Back ? Pad.B : 0;
+            if (lb != 0) { ListPagePad(lb); e.Handled = true; }
+            return;
+        }
+        if (NewsOpen) {
+            int nb = k == Key.Up ? Pad.Up : k == Key.Down ? Pad.Down : k == Key.Enter || k == Key.Space ? Pad.A : k == Key.Escape || k == Key.Back ? Pad.B : 0;
+            if (nb != 0) { NewsPad(nb); e.Handled = true; }
+            return;
+        }
+        if (AlbumOpen) {
+            int ab2 = k == Key.Left ? Pad.Left : k == Key.Right ? Pad.Right : k == Key.Up ? Pad.Up : k == Key.Down ? Pad.Down : k == Key.Enter || k == Key.Space ? Pad.A : k == Key.Escape || k == Key.Back ? Pad.B : 0;
+            if (ab2 != 0) { AlbumPad(ab2); e.Handled = true; }
+            return;
+        }
+        if (BoardOpen) {
+            int bb2 = k == Key.Left ? Pad.Left : k == Key.Right ? Pad.Right : k == Key.Escape || k == Key.Back ? Pad.B : k == Key.N ? Pad.X : 0;
+            if (bb2 != 0) { BoardPad(bb2); e.Handled = true; }
+            return;
+        }
+        if (ControllersOpen) {
+            int cb2 = k == Key.Left ? Pad.Left : k == Key.Right ? Pad.Right : k == Key.Enter || k == Key.Space ? Pad.A : k == Key.Escape || k == Key.Back ? Pad.B : 0;
+            if (cb2 != 0) { ControllersPad(cb2); e.Handled = true; }
+            return;
+        }
         if (PlazaOpen) {
             int pb = k == Key.Left ? Pad.Left : k == Key.Right ? Pad.Right : k == Key.Enter || k == Key.Space ? Pad.A : k == Key.Escape || k == Key.Back ? Pad.B : 0;
             if (pb != 0) { PlazaPad(pb); e.Handled = true; }

@@ -103,6 +103,15 @@ if ((Test-Path (Join-Path $wm 'Windows.Devices.winmd')) -and (Test-Path (Join-Pa
              "/r:$(Join-Path $wm 'Windows.Devices.winmd')", "/r:$(Join-Path $wm 'Windows.Foundation.winmd')"
     $defines = @('/define:WINRT')
 }
+# the browser inside the launcher (Browser.cs): Microsoft's WebView2 (the Edge engine Windows already has), from
+# src\lib\webview2; its three files go next to the program
+$wv2 = Join-Path $src 'lib\webview2'
+$refs += "/r:$(Join-Path $wv2 'Microsoft.Web.WebView2.Core.dll')", "/r:$(Join-Path $wv2 'Microsoft.Web.WebView2.Wpf.dll')"
+$outExe = if ($Out) { $Out } else { Join-Path $root 'Recomp Launcher.exe' }
+foreach ($f in 'Microsoft.Web.WebView2.Core.dll', 'Microsoft.Web.WebView2.Wpf.dll', 'WebView2Loader.dll') {
+    $to = Join-Path (Split-Path -Parent $outExe) $f
+    if (-not (Test-Path $to) -or (Get-Item $to).Length -ne (Get-Item (Join-Path $wv2 $f)).Length) { Copy-Item (Join-Path $wv2 $f) $to -Force }
+}
 & $csc /nologo /target:winexe /optimize+ /platform:anycpu /codepage:65001 /nowarn:618,649 "/win32icon:$ico" @refs @res @defines `
     "/out:$(if ($Out) { $Out } else { Join-Path $root 'Recomp Launcher.exe' })" (Get-ChildItem $app -Filter *.cs | ForEach-Object { $_.FullName })
 exit $LASTEXITCODE

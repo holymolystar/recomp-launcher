@@ -254,7 +254,7 @@ static class SteamGames {
             string wide = pickOf(new[] { "header.jpg", "library_header.jpg" });
             string pick = tall ?? wide; if (pick == null) return null;
             var img = new BitmapImage();
-            img.BeginInit(); img.UriSource = new Uri(pick); img.CacheOption = BitmapCacheOption.OnLoad; img.DecodePixelWidth = 320; img.EndInit(); img.Freeze();
+            img.BeginInit(); img.UriSource = new Uri(pick); img.CacheOption = BitmapCacheOption.OnLoad; img.DecodePixelWidth = (int)(320 * Icons.Quality); img.EndInit(); img.Freeze();
             var dv = new DrawingVisual();
             using (var dc = dv.RenderOpen()) {
                 var rect = new Rect(0, 0, 256, 256);
@@ -266,7 +266,7 @@ static class SteamGames {
                 dc.DrawImage(img, new Rect((256 - dw) / 2, tall != null ? 0 : (256 - dh) / 2, dw, dh));
                 dc.Pop();
             }
-            var bmp = new RenderTargetBitmap(256, 256, 96, 96, PixelFormats.Pbgra32);
+            var bmp = Icons.Canvas256();
             bmp.Render(dv); bmp.Freeze();
             return bmp;
         } catch { return null; }

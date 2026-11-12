@@ -191,7 +191,7 @@ partial class Shell {
 
         profRows.Children.Add(Heading("FROM YOUR GAMES", false));
         var games = new WrapPanel();
-        foreach (var g in Games.Where(x => x.Icon != null).OrderBy(Catalog.SeriesOf).ThenBy(x => x.Rank))
+        foreach (var g in Games.Where(x => x.Icon != null && x.App == null).OrderBy(Catalog.SeriesOf).ThenBy(x => x.Rank))
             games.Children.Add(AvatarChoice("game:" + g.Id, (ImageSource)g.Icon, g.Name));
         profRows.Children.Add(games);
 

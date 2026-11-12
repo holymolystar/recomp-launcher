@@ -162,6 +162,7 @@ partial class Shell {
         if (brIdx != was) { Sound.Play(Sfx.Move); MarkBrowserCard(); }
     }
     void StartBrowser(string url) {
+        if (WebViewAvailable()) { HideCard("BrLayer", "BrCard"); OpenBrowserView(url); return; }   // inside the launcher (BrowserView.cs)
         var br = PickedBrowser();
         HideCard("BrLayer", "BrCard");
         Sound.Play(Sfx.Launch);
@@ -206,12 +207,13 @@ partial class Shell {
         if ((pressed & Pad.A) != 0) { Input.Mouse(Input.LeftDown); leftHeld = true; }
         if ((released & Pad.A) != 0 && leftHeld) { Input.Mouse(Input.LeftUp); leftHeld = false; }
         if ((pressed & Pad.X) != 0) { Input.Mouse(Input.RightDown); Input.Mouse(Input.RightUp); }
-        if ((pressed & Pad.B) != 0) Input.Chord(Input.Alt, Input.Left);
+        if ((pressed & Pad.B) != 0) { if (BrowserViewOpen) BrowserBack(); else Input.Chord(Input.Alt, Input.Left); }
         if ((pressed & Pad.Y) != 0) Input.Keyboard();
-        if ((pressed & Pad.LB) != 0) Input.Chord(Input.Ctrl, Input.Shift, Input.Tab);
-        if ((pressed & Pad.RB) != 0) Input.Chord(Input.Ctrl, Input.Tab);
-        if ((pressed & Pad.Start) != 0 && (b & Pad.Back) == 0) { Input.Chord(Input.Ctrl, Input.L); Input.Keyboard(); }
-        if ((released & Pad.Back) != 0 && (browserPrev & Pad.Start) == 0 && (pressed & Pad.Start) == 0) Input.Chord(Input.F11);
+        bool inside = BrowserViewOpen;   // the browser inside the launcher: no tabs or address bar of its own
+        if ((pressed & Pad.LB) != 0) { if (inside) BrowserBack(); else Input.Chord(Input.Ctrl, Input.Shift, Input.Tab); }
+        if ((pressed & Pad.RB) != 0) { if (inside) BrowserForward(); else Input.Chord(Input.Ctrl, Input.Tab); }
+        if ((pressed & Pad.Start) != 0 && (b & Pad.Back) == 0) { if (inside) AskAddress(); else { Input.Chord(Input.Ctrl, Input.L); Input.Keyboard(); } }
+        if ((released & Pad.Back) != 0 && (browserPrev & Pad.Start) == 0 && (pressed & Pad.Start) == 0) { if (inside) ToggleFullscreen(); else Input.Chord(Input.F11); }
         // the d-pad: arrow keys, held like keys
         foreach (var m in new[] { new[] { Pad.Up, Input.Up }, new[] { Pad.Down, Input.Down }, new[] { Pad.Left, Input.Left }, new[] { Pad.Right, Input.Right } }) {
             if ((pressed & m[0]) != 0) Input.Key((byte)m[1], false);

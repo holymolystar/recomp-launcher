@@ -16,20 +16,31 @@
   "totk",
   "tp",
   "wwhd",
+  "ww",
   "las",
   "mm",
   "mm2s",
   "oot",
   "hookshot",
+  "tmc",
+  "oracles",
+  "alttp",
+  "zelda2",
+  "zelda1",
   "smo",
   "smg",
   "sms",
   "sm64",
   "nsmbu",
+  "smbw",
   "nsmbw",
   "spm",
   "mlbs",
+  "wlsi",
+  "wl4",
+  "wl1",
   "mkwii",
+  "mkworld",
   "mk64",
   "mp6",
   "sf64",
@@ -56,6 +67,7 @@
   "pksnap",
   "pklgpe",
   "pkswsh",
+  "karpur",
   "pkla",
   "pokopia",
   "tod",
@@ -66,6 +78,7 @@
   "legoland",
   "haloce",
   "halo2",
+  "halo3",
   "scda",
   "puttrace",
   "subnautica",
@@ -88,6 +101,7 @@
    "Needs": "Your own Tears of the Kingdom base game and its 1.4.3 update (NSP or XCI), and prod.keys from your Switch. Install opens the TotK setup, which asks for them; choose the folder from Settings as its install folder.",
    "DefaultDir": "C:\\Games\\TOTK",
    "Series": "zelda",
+   "Platform": "Switch",
    "SettingsLabel": "Tears of the Kingdom",
    "CheckFile": "totk.exe",
    "Saves": "profile;totk.ini",
@@ -118,6 +132,7 @@
    "Needs": "Your own Super Mario Odyssey 1.0.0 (no updates), extracted to exefs and romfs folders. The game asks for that folder on its first start, then builds itself (a few minutes, about 7 GB).",
    "DefaultDir": "C:\\Games\\SMO",
    "Series": "mario",
+   "Platform": "Switch",
    "SettingsLabel": "Super Mario Odyssey",
    "CheckFile": "PowerMoonRecomp.exe",
    "Saves": "save;powermoon.ini",
@@ -158,6 +173,7 @@
    "Needs": "Your own Wind Waker HD for Wii U (USA or Europe, version 0): a .wux/.wud disc image with its disc key and the Wii U common key, a Cemu .wua, or an extracted game folder. The game asks for it on its first start (about 2 minutes, 1.7 GB).",
    "DefaultDir": "C:\\Games\\WWHD",
    "Series": "zelda",
+   "Platform": "Wii U",
    "SettingsLabel": "The Wind Waker HD",
    "CheckFile": "Wind Waker HD.exe",
    "Saves": "data\\save;data\\user",
@@ -203,6 +219,7 @@
    "Needs": "Your own European PS3 disc (BCES00052, version 1.00), decrypted, as an .iso or a folder with PS3_GAME. About 24 GB free, a CPU with AVX2 and a Direct3D 12 GPU. Its installer copies the disc into the game folder.",
    "DefaultDir": "C:\\Games\\ToD",
    "Series": "playstation",
+   "Platform": "PS3",
    "SettingsLabel": "Ratchet & Clank: Tools of Destruction",
    "CheckFile": "tod.exe",
    "Saves": "gamedata;tod.ini",
@@ -245,6 +262,7 @@
    "Needs": "Your own Mario Party 6 (USA) disc image or extracted disc folder. The game asks for it on its first start. Work in progress: all six boards, and 49 of the 81 minigames (the others are skipped).",
    "DefaultDir": "C:\\Games\\MP6",
    "Series": "mario",
+   "Platform": "GameCube",
    "SettingsLabel": "Mario Party 6",
    "CheckFile": "mp6native.exe",
    "Saves": "save;config.json",
@@ -293,6 +311,7 @@
    "Needs": "Your own Pikmin GameCube disc: USA revision 1 (GPIE01) or Europe (GPIP01), as .iso or .gcm (.rvz, .wia and .gcz need DolphinTool.exe from a Dolphin install). Open Nectar checks the disc and extracts the game (about 1 GB). OpenGL 3.3 graphics driver needed.",
    "DefaultDir": "C:\\Games\\Pikmin",
    "Series": "nintendo",
+   "Platform": "GameCube",
    "SettingsLabel": "Pikmin (Open Nectar)",
    "CheckFile": "nectar-launcher.exe",
    "Saves": "save;pikmin_settings.conf",
@@ -334,6 +353,7 @@
    "Needs": "Your own Pikmin 2 GameCube disc: USA (GPVE01) or Europe (GPVP01), as .iso or .gcm (.rvz, .wia and .gcz need DolphinTool.exe from a Dolphin install). Open Nectar checks the disc and extracts the game (about 1 GB). Playable from start to finish.",
    "DefaultDir": "C:\\Games\\Pikmin 2",
    "Series": "nintendo",
+   "Platform": "GameCube",
    "SettingsLabel": "Pikmin 2 (Open Nectar)",
    "CheckFile": "nectar-launcher.exe",
    "Saves": "save;pikmin2\\save;pikmin_settings.conf",
@@ -373,6 +393,7 @@
    "Needs": "Your own clean Mario Kart Wii disc image (PAL RMCP01, NTSC-U RMCE01 or NTSC-J RMCJ01; ISO, WBFS, RVZ and more). In Wheel Wizard: pick the image under Settings, turn on WiiCompiled (beta), then Install on the Home page. About 20 GB free while it builds.",
    "DefaultDir": "C:\\Games\\MKWii",
    "Series": "mario",
+   "Platform": "Wii",
    "SettingsLabel": "Mario Kart Wii (Wheel Wizard)",
    "CheckFile": "WheelWizard.exe",
    "Rom": {
@@ -414,6 +435,7 @@
    "Needs": "Your own North American Super Mario Sunshine disc image (GMSE01, revision 0) as .iso, .gcm or .ciso. SMS Launcher downloads its build tools and HD textures and builds the game on your PC; its data stays in the SMS-Launcher-Portable folder here.",
    "DefaultDir": "C:\\Games\\SMS",
    "Series": "mario",
+   "Platform": "GameCube",
    "SettingsLabel": "Super Mario Sunshine (SMS Launcher)",
    "CheckFile": "SMS-Launcher-*-win-portable.exe",
    "Saves": "SMS-Launcher-Portable\\saves;SMS-Launcher-Portable\\Save Backups;SMS-Launcher-Portable\\preferences.json",
@@ -450,6 +472,7 @@
    "Pre": true,
    "DefaultDir": "C:\\Games\\BOTW",
    "Series": "zelda",
+   "Platform": "Switch",
    "SettingsLabel": "Breath of the Wild",
    "CheckFile": "savagewind.exe",
    "Saves": "save;savagewind.ini",
@@ -488,6 +511,7 @@
    "Needs": "Your own North American PS3 disc (BCUS98124), decrypted, as an .iso or the PS3_GAME folder (with a decrypted EBOOT.elf). The RaCACiT Launcher asks for it on its first start. Work in progress.",
    "DefaultDir": "C:\\Games\\ACiT",
    "Series": "playstation",
+   "Platform": "PS3",
    "SettingsLabel": "Ratchet & Clank: A Crack in Time",
    "CheckFile": "RaCACiT Launcher.exe",
    "Rom": {
@@ -527,6 +551,7 @@
    "Needs": "Your own Link's Awakening for Switch, version 1.0.0, 1.0.1 or 1.1.0, extracted (exefs and romfs folders). The start screen's game-file setup asks for that folder, then builds the game (about 12 GB free). Beta, with a randomizer.",
    "DefaultDir": "C:\\Games\\LAS",
    "Series": "zelda",
+   "Platform": "Switch",
    "SettingsLabel": "Link's Awakening",
    "CheckFile": "lasrecomp.exe",
    "Saves": "save;saves;seeds;settings.ini;settings.json;config.json",
@@ -566,6 +591,7 @@
    "Pre": true,
    "DefaultDir": "C:\\Games\\ISS",
    "Series": "playstation",
+   "Platform": "PS4",
    "SettingsLabel": "inFAMOUS Second Son",
    "CheckFile": "inFAMOUS Second Son.exe",
    "Saves": "user",
@@ -599,6 +625,7 @@
    "Needs": "Your own North American Super Mario Galaxy disc (RMGE01, revision 0) as an .iso, .rvz or extracted folder. Nebula Setup asks for it, then translates and builds the game on your PC (about 16 GB free and internet while it installs).",
    "DefaultDir": "C:\\Games\\SMG",
    "Series": "mario",
+   "Platform": "Wii",
    "SettingsLabel": "Super Mario Galaxy",
    "CheckFile": "Nebula-Setup.exe",
    "Rom": {
@@ -641,6 +668,7 @@
    "Needs": "Your own Super Paper Mario Wii disc, USA (R8PE01, revision 0) or Europe (R8PP01), as .iso, .ciso or .wbfs. Pick it on the Play page the first time; its files are copied in once.",
    "DefaultDir": "C:\\Games\\SPM",
    "Series": "mario",
+   "Platform": "Wii",
    "SettingsLabel": "Super Paper Mario",
    "CheckFile": "New Super Paper Bros.exe",
    "Saves": "engine\\UserData",
@@ -675,6 +703,7 @@
    "Needs": "Your own Twilight Princess disc, GameCube or Wii (any region except the Korean Wii one), as an .iso or .rvz. Dusklight asks for it on its first start.",
    "DefaultDir": "C:\\Games\\Dusklight",
    "Series": "zelda",
+   "Platform": "GameCube",
    "SettingsLabel": "Twilight Princess (Dusklight)",
    "CheckFile": "dusklight.exe",
    "Rom": {
@@ -707,6 +736,7 @@
    "Needs": "Your own USA New Super Mario Bros. Wii disc (SMNE01, revision 1 only: Dolphin shows it under Properties > Info), extracted with Dolphin. The first start asks for it. Couch and LAN multiplayer.",
    "DefaultDir": "C:\\Games\\NSMBW",
    "Series": "mario",
+   "Platform": "Wii",
    "SettingsLabel": "New Super Mario Bros. Wii",
    "CheckFile": "NSMBW.exe",
    "Rom": {
@@ -741,6 +771,7 @@
    "Needs": "Your own Wii U New Super Mario Bros. U, USA or Europe: a .wux / .wud disc image with its keys, or an extracted folder with code, content and meta (USA update 1.3.0 is the best match). The first start prepares the game once.",
    "DefaultDir": "C:\\Games\\NSMBU",
    "Series": "mario",
+   "Platform": "Wii U",
    "SettingsLabel": "New Super Mario Bros. U",
    "CheckFile": "NSMBU.exe",
    "Saves": "user;save;saves;settings.json;config.json",
@@ -780,6 +811,7 @@
    "Needs": "Your own cartridge dumps: Red, Blue, Yellow, Gold, Silver, Crystal and more (.gb / .gbc, also some .gba / .nds). Only exact original dumps are accepted (it checks them). Pick or drop them on the window on its first start; it keeps them.",
    "DefaultDir": "C:\\Games\\Pokemon Gen12",
    "Series": "pokemon",
+   "Platform": "Game Boy",
    "SettingsLabel": "Pokémon Gen 1 & 2",
    "CheckFile": "Gen2Recomped.exe",
    "Rom": {
@@ -815,6 +847,7 @@
    "Needs": "Your own Red Rescue Team GBA cartridge dump, USA/Australia version (.gba). The game asks for it on its first start.",
    "DefaultDir": "C:\\Games\\Pokemon PMD",
    "Series": "pokemon",
+   "Platform": "GBA",
    "SettingsLabel": "Pokémon Mystery Dungeon",
    "CheckFile": "pmd_green.exe",
    "Saves": "saves;save;settings.json",
@@ -845,6 +878,7 @@
    "Needs": "Your own Pokémon Black DS dump, USA or Europe (.nds). Early: the opening hours (field, battles, menus, saves) work.",
    "DefaultDir": "C:\\Games\\Pokemon Black",
    "Series": "pokemon",
+   "Platform": "NDS",
    "SettingsLabel": "Pokémon Black",
    "CheckFile": "eidos.exe",
    "Rom": {
@@ -874,6 +908,7 @@
    "Needs": "Your own Pokémon SoulSilver DS dump, US version only (.nds; European ones don't match). Its setup compiles the game on your PC, so it also needs the free MSYS2 build tools (it shows the commands). One screen instead of the DS's two.",
    "DefaultDir": "C:\\Games\\Pokemon SoulSilver",
    "Series": "pokemon",
+   "Platform": "NDS",
    "SettingsLabel": "Pokémon SoulSilver",
    "CheckFile": "ssrecomp-setup-windows-x86_64.exe",
    "Rom": {
@@ -903,6 +938,7 @@
    "Needs": "Your own Pokémon Stadium N64 ROM, US version 1.0 only (.z64 / .n64 / .v64; Rev A doesn't work). Red, Blue and Yellow saves can be used through its Transfer Pak. Beta.",
    "DefaultDir": "C:\\Games\\Pokemon Stadium",
    "Series": "pokemon",
+   "Platform": "N64",
    "SettingsLabel": "Pokémon Stadium",
    "CheckFile": "PokemonStadiumRecomp.exe",
    "Saves": "saves;save",
@@ -938,6 +974,7 @@
    "Needs": "Your own Pokémon Snap N64 ROM, US cartridge only (.z64). The launcher copies it in as pokemonsnap.z64. Plays like the cartridge; every enhancement is optional.",
    "DefaultDir": "C:\\Games\\Pokemon Snap",
    "Series": "pokemon",
+   "Platform": "N64",
    "SettingsLabel": "Pokémon Snap",
    "CheckFile": "Snap64Recomp.exe",
    "Saves": "saves",
@@ -970,6 +1007,7 @@
    "Needs": "Your own Let's Go, Eevee! or Pikachu! for Switch, any region, version 1.0.0 (Eevee 1.0.2 also works), extracted (exefs and romfs folders). Pick that folder on its Game page.",
    "DefaultDir": "C:\\Games\\Pokemon LetsGo",
    "Series": "pokemon",
+   "Platform": "Switch",
    "SettingsLabel": "Pokémon Let's Go",
    "CheckFile": "LetsGoRecomp.exe",
    "Saves": "save;saves;larecomp.ini",
@@ -1004,6 +1042,7 @@
    "Pre": true,
    "DefaultDir": "C:\\Games\\Pokemon SwSh",
    "Series": "pokemon",
+   "Platform": "Switch",
    "SettingsLabel": "Pokémon Sword & Shield",
    "CheckFile": "SwShRecomp.exe",
    "Saves": "save-sword;save-shield;larecomp.ini",
@@ -1038,6 +1077,7 @@
    "Console": true,
    "DefaultDir": "C:\\Games\\Pokemon Arceus",
    "Series": "pokemon",
+   "Platform": "Switch",
    "SettingsLabel": "Pokémon Legends: Arceus",
    "CheckFile": "arceusrecomp.exe",
    "Saves": "save;saves;larecomp.ini",
@@ -1074,6 +1114,7 @@
    "Needs": "Your own Pokopia for Switch 2, version 2.0.1a: an extracted folder, or NSP / XCI files with your keys. Its Set up builds the game (about 7 minutes) and then the shader cache (1 to 2 hours, can be paused).",
    "DefaultDir": "C:\\Games\\Pokopia",
    "Series": "pokemon",
+   "Platform": "Switch 2",
    "SettingsLabel": "Pokémon Pokopia",
    "CheckFile": "PokopiaLauncher.exe",
    "Rom": {
@@ -1100,6 +1141,7 @@
    "Needs": "Your own North American Majora's Mask N64 ROM (.z64). Pick it in the game's main menu; assets load straight from it.",
    "DefaultDir": "C:\\Games\\MM",
    "Series": "zelda",
+   "Platform": "N64",
    "SettingsLabel": "Majora's Mask",
    "CheckFile": "Zelda64Recompiled.exe",
    "Rom": {
@@ -1134,6 +1176,7 @@
    "Needs": "Your own Majora's Mask N64 ROM (.z64, US; check it at 2ship.equipment). The first start asks for it and builds its asset file once. Lots of enhancements and randomizer options.",
    "DefaultDir": "C:\\Games\\2Ship",
    "Series": "zelda",
+   "Platform": "N64",
    "SettingsLabel": "Majora's Mask (2 Ship)",
    "CheckFile": "2ship.exe",
    "Saves": "Save;2ship2harkinian.json",
@@ -1169,6 +1212,7 @@
    "Needs": "Your own Ocarina of Time N64 ROM (.z64; check it at ship.equipment). The first start asks for it and builds oot.o2r once. Master Quest works too.",
    "DefaultDir": "C:\\Games\\SoH",
    "Series": "zelda",
+   "Platform": "N64",
    "SettingsLabel": "Ocarina of Time",
    "CheckFile": "soh.exe",
    "Saves": "Save;shipofharkinian.json",
@@ -1206,6 +1250,7 @@
    "Needs": "Your own Ocarina of Time for Nintendo Switch 2 with update v131072 (build e0f3ccfa): a .nup, or romfs and exefs folders. In Hookshot Builder pick it and a language, and keep its own game folder (Games\\Hookshot in your user folder): Play starts the game from there. The build takes about 40 minutes and 60 GB free. Needs Visual Studio Build Tools (C++), 16 GB of RAM and a GPU with mesh shaders. Experimental.",
    "DefaultDir": "C:\\Games\\Hookshot",
    "Series": "zelda",
+   "Platform": "Switch 2",
    "SettingsLabel": "Ocarina of Time (Switch 2, Hookshot)",
    "CheckFile": "HookshotBuilder.exe",
    "Saves": "%USERPROFILE%\\Games\\Hookshot\\user\\save;%USERPROFILE%\\Games\\Hookshot\\hookshot_options.ini;%USERPROFILE%\\Games\\Hookshot\\language.txt",
@@ -1234,6 +1279,7 @@
    "Needs": "Your own Super Mario 64 N64 ROM, US or Japan, in .z64 format. The first start asks for it and builds its asset file once.",
    "DefaultDir": "C:\\Games\\SM64",
    "Series": "mario",
+   "Platform": "N64",
    "SettingsLabel": "Super Mario 64",
    "CheckFile": "Ghostship.exe",
    "Saves": "Save;ghostship.json",
@@ -1269,6 +1315,7 @@
    "Needs": "Your own Mario Kart 64 N64 ROM, US version only, in .z64 format. The first start asks for it and builds its asset file once.",
    "DefaultDir": "C:\\Games\\MK64",
    "Series": "mario",
+   "Platform": "N64",
    "SettingsLabel": "Mario Kart 64",
    "CheckFile": "Spaghettify.exe",
    "Saves": "Save;spaghettify.json",
@@ -1305,6 +1352,7 @@
    "NoSha": true,
    "DefaultDir": "C:\\Games\\SF64",
    "Series": "nintendo",
+   "Platform": "N64",
    "SettingsLabel": "Star Fox 64",
    "CheckFile": "Starship.exe",
    "Saves": "Save;starship.json",
@@ -1339,6 +1387,7 @@
    "Needs": "Your own North American Banjo-Kazooie N64 ROM, version 1.0 (.z64). Pick it in the main menu.",
    "DefaultDir": "C:\\Games\\Banjo",
    "Series": "nintendo",
+   "Platform": "N64",
    "SettingsLabel": "Banjo-Kazooie",
    "CheckFile": "BanjoRecompiled.exe",
    "Rom": {
@@ -1372,6 +1421,7 @@
    "Needs": "Your own Donkey Kong 64 N64 ROM, US version only (.z64). Pick it in the main menu.",
    "DefaultDir": "C:\\Games\\DK64",
    "Series": "nintendo",
+   "Platform": "N64",
    "SettingsLabel": "Donkey Kong 64",
    "CheckFile": "DK64Recompiled.exe",
    "Rom": {
@@ -1405,6 +1455,7 @@
    "Needs": "Early and not fully playable yet (the tutorial and first stage, and it can crash). Your own Donkey Kong Bananza 1.0.0 or 3.2.0, dumped from your own Switch 2 as a .nup file or ExeFS and RomFS folders. Install opens the DKB setup, which builds the game on this PC from them (it needs about 24 GB of memory and page file); choose the folder from Settings as its install folder.",
    "DefaultDir": "C:\\Games\\DKB",
    "Series": "nintendo",
+   "Platform": "Switch 2",
    "SettingsLabel": "Donkey Kong Bananza",
    "CheckFile": "dkb.exe",
    "Pre": true,
@@ -1431,6 +1482,7 @@
    "Needs": "Your own Conker's Bad Fur Day N64 ROM, US version (.z64). Pick it the first time; it's remembered.",
    "DefaultDir": "C:\\Games\\Conker",
    "Series": "nintendo",
+   "Platform": "N64",
    "SettingsLabel": "Conker's Bad Fur Day",
    "CheckFile": "ConkerBFDReloaded.exe",
    "Rom": {
@@ -1465,6 +1517,7 @@
    "NoSha": true,
    "DefaultDir": "C:\\Games\\Unleashed",
    "Series": "sega",
+   "Platform": "Xbox 360",
    "SettingsLabel": "Sonic Unleashed",
    "CheckFile": "UnleashedRecomp.exe",
    "Rom": {
@@ -1492,6 +1545,7 @@
    "Needs": "Your own Tony Hawk's Pro Skater N64 cartridge dump, USA 1.0 or 1.1 (.z64, .n64 or .v64). The app builds the game from it.",
    "DefaultDir": "C:\\Games\\THPS1",
    "Series": "sports",
+   "Platform": "N64",
    "SettingsLabel": "Tony Hawk's Pro Skater",
    "CheckFile": "THPS1-64Recomp.exe",
    "Rom": {
@@ -1526,6 +1580,7 @@
    "Pre": true,
    "DefaultDir": "C:\\Games\\THPS2",
    "Series": "sports",
+   "Platform": "N64",
    "SettingsLabel": "Tony Hawk's Pro Skater 2",
    "CheckFile": "THPS2-64Recomp.exe",
    "Rom": {
@@ -1560,6 +1615,7 @@
    "Pre": true,
    "DefaultDir": "C:\\Games\\THPS3",
    "Series": "sports",
+   "Platform": "N64",
    "SettingsLabel": "Tony Hawk's Pro Skater 3",
    "CheckFile": "THPS3-64Recomp.exe",
    "Rom": {
@@ -1594,6 +1650,7 @@
    "Pre": true,
    "DefaultDir": "C:\\Games\\NoMercy",
    "Series": "sports",
+   "Platform": "N64",
    "SettingsLabel": "WWF No Mercy",
    "CheckFile": "NoMercyRecompiled.exe",
    "Rom": {
@@ -1628,6 +1685,7 @@
    "Pre": true,
    "DefaultDir": "C:\\Games\\WM2000",
    "Series": "sports",
+   "Platform": "N64",
    "SettingsLabel": "WWF WrestleMania 2000",
    "CheckFile": "Wm2kRecompiled.exe",
    "Rom": {
@@ -1662,6 +1720,7 @@
    "Pre": true,
    "DefaultDir": "C:\\Games\\WCW World Tour",
    "Series": "sports",
+   "Platform": "N64",
    "SettingsLabel": "WCW vs. nWo: World Tour",
    "CheckFile": "WCWRecompiled.exe",
    "Rom": {
@@ -1696,6 +1755,7 @@
    "Pre": true,
    "DefaultDir": "C:\\Games\\WCW Revenge",
    "Series": "sports",
+   "Platform": "N64",
    "SettingsLabel": "WCW/nWo Revenge",
    "CheckFile": "RevengeRecompiled.exe",
    "Rom": {
@@ -1730,6 +1790,7 @@
    "Pre": true,
    "DefaultDir": "C:\\Games\\VPW64",
    "Series": "sports",
+   "Platform": "N64",
    "SettingsLabel": "Virtual Pro Wrestling 64",
    "CheckFile": "Vpw64Recompiled.exe",
    "Rom": {
@@ -1764,6 +1825,7 @@
    "NoSha": true,
    "DefaultDir": "C:\\Games\\Brothership",
    "Series": "mario",
+   "Platform": "Switch",
    "SettingsLabel": "Mario & Luigi: Brothership",
    "CheckFile": "BrothershipRecomp.exe",
    "Rom": {
@@ -1792,6 +1854,7 @@
    "NoSha": true,
    "DefaultDir": "C:\\Games\\Uncharted",
    "Series": "playstation",
+   "Platform": "PS4",
    "SettingsLabel": "Uncharted: The Nathan Drake Collection",
    "CheckFile": "Uncharted Launcher.exe",
    "Rom": {
@@ -1818,6 +1881,7 @@
    "NoSha": true,
    "DefaultDir": "C:\\Games\\LEGO Island",
    "Series": "lego",
+   "Platform": "PC",
    "SettingsLabel": "LEGO Island",
    "CheckFile": "isle.exe",
    "Rom": {
@@ -1845,6 +1909,7 @@
    "NoSha": true,
    "DefaultDir": "C:\\Games\\LEGOLAND",
    "Series": "lego",
+   "Platform": "PC",
    "SettingsLabel": "LEGOLAND",
    "CheckFile": "LEGOLAND-port.exe",
    "Rom": {
@@ -1872,6 +1937,7 @@
    "Needs": "Your own original Xbox Halo: Combat Evolved disc image (.iso or .xiso; USA NTSC for the community maps). PC, Custom Edition, Anniversary and MCC files don't work. Put the image in the game folder next to halo.exe: the first start imports it into the maps folder. OpenGL 4.5 needed. Testing builds (pre-releases).",
    "DefaultDir": "C:\\Games\\HaloCE",
    "Series": "xbox",
+   "Platform": "Xbox",
    "SettingsLabel": "Halo: Combat Evolved (Halo OG)",
    "CheckFile": "halo.exe",
    "Rom": {
@@ -1898,6 +1964,7 @@
    "Needs": "Your own original Xbox Halo 2, the retail disc: a Redump .iso or XISO, or the default.xbe of a copy you extracted. On the first start it imports the disc and builds the game from it once (10 to 30 minutes, about 10 GB free; without Visual Studio it downloads Microsoft's C++ build files, 85 MB). OpenGL 3.3 needed. Always start it from OpenHalo2.exe.",
    "DefaultDir": "C:\\Games\\Halo2",
    "Series": "xbox",
+   "Platform": "Xbox",
    "SettingsLabel": "Halo 2 (Open Halo 2)",
    "CheckFile": "OpenHalo2.exe",
    "Saves": "save;halo2.ini",
@@ -1925,6 +1992,7 @@
    "Needs": "Your own original Xbox Splinter Cell: Double Agent: a disc image (.iso) or its extracted files. Put them in the assets folder inside the game folder; the first start compiles the game for your PC once. Co-op and Versus (SCDA_Versus.exe) over LAN or by IP. Settings: F10 in the game.",
    "DefaultDir": "C:\\Games\\SCDA",
    "Series": "xbox",
+   "Platform": "Xbox",
    "SettingsLabel": "Splinter Cell: Double Agent",
    "CheckFile": "SCDA.exe",
    "Rom": {
@@ -1951,7 +2019,8 @@
     "Dutch"
    ],
    "Needs": "Putt-Putt Enters the Race on Steam: the launcher asks Steam to install it, and Steam keeps it up to date. It runs in ScummVM; a controller works as the mouse (stick moves, A clicks). Language: English, French, German or Dutch, all with voices.",
-   "Series": "steam"
+   "Series": "steam",
+   "Platform": "PC"
   },
   {
    "Id": "subnautica",
@@ -1964,7 +2033,8 @@
    "Accent": "#1E88C8",
    "Accent2": "#F2A33A",
    "Needs": "Subnautica on Steam: the launcher asks Steam to install it (about 9 GB), and Steam keeps it up to date.",
-   "Series": "steam"
+   "Series": "steam",
+   "Platform": "PC"
   },
   {
    "Id": "subnauticabz",
@@ -1977,7 +2047,8 @@
    "Accent": "#5FC2E8",
    "Accent2": "#E8F4FA",
    "Needs": "Subnautica: Below Zero on Steam: the launcher asks Steam to install it (about 10 GB), and Steam keeps it up to date.",
-   "Series": "steam"
+   "Series": "steam",
+   "Platform": "PC"
   },
   {
    "Id": "subnautica2",
@@ -1990,7 +2061,382 @@
    "Accent": "#2B6DE0",
    "Accent2": "#4FD1C5",
    "Needs": "Subnautica 2 on Steam (Early Access): the launcher asks Steam to install it, and Steam keeps it up to date.",
-   "Series": "steam"
+   "Series": "steam",
+   "Platform": "PC"
+  },
+  {
+   "Id": "ww",
+   "Name": "The Wind Waker",
+   "Short": "WW",
+   "Source": "BLUEWAKE  •  GITHUB",
+   "Exe": "BlueWake.exe",
+   "Proc": "BlueWake",
+   "SettingsKey": "WwDir",
+   "Repo": "chrissotraidis/bluewake",
+   "Asset": "*-windows-x64.zip",
+   "Accent": "#1E6FB8",
+   "Accent2": "#F2C14E",
+   "FirstRun": "BlueWake.exe",
+   "Needs": "Your own GameCube Wind Waker disc, USA release (GZLE01, revision 0), as .iso or .gcm (convert a .rvz to ISO in Dolphin first). BlueWake asks for it on its first start. It needs a CPU with AVX2 and a DirectX 12 graphics card. Saves stay in %APPDATA%\\BlueWake.",
+   "DefaultDir": "C:\\Games\\BlueWake",
+   "Series": "zelda",
+   "Platform": "GameCube",
+   "SettingsLabel": "The Wind Waker (BlueWake)",
+   "CheckFile": "BlueWake.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     ".gcm"
+    ]
+   }
+  },
+  {
+   "Id": "tmc",
+   "Name": "The Minish Cap",
+   "Short": "TMC",
+   "Source": "PROJECT PICORI  •  GITHUB",
+   "Exe": "tmc_pc.exe",
+   "Proc": "tmc_pc",
+   "SettingsKey": "TmcDir",
+   "Repo": "999sian/tmc",
+   "Asset": "tmc-multi-windows-x86_64-*.tar.gz",
+   "Accent": "#3E9B4F",
+   "Accent2": "#E7C34A",
+   "Backup": "tmc.sav",
+   "FirstRun": "tmc_pc.exe",
+   "Needs": "Your own Minish Cap GBA ROM, USA release (.gba). The launcher copies it in as baserom.gba; the first start unpacks the game's data from it in a few seconds. (For an EU or JP ROM, put it in the game folder as baserom_eu.gba or baserom_jp.gba instead.)",
+   "DefaultDir": "C:\\Games\\Minish Cap",
+   "Series": "zelda",
+   "Platform": "GBA",
+   "SettingsLabel": "The Minish Cap (Project Picori)",
+   "CheckFile": "tmc_pc.exe",
+   "Ready": "baserom*.gba",
+   "Keep": "tmc.sav",
+   "Saves": "tmc.sav",
+   "Rom": {
+    "Kind": "file",
+    "Formats": [
+     ".gba"
+    ],
+    "Ext": [
+     ".gba"
+    ],
+    "Filter": "GBA ROM (*.gba)|*.gba",
+    "CopyAs": "baserom.gba"
+   }
+  },
+  {
+   "Id": "oracles",
+   "Name": "Oracle of Ages & Seasons",
+   "Short": "OoA",
+   "Source": "ORACLES DECOMP  •  GITHUB",
+   "Exe": "Oracles.exe",
+   "Proc": "Oracles",
+   "SettingsKey": "OraclesDir",
+   "Repo": "kirby-letsgo/oracles-decomp",
+   "Asset": "Oracles-windows-x64.zip",
+   "Accent": "#B0413E",
+   "Accent2": "#3A7BD5",
+   "FirstRun": "Oracles.exe",
+   "Needs": "Your own Oracle of Ages and/or Oracle of Seasons cartridge dumps, USA or European (.gbc, or a .zip with one inside). Add them from the game's menu (each game has a tab with an Add ROM row); after that the ROM isn't needed. Saves stay in %APPDATA%\\oracles-decomp.",
+   "DefaultDir": "C:\\Games\\Oracles",
+   "Series": "zelda",
+   "Platform": "GBC",
+   "SettingsLabel": "Oracle of Ages & Seasons",
+   "CheckFile": "Oracles.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".gbc",
+     ".gb",
+     ".zip"
+    ]
+   }
+  },
+  {
+   "Id": "alttp",
+   "Name": "A Link to the Past",
+   "Short": "LttP",
+   "Source": "ZELDA3  •  GITHUB",
+   "Exe": "zelda3.exe",
+   "Proc": "zelda3",
+   "SettingsKey": "AlttpDir",
+   "Repo": "snesrev/zelda3",
+   "Asset": "zelda3_*.zip",
+   "Accent": "#7B3FA0",
+   "Accent2": "#E2B33C",
+   "FirstRun": "zelda3.exe",
+   "Needs": "Your own A Link to the Past SNES ROM, USA release (.sfc). The launcher copies it in as zelda3.sfc next to the game. Settings are in zelda3.ini in the game folder.",
+   "DefaultDir": "C:\\Games\\Zelda3",
+   "Series": "zelda",
+   "Platform": "SNES",
+   "SettingsLabel": "A Link to the Past (zelda3)",
+   "CheckFile": "zelda3.exe",
+   "Keep": "zelda3.ini",
+   "Rom": {
+    "Kind": "file",
+    "Formats": [
+     ".sfc",
+     ".smc"
+    ],
+    "Ext": [
+     ".sfc",
+     ".smc"
+    ],
+    "Filter": "SNES ROM (*.sfc;*.smc)|*.sfc;*.smc",
+    "CopyAs": "zelda3.sfc"
+   }
+  },
+  {
+   "Id": "zelda2",
+   "Name": "Zelda II: The Adventure of Link",
+   "Short": "Z2",
+   "Source": "Z2RS  •  GITHUB",
+   "Exe": "z2rs-launcher.exe",
+   "Proc": "z2rs",
+   "SettingsKey": "Zelda2Dir",
+   "Repo": "troyedwardsjr/z2rs",
+   "Asset": "z2rs-*-x86_64-pc-windows-msvc.zip",
+   "Accent": "#A23B2A",
+   "Accent2": "#D9A441",
+   "FirstRun": "z2rs-launcher.exe",
+   "Needs": "Your own Zelda II NES ROM, USA release (.nes; only the No-Intro USA dump passes its check). Pick it in the z2rs launcher and press Play; it remembers it after that. Controls, and where saves go, are in HOW-TO-PLAY.txt in the game folder.",
+   "DefaultDir": "C:\\Games\\Zelda2",
+   "Series": "zelda",
+   "Platform": "NES",
+   "SettingsLabel": "Zelda II (z2rs)",
+   "CheckFile": "z2rs-launcher.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".nes"
+    ]
+   }
+  },
+  {
+   "Id": "zelda1",
+   "Name": "The Legend of Zelda",
+   "Short": "LoZ",
+   "Source": "NES RECOMP  •  GITHUB",
+   "Exe": "LegendOfZeldaNESRecomp.exe",
+   "Proc": "LegendOfZeldaNESRecomp",
+   "SettingsKey": "Zelda1Dir",
+   "Repo": "mstan/LegendOfZeldaNESRecomp",
+   "Asset": "*-windows-x64.zip",
+   "Accent": "#C9A227",
+   "Accent2": "#2E7D4F",
+   "Backup": "saves",
+   "FirstRun": "LegendOfZeldaNESRecomp.exe",
+   "Needs": "Your own Legend of Zelda NES ROM, USA release (PRG0, .nes). The game asks for it on its first start and remembers it. Saves go in the saves folder next to the game.",
+   "DefaultDir": "C:\\Games\\Zelda1",
+   "Series": "zelda",
+   "Platform": "NES",
+   "SettingsLabel": "The Legend of Zelda (NES Recomp)",
+   "CheckFile": "LegendOfZeldaNESRecomp.exe",
+   "Saves": "saves",
+   "NotAsset": "*symbols*",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".nes"
+    ]
+   }
+  },
+  {
+   "Id": "wlsi",
+   "Name": "Wario Land: Shake It!",
+   "Short": "WLSI",
+   "Source": "WARIORECOMP  •  GITHUB",
+   "Exe": "WarioLauncher.exe",
+   "Proc": "WarioLauncher",
+   "SettingsKey": "WlsiDir",
+   "Repo": "santiagovalencia109/Wario-Land-Shake-It-Native-PC",
+   "Asset": "WarioRecomp-*.zip",
+   "Accent": "#F2C230",
+   "Accent2": "#7A3FA0",
+   "Backup": "Play/UserData",
+   "FirstRun": "WarioLauncher.exe",
+   "Needs": "A testing build. Your own Wario Land: Shake It! Wii disc, USA release (RWLE01, unmodified), as .iso, .wbfs, .ciso or .rvz. In WarioLauncher, press Install and pick the disc: it extracts the game and builds the port on this PC (15 to 45 minutes, about 7.5 GB). Then press PLAY there. Saves stay in Play\\UserData.",
+   "DefaultDir": "C:\\Games\\WarioRecomp",
+   "Series": "mario",
+   "Platform": "Wii",
+   "SettingsLabel": "Wario Land: Shake It! (WarioRecomp)",
+   "CheckFile": "WarioLauncher.exe",
+   "Saves": "Play\\UserData",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     ".wbfs",
+     ".ciso",
+     ".rvz"
+    ]
+   }
+  },
+  {
+   "Id": "wl4",
+   "Name": "Wario Land 4",
+   "Short": "WL4",
+   "Source": "WL4 NATIVE PORT  •  GITHUB",
+   "Exe": "wl4-launcher.exe",
+   "Proc": "wl4",
+   "SettingsKey": "Wl4Dir",
+   "Repo": "BioRhythmicStudios/warioland4",
+   "Asset": "*-Windows-x64.zip",
+   "Accent": "#E8B21E",
+   "Accent2": "#8E3FB5",
+   "FirstRun": "wl4-launcher.exe",
+   "Needs": "A beta. Your own Wario Land 4 GBA ROM, US/EU release (AWAE, unmodified, 8 MB); Japanese ROMs and hacks are refused. Pick it in wl4-launcher. Saves stay in %APPDATA%\\wl4.",
+   "DefaultDir": "C:\\Games\\Wario Land 4",
+   "Series": "mario",
+   "Platform": "GBA",
+   "SettingsLabel": "Wario Land 4 (native port)",
+   "CheckFile": "wl4-launcher.exe",
+   "NotAsset": "*.sha256",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".gba"
+    ]
+   }
+  },
+  {
+   "Id": "wl1",
+   "Name": "Wario Land: Super Mario Land 3",
+   "Short": "WL",
+   "Source": "BIGODAO  •  GITHUB",
+   "Exe": "bigodao_*_win.exe",
+   "Proc": "bigodao*",
+   "SettingsKey": "Wl1Dir",
+   "Repo": "GABRIELNNK/Bigodao",
+   "Asset": "bigodao_*_win.zip",
+   "Accent": "#E3B32B",
+   "Accent2": "#5B8F3A",
+   "FirstRun": "bigodao_*_win.exe",
+   "Needs": "Your own Wario Land: Super Mario Land 3 Game Boy ROM (World) and the Super Mario Land 3 DX v1.2 IPS patch by korxo. The game checks both and patches the ROM in memory (the file on disk is left alone); keep them in the game folder. Adds widescreen and an optional 3D mode.",
+   "DefaultDir": "C:\\Games\\Bigodao",
+   "Series": "mario",
+   "Platform": "Game Boy",
+   "SettingsLabel": "Wario Land (Bigodao)",
+   "CheckFile": "bigodao_*_win.exe",
+   "Ready": "*.gb",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".gb",
+     ".ips"
+    ]
+   }
+  },
+  {
+   "Id": "mkworld",
+   "Name": "Mario Kart World",
+   "Short": "MKW",
+   "Source": "MKW RECOMP  •  GITHUB",
+   "Exe": "mkw.exe",
+   "Proc": "mkw",
+   "SettingsKey": "MkworldDir",
+   "Repo": "adriadam10/mkw-recomp",
+   "Asset": "mkw-recomp-*-windows-x64.zip",
+   "Accent": "#E4332B",
+   "Accent2": "#F7C531",
+   "FirstRun": "mkw.exe",
+   "Needs": "Early. Your own Mario Kart World 1.0.0, dumped from your own Switch 2 as decrypted exefs and romfs folders. In mkw.exe, open Game files, point it at the dump and press Prepare: the first time it builds the game on this PC (a while, about 30 GB free, and it downloads NVIDIA's shader tools, 126 MB). Then Play. Needs a CPU with AVX2 and a Vulkan 1.3 graphics card; 16 GB of memory recommended.",
+   "DefaultDir": "E:\\Games\\MKWorld",
+   "Series": "mario",
+   "Platform": "Switch 2",
+   "SettingsLabel": "Mario Kart World",
+   "CheckFile": "mkw.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     "exefs + romfs folders"
+    ]
+   }
+  },
+  {
+   "Id": "smbw",
+   "Name": "Super Mario Bros. Wonder",
+   "Short": "SMBW",
+   "Source": "SUPERWONDERS  •  GITHUB",
+   "Exe": "Start WonderBuilder.cmd",
+   "Proc": "wonder",
+   "SettingsKey": "SmbwDir",
+   "Repo": "vfjoo888/SuperWonders",
+   "Asset": "SuperWonders-builder*.zip",
+   "Accent": "#E85A9B",
+   "Accent2": "#F6C643",
+   "FirstRun": "Start WonderBuilder.cmd",
+   "Needs": "Experimental (tested through World 1). Your own Super Mario Bros. Wonder 1.0.0, dumped from your own Switch as extracted ExeFS and RomFS folders. The builder opens on install: press Install prerequisites once (it installs development tools, with UAC prompts), pick the folders, and choose the output folder output\\ inside this game's folder so Play finds wonder.exe. Then Build. Needs a CPU with AVX2 and a Vulkan 1.3 card; 32 GB of memory recommended while building.",
+   "DefaultDir": "E:\\Games\\SuperWonders",
+   "Series": "mario",
+   "Platform": "Switch",
+   "SettingsLabel": "Super Mario Bros. Wonder (SuperWonders)",
+   "CheckFile": "Start WonderBuilder.cmd",
+   "Ready": "output\\wonder.exe;*\\wonder.exe;*\\*\\wonder.exe",
+   "Launch": "output\\wonder.exe;*\\wonder.exe;*\\*\\wonder.exe;Start WonderBuilder.cmd",
+   "Pre": true,
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     "ExeFS + RomFS folders"
+    ]
+   }
+  },
+  {
+   "Id": "karpur",
+   "Name": "Pokémon Scarlet & Violet",
+   "Short": "SV",
+   "Source": "KARPUR  •  GITHUB",
+   "Exe": "KarPur-Launcher.exe",
+   "Proc": "karpur",
+   "SettingsKey": "KarpurDir",
+   "Repo": "Grunttanamo/KarPur",
+   "Asset": "KarPur-Launcher.exe",
+   "Accent": "#D8412F",
+   "Accent2": "#7B3FA0",
+   "FirstRun": "KarPur-Launcher.exe",
+   "Needs": "Your own Pokémon Violet (tested) or Scarlet as .xci, the 4.0.0 update .nsp (only that one) and prod.keys from the same Switch. In KarPur-Launcher's Setup tab pick them and a target folder without spaces (this game's folder works), then Build: the first build takes 30 to 60 minutes and about 30 GB (13 GB after), and downloads about 250 MB of tools. Then Play there. Needs a CPU with AVX2 and a Vulkan 1.3 card.",
+   "DefaultDir": "E:\\Games\\KarPur",
+   "Series": "pokemon",
+   "Platform": "Switch",
+   "SettingsLabel": "Pokémon Scarlet & Violet (KarPur)",
+   "CheckFile": "KarPur-Launcher.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".xci",
+     "4.0.0 update .nsp",
+     "prod.keys"
+    ]
+   }
+  },
+  {
+   "Id": "halo3",
+   "Name": "Halo 3 (Mythic multiplayer)",
+   "Short": "H3",
+   "Source": "SPARTAN (OPENH3M)  •  GITHUB",
+   "Exe": "OpenH3M.exe",
+   "Proc": "OpenH3M",
+   "SettingsKey": "Halo3Dir",
+   "Repo": "GTTeancum/OpenH3M",
+   "Asset": "OpenH3M-*-win-x64.zip",
+   "Accent": "#3F5A3A",
+   "Accent2": "#A8B37A",
+   "Needs": "A beta: Halo 3's multiplayer (Custom Games, 1-4 player split screen, Forge); no online play. Your own Halo 3: ODST Multiplayer Disc (disc 2), extracted with an Xbox (XDVDFS) extraction tool into the game folder inside this game's folder, so that game\\default.xex and game\\maps are there. Needs a DirectX 12 graphics card; a controller is recommended.",
+   "DefaultDir": "E:\\Games\\Halo3",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Halo 3 (Spartan / OpenH3M)",
+   "CheckFile": "OpenH3M.exe",
+   "Ready": "game\\default.xex",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     "Extracted disc files (default.xex + maps)"
+    ]
+   }
   }
  ]
 }

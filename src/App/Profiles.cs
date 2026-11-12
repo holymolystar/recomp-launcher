@@ -25,6 +25,11 @@ class PlayerProfile {
 static class Profiles {
     public static readonly List<PlayerProfile> All = new List<PlayerProfile>();
     public static PlayerProfile Current;
+    // Guest: plays without keeping anything of their own (play time and favourites are forgotten); their game saves
+    // are kept apart from everyone else's, under profiles\guest
+    public static readonly PlayerProfile Guest = new PlayerProfile { Id = "guest", Name = "Guest", Avatar = "", Frame = "", Character = "" };
+    public static bool IsGuest { get { return Current == Guest; } }
+    static PlayerProfile lastReal;
     static string original;
     static readonly Dictionary<string, string> live = new Dictionary<string, string>();
     public static string Dir { get { return Path.Combine(Paths.Root, "profiles"); } }
@@ -64,6 +69,7 @@ static class Profiles {
     // play time is kept per profile: the first profile keeps playtime.json (the time played before profiles), the
     // others profiles\<id>\playtime.json
     public static string PlaytimeFile(PlayerProfile p) {
+        if (p == Guest) return Path.Combine(Path.GetTempPath(), "RecompLauncher-guest-playtime.json");
         if (p.Id == original) return Path.Combine(Paths.Root, "playtime.json");
         string dir = Path.Combine(Dir, p.Id);
         try { Directory.CreateDirectory(dir); } catch { }
@@ -88,7 +94,7 @@ static class Profiles {
             Json.WriteFile(FilePath, new Dictionary<string, object> {
                 { "Profiles", All.Select(p => new Dictionary<string, object> { { "Id", p.Id }, { "Name", p.Name }, { "Avatar", p.Avatar }, { "Frame", p.Frame }, { "Character", p.Character },
                     { "Favs", p.Favs.ToList() }, { "Collections", p.Collections.Select(c => (object)new Dictionary<string, object> { { "Name", c.Key }, { "Games", c.Value.ToList() } }).ToList() } }).ToList() },
-                { "Current", Current.Id }, { "Original", original }, { "Live", live.ToDictionary(kv => kv.Key, kv => (object)kv.Value) },
+                { "Current", (Current == Guest ? (lastReal ?? All[0]) : Current).Id }, { "Original", original }, { "Live", live.ToDictionary(kv => kv.Key, kv => (object)kv.Value) },
             });
         } catch { }
     }
@@ -127,7 +133,11 @@ static class Profiles {
         if (Current == p) Current = All[0];
         Save();
     }
-    public static void Switch(PlayerProfile p) { Current = p; Playtime.Use(PlaytimeFile(p)); Save(); }
+    public static void Switch(PlayerProfile p) {
+        if (p == Guest) { Guest.Favs.Clear(); Guest.Collections.Clear(); try { File.Delete(PlaytimeFile(Guest)); } catch { } }   // a fresh guest every time
+        else lastReal = p;
+        Current = p; Playtime.Use(PlaytimeFile(p)); Save();
+    }
 
     // ---------- saves ----------
     // (catalog entry, full path) of each save folder of a game

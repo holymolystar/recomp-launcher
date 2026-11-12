@@ -7,6 +7,7 @@
 // the in-game menu, when that's on), and comes back by itself when the game closes. The icon opens it (double click)
 // or quits it (right click menu); it also shows notes like "an update is out" (Notify).
 using System;
+using System.Linq;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -19,14 +20,29 @@ namespace RecompLauncher {
 partial class Shell {
     Forms.NotifyIcon tray;
     bool inTray;
-    Game playing; DateTime playingSince; bool playingSeen;
+    Game playing; DateTime playingSince; bool playingSeen; double playingBefore;
+    // the running game's tile says SUSPENDED and comes first on Home while the launcher is in front
+    void RefreshPlayingTile(Game g) {
+        try { if (g != null && g.Ui != null) UpdateHomeTile(g); if (view == View.Home && homeTiles != null) { ApplySort(true); ApplyFilter(); } } catch { }
+    }
+    // back to the running game, in front
+    void ResumePlaying(Game g) {
+        var h = Engine.Processes(g).Select(p => { try { return p.MainWindowHandle; } catch { return IntPtr.Zero; } }).FirstOrDefault(x => x != IntPtr.Zero);
+        if (h == IntPtr.Zero) { SetStep(g.Name + " is still starting or has no window yet.", Ui.Gold); return; }
+        Sound.Play(Sfx.Select);
+        if (IsIconic(h)) ShowWindow(h, 9);
+        BringToFront(h);
+    }
     DispatcherTimer gameWatch;
     [DllImport("kernel32.dll")] static extern bool SetProcessWorkingSetSize(IntPtr process, IntPtr min, IntPtr max);
 
     // a game was started: follow it until it closes
     void WatchGame(Game g) {
-        playing = g; playingSince = DateTime.Now; playingSeen = false;
+        playing = g; playingSince = DateTime.Now; playingSeen = false; playingBefore = Playtime.Total(g.Id);
+        RefreshPlayingTile(g);
+        SendPresence();   // friends see what you're playing (FriendList.cs)
         DiscordStatus.Playing(g, playingSince);
+        StartBreakWatch();   // the break reminder, when it's on (Extras.cs)
         if (gameWatch == null) {
             gameWatch = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromSeconds(3) };
             gameWatch.Tick += (s, e) => {
@@ -41,8 +57,14 @@ partial class Shell {
     void GameClosed() {
         var g = playing;
         playing = null;
+        RefreshPlayingTile(g);
+        SendPresence();
+        // a play-time milestone, once the time is counted (Mail.cs)
+        if (g != null) { double before = playingBefore; var t = new DispatcherTimer { Interval = TimeSpan.FromSeconds(6) }; t.Tick += (s, e) => { t.Stop(); MailMilestone(g, before); }; t.Start(); }
         gameWatch.Stop();
         DiscordStatus.Clear();
+        // the diary: who played what, for how long (Board.cs)
+        if (g != null && (DateTime.Now - playingSince).TotalSeconds >= 60) Board.Add("play", Profiles.Current.Id, g.Id, null, (DateTime.Now - playingSince).TotalSeconds);
         CloseOverlay(false);
         if (inTray) ComeBack(g);
         else if (g != null) { UpdateViews(); }
