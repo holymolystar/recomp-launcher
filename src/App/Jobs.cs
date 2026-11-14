@@ -1,4 +1,4 @@
-// Update checks, installs, updates, NSP conversion, uninstall and Play.
+﻿// Update checks, installs, updates, NSP conversion, uninstall and Play.
 // Checks: only games that are installed are looked up (in parallel, in the background), and a release found in the
 // last 20 minutes is used instead of asking again. A game that isn't installed is looked up only when it's needed:
 // Install, or its release notes.
@@ -51,6 +51,8 @@ partial class Shell {
         foreach (var g in Games) {
             if (g.IsBusy) continue;
             g.Inst = Engine.GetInstalled(g);
+            if (g.App != null) { g.State = State.Current; g.Latest = null; continue; }   // nothing to update
+            if (g.ByStore) { g.State = g.Inst == null ? State.Missing : State.Current; g.Latest = Stores.Note(g); continue; }
             if (g.Inst == null) { g.State = State.Missing; g.Latest = ReleaseCache.Get(g.Id); continue; }
             var c = ReleaseCache.Get(g.Id);
             if (!force && c != null && (DateTime.Now - c.CheckedAt).TotalMinutes < CacheMinutes) { SetLatest(g, c); continue; }
@@ -97,7 +99,11 @@ partial class Shell {
         int n = list.Count(g => g.State == State.Update), off = list.Count(g => g.State == State.Offline);
         int inst = list.Count(g => g.Inst != null);
         string old = usedOld ? "Some release pages could not be reached; showing the last known versions." : "";
-        if (n > 0) { SetStep(n == 1 ? "1 update available" : n + " updates available", Ui.Gold, old); SetProgress(0); }
+        if (n > 0) {
+            SetStep(n == 1 ? "1 update available" : n + " updates available", Ui.Gold, old); SetProgress(0);
+            var up = list.Where(g => g.State == State.Update).ToList();
+            Notify(n == 1 ? "An update is out" : n + " updates are out", string.Join(", ", up.Take(3).Select(g => g.Name + " " + g.Latest.Tag).ToArray()) + (n > 3 ? " and more" : ""));
+        }
         else if (off > 0) { SetStep("Couldn't reach the release pages", Ui.Red, "Check your internet connection, or add a GitHub token in Settings."); SetProgress(0); }
         else if (inst == 0) { SetStep("No games installed yet: pick one and press Install", Ui.Muted); SetProgress(0); }
         else { SetStep("Everything is up to date", Ui.Teal, old); SetProgress(1); }
@@ -111,6 +117,9 @@ partial class Shell {
     }
 
     // ---------- install ----------
+    // where a game's setup download is unpacked (TotK's keeps its old name)
+    static string SetupDirOf(Game g) { return g.Id == "totk" ? TotkSetupDir : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"RecompLauncher\" + g.Id + "-setup"); }
+    static string SetupExeOf(Game g) { return g.Setup ?? "TotK-Setup.exe"; }
     static string TotkSetupDir { get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"RecompLauncher\totk-setup"); } }
     void StartInstall(Game g) {
         // no download known yet: look it up first (a game that isn't installed isn't checked at start)
@@ -203,6 +212,8 @@ partial class Shell {
             if (!string.IsNullOrEmpty(n.TitleKeys)) a += " -TitleKeys " + Engine.Q(n.TitleKeys);
             worker.Proc = Engine.RunWorker(Path.Combine(Paths.Root, "nsp-worker.ps1"), a);
         } else {
+            // a game with its own setup program is updated by running the new setup (it rebuilds the game)
+            if (g.Setup != null && j.Kind == "update") j.Kind = "setup";
             bool totkWorker = g.Id == "totk" && j.Kind == "update";
             string script = totkWorker ? g.Worker : Path.Combine(Paths.Root, "recomp-worker.ps1");
             if (!File.Exists(script)) {
@@ -211,10 +222,13 @@ partial class Shell {
             }
             if (totkWorker) a = "-Game " + Engine.Q(g.Dir) + " -Url " + Engine.Q(g.Latest.Url) + " -Tag " + Engine.Q(g.Latest.Tag) + " -Log " + Engine.Q(log);
             else {
-                string dest = j.Kind == "setup" ? TotkSetupDir : g.Dir;
+                string dest = j.Kind == "setup" ? SetupDirOf(g) : g.Dir;
                 bool pattern = g.Exe.IndexOfAny(new[] { '*', '?' }) >= 0;
-                // a pattern Exe is a single-file release: it keeps the download's own name, older copies are removed
-                string exe = j.Kind == "setup" ? "TotK-Setup.exe" : pattern ? Path.GetFileName(new Uri(g.Latest.Url).LocalPath) : g.Exe;
+                // a pattern Exe is a single-file release: it keeps the download's own name, older copies are removed; in a
+                // zip or tarball the pattern finds the exe (named after its version), and the older ones go too
+                string file = Path.GetFileName(new Uri(g.Latest.Url).LocalPath).ToLowerInvariant();
+                bool archive = file.EndsWith(".zip") || file.EndsWith(".tar.gz") || file.EndsWith(".tgz");
+                string exe = j.Kind == "setup" ? SetupExeOf(g) : pattern && !archive ? Path.GetFileName(new Uri(g.Latest.Url).LocalPath) : g.Exe;
                 a = "-Mode " + j.Kind + " -Game " + Engine.Q(dest) + " -Url " + Engine.Q(g.Latest.Url) + " -Tag " + Engine.Q(g.Latest.Tag) +
                     " -Sha256 " + Engine.Q(g.Latest.Sha ?? "") + " -Log " + Engine.Q(log) + " -Exe " + Engine.Q(exe) + " -BackupDir " + Engine.Q(g.Backups) +
                     " -Backup " + Engine.Q(g.Backup ?? "") + " -Keep " + Engine.Q(g.Keep ?? "") + " -Replace " + Engine.Q(g.Replace ?? "");
@@ -299,23 +313,25 @@ partial class Shell {
             switch (job) {
                 case "update":
                     Log(g.Name + " updated to " + g.Latest.Tag + ". Saves and settings were kept.", Ui.Teal);
+                    Board.Add("update", null, g.Id, g.Name + " was updated to " + g.Latest.Tag + ".");
                     if (backup != null) Log("Backup: " + backup, Ui.Muted);
                     if (g.Id == "smo") Log("The first start after an update can rebuild the game code (a few minutes).", Ui.Muted);
                     if (g.SetupArg != null) Log("The next Play runs the game's setup once, to rebuild the game for this version.", Ui.Muted);
                     if (g.Rebuild != null) Log("The next Play opens the builder once: build over the same folder with the same game to update it.", Ui.Muted);
                     break;
-                case "install": Log(g.Name + " " + g.Latest.Tag + " is in " + g.Dir + ".", Ui.Teal); StartFirstRun(g); break;
+                case "install": Log(g.Name + " " + g.Latest.Tag + " is in " + g.Dir + ".", Ui.Teal); StartFirstRun(g); MailInstalled(g); break;
                 case "uninstall": Log(g.Name + " is uninstalled.", Ui.Teal); if (backup != null) Log("Saves and settings kept in " + backup, Ui.Muted); break;
                 case "convert":
                     Log(g.Name + ": exefs and romfs are in " + outDir + ".", Ui.Teal);
                     Roms.Set(g.Id, outDir); reopenRom = g;
                     break;
                 case "setup": {
-                    string exe = Directory.Exists(TotkSetupDir) ? Directory.GetFiles(TotkSetupDir, "TotK-Setup.exe", SearchOption.AllDirectories).FirstOrDefault() : null;
+                    string sdir = SetupDirOf(g), sname = SetupExeOf(g);
+                    string exe = Directory.Exists(sdir) ? Directory.GetFiles(sdir, sname, SearchOption.AllDirectories).FirstOrDefault() : null;
                     if (exe != null) {
-                        Log("Started the TotK setup. Choose your game files, and " + g.Dir + " as the install folder (or change it in Settings to match).", Ui.Teal);
+                        Log("Started the " + g.Short + " setup. Choose your game files, and " + g.Dir + " as the install folder (or change it in Settings to match).", Ui.Teal);
                         Engine.Start(exe, null, Path.GetDirectoryName(exe), false);
-                    } else Log("The TotK download has no TotK-Setup.exe in it.", Ui.Red);
+                    } else Log("The " + g.Short + " download has no " + sname + " in it.", Ui.Red);
                     break;
                 }
             }
@@ -379,7 +395,9 @@ partial class Shell {
         if (first == null || !File.Exists(first)) return;
         if (rom != null && spec.CopyAs != null && File.Exists(rom)) {
             try {
-                File.Copy(rom, Path.Combine(g.Dir, spec.CopyAs), true);
+                string dest = Path.Combine(g.Dir, spec.CopyAs);
+                Directory.CreateDirectory(Path.GetDirectoryName(dest));   // CopyAs can be in a folder ("data\pd.ntsc-final.z64")
+                File.Copy(rom, dest, true);
                 Log("Copied your game in as " + spec.CopyAs + ".", Ui.Muted);
                 Engine.Start(first, null, g.Dir, false);
                 return;
@@ -408,16 +426,34 @@ partial class Shell {
         // play time watches the folder the game runs from
         string playDir = Paths.Under(file, g.Dir) ? g.Dir : Path.GetDirectoryName(file);
         bool hidden = file.EndsWith(".bat", StringComparison.OrdinalIgnoreCase) && !g.Console;
+        // the current profile's saves go in place first (not while the game is already running)
+        if (!Engine.IsRunning(g)) {
+            try { Profiles.PrepareSaves(g); }
+            catch (Exception e) {
+                SetStep("Couldn't put " + Profiles.DisplayName(Profiles.Current) + "'s saves in place for " + g.Name + ", so it wasn't started: " + e.Message, Ui.Red);
+                Log("Save switch for " + g.Name + " failed: " + e, Ui.Red);
+                return;
+            }
+        }
         Engine.Start(file, args, playDir, hidden);
         SetStep("Starting " + g.Name + "...", Ui.Teal);
         Engine.StartPlaytime(g, playDir);
-        if (!running && Settings.On("CloseOnPlay")) CloseLauncher();
+        WatchGame(g);
+        if (!running) { string mode = OnPlayMode(); if (mode == "close") CloseLauncher(); else if (mode == "tray") WaitInTray(g); }
     }
     void CloseLauncher() {
         W.Topmost = false;
         var root = N<System.Windows.Controls.Border>("Root");
         var a = Anim(0, 300, null, System.Windows.Media.Animation.EasingMode.EaseIn);
-        a.Completed += (s, e) => W.Close();
+        // the start sound rings out before the launcher goes
+        a.Completed += (s, e) => {
+            var wait = Sound.BusyUntil - DateTime.Now;
+            if (wait.TotalMilliseconds <= 0) { W.Close(); return; }
+            W.Hide();
+            var t = new System.Windows.Threading.DispatcherTimer { Interval = wait };
+            t.Tick += (s2, e2) => { t.Stop(); W.Close(); };
+            t.Start();
+        };
         root.BeginAnimation(UIElement.OpacityProperty, a);
         var rs = (System.Windows.Media.ScaleTransform)root.RenderTransform;
         rs.BeginAnimation(System.Windows.Media.ScaleTransform.ScaleXProperty, Anim(0.97, 300, null, System.Windows.Media.Animation.EasingMode.EaseIn));

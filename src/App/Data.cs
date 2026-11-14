@@ -87,6 +87,8 @@ class RomSpec {
 class Release {
     public string Tag, Notes, Date, Url, Sha, Problem, Checked;
     public double Size;
+    // the releases before this one, newest first (tag, date and notes only), for the notes of every version skipped
+    public List<Release> Older = new List<Release>();
     public Dictionary<string, object> ToDict() {
         var d = new Dictionary<string, object>();
         d["Tag"] = Tag; d["Notes"] = Notes; d["Date"] = Date; d["Checked"] = Checked;
@@ -94,14 +96,20 @@ class Release {
         if (Size > 0) d["Size"] = Size;
         if (Sha != null) d["Sha"] = Sha;
         if (Problem != null) d["Problem"] = Problem;
+        if (Older.Count > 0) d["Older"] = Older.Select(o => (object)new Dictionary<string, object> { { "Tag", o.Tag }, { "Date", o.Date }, { "Notes", o.Notes } }).ToList();
         return d;
     }
     public static Release From(IDictionary<string, object> d) {
         if (d == null || Json.Str(d, "Tag") == null) return null;
-        return new Release {
+        var r = new Release {
             Tag = Json.Str(d, "Tag"), Notes = Json.Str(d, "Notes"), Date = Json.Str(d, "Date"), Url = Json.Str(d, "Url"),
             Sha = Json.Str(d, "Sha"), Problem = Json.Str(d, "Problem"), Checked = Json.Str(d, "Checked"), Size = Json.Num(d, "Size")
         };
+        object older;
+        if (d.TryGetValue("Older", out older) && older is System.Collections.IEnumerable)
+            foreach (var o in ((System.Collections.IEnumerable)older).OfType<Dictionary<string, object>>())
+                if (Json.Str(o, "Tag") != null) r.Older.Add(new Release { Tag = Json.Str(o, "Tag"), Date = Json.Str(o, "Date"), Notes = Json.Str(o, "Notes") });
+        return r;
     }
     public DateTime CheckedAt { get { DateTime t; return DateTime.TryParse(Checked, out t) ? t : DateTime.MinValue; } }
 }
@@ -121,6 +129,19 @@ class Game {
     public string Id, Name, Short, Source, Exe, Proc, SettingsKey, Launch, Repo, Asset, NotAsset, Accent, Accent2;
     public string Backup, Keep, Replace, FirstRun, SetupArg, Rebuild, Needs, DefaultDir, Series, SettingsLabel, CheckFile, Saves;
     public bool Pre, NoSha, Console;
+    public bool OwnGuide;                         // the game uses the Xbox / PS / Home button itself (the in-game menu then opens with View + Menu only)
+    public string Steam;                          // a Steam game: its app id (Steam.cs)
+    public string Setup;                          // the game's own setup program in its download ("DKB-Setup.exe"): Install runs it
+    public string[] Languages = new string[0];    // the languages Steam has it in
+    // a game from Epic or GOG (Stores.cs): the store, its id there, and what the store needs to start it
+    public string Store, StoreId, StoreNs, StoreItem, StoreExe, StoreArgs, StoreUninstall, StoreArt, StoreHero;
+    public string Platform;
+    public string Helpers;     // the port's own setup or launcher programs (process names, ";", * at the end for a prefix): the controller is a mouse there (PadMouse.cs)
+    public string Ready;       // files that show the game has what it needs from you ("a;b", wildcards; NeedsFiles.cs)    // the console it was first made for (games.json; Folders.cs)
+    public Action App;         // the launcher's own page shown as a tile on Home (Apps.cs): starting it opens the page
+    public bool FromLibrary;   // found in a store library (Steam.cs, Stores.cs), not listed in games.json
+    public bool ByStore { get { return Steam != null || Store != null; } }
+    public string StoreName { get { return Steam != null ? "Steam" : Store == "epic" ? "Epic Games" : Store == "gog" ? "GOG" : null; } }
     public RomSpec Rom = new RomSpec();
     public int Rank;
 
@@ -160,7 +181,8 @@ static class Catalog {
                 SetupArg = Json.Str(d, "SetupArg"), Rebuild = Json.Str(d, "Rebuild"), Needs = Json.Str(d, "Needs") ?? "",
                 DefaultDir = Json.Str(d, "DefaultDir"), Series = Json.Str(d, "Series") ?? "nintendo",
                 SettingsLabel = Json.Str(d, "SettingsLabel"), CheckFile = Json.Str(d, "CheckFile"), Saves = Json.Str(d, "Saves"),
-                Pre = Json.Bool(d, "Pre"), NoSha = Json.Bool(d, "NoSha"), Console = Json.Bool(d, "Console")
+                OwnGuide = Json.Bool(d, "OwnGuide"), Pre = Json.Bool(d, "Pre"), NoSha = Json.Bool(d, "NoSha"), Console = Json.Bool(d, "Console"),
+                Setup = Json.Str(d, "Setup"), Platform = Json.Str(d, "Platform"), Helpers = Json.Str(d, "Helpers"), Ready = Json.Str(d, "Ready"), Steam = Json.Str(d, "Steam"), Languages = Json.Strings(d, "Languages")
             };
             if (g.SettingsLabel == null) g.SettingsLabel = g.Name;
             if (g.CheckFile == null) g.CheckFile = g.Exe;
@@ -194,8 +216,8 @@ static class Settings {
     public static string Path;
     static Dictionary<string, object> values = new Dictionary<string, object>();
     static readonly Dictionary<string, string> Defaults = new Dictionary<string, string> {
-        { "TotkUpdaterDir", @"C:\Recomp TOTK Updater" }, { "Fullscreen", "" }, { "LastGame", "totk" }, { "SortMode", "default" },
-        { "CloseOnPlay", "on" }, { "AutoCheck", "on" }, { "GitHubToken", "" }, { "ViewMode", "home" }, { "Hidden", "" }
+        { "TotkUpdaterDir", @"C:\Games\TOTK Updater" }, { "Fullscreen", "" }, { "LastGame", "totk" }, { "SortMode", "default" },
+        { "CloseOnPlay", "on" }, { "AutoCheck", "on" }, { "GitHubToken", "" }, { "ViewMode", "home" }, { "Hidden", "" }, { "SoundVolume", "50" }
     };
     public static void Load(string path) {
         Path = path;
@@ -218,7 +240,7 @@ static class Settings {
     public static bool On(string key) { return Get(key) != "off"; }
     public static void Save() {
         try {
-            foreach (var g in Catalog.Games) if (!values.ContainsKey(g.SettingsKey)) values[g.SettingsKey] = g.DefaultDir;
+            foreach (var g in Catalog.Games) if (g.SettingsKey != null && !values.ContainsKey(g.SettingsKey)) values[g.SettingsKey] = g.DefaultDir;
             Json.WriteFile(Path, values);
         } catch { }
     }
@@ -255,7 +277,33 @@ static class Playtime {
         if (t == read) return;
         read = t; data = Json.ReadFile(Path) ?? new Dictionary<string, object>();
     }
+    // the profile whose play time is shown and counted (Profiles.PlaytimeFile)
+    public static void Use(string path) { Path = path; read = DateTime.MinValue; data = new Dictionary<string, object>(); }
     public static double Total(string id) { Refresh(); return Json.Num(Json.Obj(data, id), "total"); }
+    // all of a profile's play time, and its most played game's id (for Who's playing?)
+    public static double TotalIn(string path, out string top) {
+        top = null; double sum = 0, most = 0;
+        var d = Json.ReadFile(path);
+        if (d == null) return 0;
+        foreach (var kv in d) {
+            double t = Json.Num(kv.Value as Dictionary<string, object>, "total");
+            sum += t; if (t > most) { most = t; top = kv.Key; }
+        }
+        return sum;
+    }
+    // a profile's play time, game by game: (id, seconds, last played), most played first
+    public static List<Tuple<string, double, DateTime>> AllIn(string path) {
+        var r = new List<Tuple<string, double, DateTime>>();
+        var d = Json.ReadFile(path);
+        if (d == null) return r;
+        foreach (var kv in d) {
+            var o = kv.Value as Dictionary<string, object>;
+            double t = Json.Num(o, "total"); DateTime last;
+            if (!DateTime.TryParse(Json.Str(o, "last"), out last)) last = DateTime.MinValue;
+            if (t > 0) r.Add(Tuple.Create(kv.Key, t, last));
+        }
+        return r.OrderByDescending(x => x.Item2).ToList();
+    }
     public static DateTime Last(string id) {
         Refresh(); DateTime d;
         return DateTime.TryParse(Json.Str(Json.Obj(data, id), "last"), out d) ? d : DateTime.MinValue;

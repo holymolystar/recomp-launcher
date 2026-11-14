@@ -61,6 +61,7 @@ partial class Shell {
         homeAllTiles.BeginAnimation(UIElement.OpacityProperty, Anim(1, 200, 0));
     }
     void CycleAllLayout() {
+        Sound.Play(Sfx.Move);
         var ids = new[] { "big", "small", "list" };
         SetAllLayout(ids[(Array.IndexOf(ids, allLayout) + 1) % 3]);
     }
@@ -122,7 +123,33 @@ partial class Shell {
     }
 
     // ---------- the game page ----------
-    Grid gamePage; Border gpFace; Image gpIcon; TextBlock gpSource, gpName, gpInst, gpLatest, gpStatus, gpPlayed, gpNeeds; Ellipse gpDot; Border gpPlayedChip;
+    Grid gamePage; Border gpFace; Image gpIcon; TextBlock gpSource, gpName, gpInst, gpLatest, gpStatus, gpPlayed, gpNeeds, gpSteam, gpSize; Ellipse gpDot; Border gpPlayedChip, gpSteamChip, gpSizeChip; Image gpHero; Game gpHeroFor;
+    readonly Dictionary<string, long> sizes = new Dictionary<string, long>(); readonly HashSet<string> sizing = new HashSet<string>();
+    // how much space the game takes (the store's own count, else its folder added up once, in the background) and
+    // what's free on its drive
+    string SizeText(Game g) {
+        if (g.Inst == null || string.IsNullOrEmpty(g.Dir) || !Directory.Exists(g.Dir)) return null;
+        long size;
+        if (!sizes.TryGetValue(g.Id, out size)) {
+            long known = Stores.KnownSize(g);
+            if (known > 0) sizes[g.Id] = size = known;
+            else {
+                if (sizing.Add(g.Id)) {
+                    string dir = g.Dir;
+                    System.Threading.ThreadPool.QueueUserWorkItem(_ => {
+                        long n = 0;
+                        try { foreach (var f in new DirectoryInfo(dir).EnumerateFiles("*", SearchOption.AllDirectories)) { try { n += f.Length; } catch { } } } catch { }
+                        W.Dispatcher.BeginInvoke(new Action(() => { sizes[g.Id] = n; if (sel == g && homePage == "game") UpdateGamePage(); }));
+                    });
+                }
+                size = -1;
+            }
+        }
+        string free = "";
+        try { var d = new DriveInfo(Path.GetPathRoot(g.Dir)); free = "  \u2022  " + Gb(d.AvailableFreeSpace) + " free on " + d.Name.TrimEnd('\\'); } catch { }
+        return (size < 0 ? "adding up..." : Gb(size)) + free;
+    }
+    static string Gb(long b) { return b >= 1073741824L ? (b / 1073741824.0).ToString(b >= 107374182400L ? "0" : "0.0") + " GB" : Math.Max(1, b / 1048576) + " MB"; }
     readonly List<PageButton> gpButtons = new List<PageButton>(); int gpIdx; WrapPanel gpButtonRow;
     void BuildGamePage() {
         gamePage = new Grid { Visibility = Visibility.Collapsed, Margin = new Thickness(60, 4, 60, 0) };
@@ -134,6 +161,11 @@ partial class Shell {
         RenderOptions.SetBitmapScalingMode(gpIcon, BitmapScalingMode.HighQuality);
         gpFace = new Border { Width = 300, Height = 300, CornerRadius = new CornerRadius(3), ClipToBounds = true, Child = gpIcon, VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(0, 30, 0, 0),
             Effect = new DropShadowEffect { BlurRadius = 16, ShadowDepth = 3, Opacity = Theme.Current.Light ? 0.22 : 0.45 } };
+        // the game's wide picture behind its page, faded into the background (Steam, Epic and GOG games)
+        gpHero = new Image { Stretch = Stretch.UniformToFill, VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(-60, -120, -60, 0), Opacity = 0, IsHitTestVisible = false,
+            OpacityMask = new LinearGradientBrush(new GradientStopCollection { new GradientStop(Color.FromArgb(150, 0, 0, 0), 0), new GradientStop(Color.FromArgb(70, 0, 0, 0), 0.55), new GradientStop(Colors.Transparent, 1) }, 90) };
+        Grid.SetColumnSpan(gpHero, 3);
+        gamePage.Children.Add(gpHero);
         gamePage.Children.Add(gpFace);
         var right = new StackPanel { VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(0, 26, 0, 0) };
         Grid.SetColumn(right, 2);
@@ -155,6 +187,10 @@ partial class Shell {
         chips.Children.Add(chip("INSTALLED", gpInst)); chips.Children.Add(chip("LATEST", gpLatest));
         var stChip = chip(null, gpStatus); ((StackPanel)stChip.Child).Children.Insert(0, gpDot); chips.Children.Add(stChip);
         gpPlayedChip = chip("PLAYED", gpPlayed); chips.Children.Add(gpPlayedChip);
+        gpSteam = new TextBlock { FontSize = 13.5, Foreground = Ui.Brush(Ui.Text) };
+        gpSteamChip = chip("ON STEAM", gpSteam); chips.Children.Add(gpSteamChip);
+        gpSize = new TextBlock { FontSize = 13.5, Foreground = Ui.Brush(Ui.Text) };
+        gpSizeChip = chip("SIZE", gpSize); chips.Children.Add(gpSizeChip);
         right.Children.Add(chips);
         gpNeeds = new TextBlock { FontSize = 13, Foreground = Ui.Brush(Ui.Muted), TextWrapping = TextWrapping.Wrap, MaxWidth = 720, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(2, 6, 0, 0), LineHeight = 19 };
         right.Children.Add(gpNeeds);
@@ -165,6 +201,13 @@ partial class Shell {
         AddPageButton("", "Game folder", () => OpenFolder(sel.Dir));
         AddPageButton("", "Save backups", () => OpenFolder(sel.Backups));
         AddPageButton("", "Uninstall", () => { if (sel != null && sel.Inst != null && !running) OpenUninstall(sel); });
+        AddPageButton("", "Add to favourites", () => { if (sel != null) ToggleFavourite(sel); });
+        AddPageButton("", "Collections", () => { if (sel != null) OpenCollections(sel); });
+        AddPageButton("", "Language", () => { if (sel != null && sel.Steam != null) SteamLanguage(sel); });
+        AddPageButton("\uED1A", "Hide", () => { if (sel != null) HideGame(sel); });
+        AddPageButton("\uE9F9", "Achievements", () => { if (sel != null) OpenAchievements(sel); });
+        AddPageButton("\uE7FC", "In-game menu", () => { if (sel != null) ToggleGuide(sel); });
+        AddPageButton("\uE9D9", "Test versions", () => { if (sel != null) ToggleTestVersions(sel); });
         right.Children.Add(gpButtonRow);
         gamePage.Children.Add(right);
         homeLayer.Children.Add(gamePage);
@@ -199,12 +242,31 @@ partial class Shell {
         double total = Playtime.Total(g.Id); var last = Playtime.Last(g.Id);
         gpPlayedChip.Visibility = total > 30 || last != DateTime.MinValue ? Visibility.Visible : Visibility.Collapsed;
         gpPlayed.Text = Playtime.Format(total) + (last != DateTime.MinValue ? "  •  " + Playtime.When(last) : "");
+        // what Steam counted (all the play, also outside the launcher), when you last played, and achievements
+        var ss = SteamGames.StatsOf(g);
+        var bits = new List<string>();
+        if (ss != null) {
+            if (ss.Minutes > 0) bits.Add(Playtime.Format(ss.Minutes * 60.0));
+            if (ss.Last != DateTime.MinValue) bits.Add("last " + Playtime.When(ss.Last));
+            if (ss.AchTotal > 0) bits.Add(ss.Achieved + " / " + ss.AchTotal + " achievements");
+        }
+        gpSteam.Text = string.Join("  •  ", bits);
+        gpSteamChip.Visibility = bits.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        string sz = SizeText(g);
+        gpSize.Text = sz ?? ""; gpSizeChip.Visibility = sz != null ? Visibility.Visible : Visibility.Collapsed;
+        if (gpHeroFor != g) {
+            gpHeroFor = g;
+            var hero = Stores.Hero(g);
+            gpHero.Source = hero;
+            gpHero.BeginAnimation(UIElement.OpacityProperty, hero != null ? Anim(Theme.Current.Light ? 0.35 : 0.5, 400, 0) : null);
+            if (hero == null) gpHero.Opacity = 0;
+        }
         bool missing = g.State == State.Missing || g.State == State.Installing || g.State == State.Converting;
         gpNeeds.Text = missing ? "You need: " + g.Needs : "";
         gpNeeds.Visibility = missing ? Visibility.Visible : Visibility.Collapsed;
         // Start / Install, Update, What's new, folder, backups, Uninstall
         string dummy;
-        bool playOk = missing ? g.State == State.Missing && !running : File.Exists(Engine.PlayFile(g, out dummy, false)) && !g.IsBusy;
+        bool playOk = missing ? g.State == State.Missing && !running : g.ByStore ? g.Inst != null : File.Exists(Engine.PlayFile(g, out dummy, false)) && !g.IsBusy;
         SetPageButton(0, missing ? "" : "", g.State == State.Installing ? "Installing..." : missing ? "Install" : "Start", playOk, true);
         SetPageButton(1, "", g.State == State.Update ? (g.Latest.Size >= 1048576 ? string.Format("Update  ({0:N0} MB)", g.Latest.Size / 1048576) : string.Format("Update  ({0:N0} KB)", g.Latest.Size / 1024)) : g.State == State.Updating ? "Updating..." : "Up to date",
             g.State == State.Update && !running, !missing);
@@ -212,6 +274,29 @@ partial class Shell {
         SetPageButton(3, "", "Game folder", Directory.Exists(g.Dir), true);
         SetPageButton(4, "", "Save backups", true, true);
         SetPageButton(5, "", "Uninstall", g.Inst != null && !running && !missing, g.Inst != null && !missing);
+        bool fav = Profiles.IsFav(g.Id);
+        SetPageButton(6, fav ? "\uE735" : "\uE734", fav ? "Favourite" : "Add to favourites", true, true);
+        if (fav) gpButtons[6].Glyph.Foreground = Ui.Brush(Ui.Gold);
+        int inCols = Profiles.CollectionNames().Count(c => Profiles.InCollection(c).Contains(g.Id));
+        SetPageButton(7, "\uE8F1", inCols > 0 ? "Collections  (" + inCols + ")" : "Add to a collection", true, true);
+        // Steam games: Steam installs, updates and uninstalls them, and their language is picked in Steam
+        string lang = g.Steam != null && g.Inst != null && g.Languages.Length > 0 ? SteamGames.Language(g) : null;
+        SetPageButton(8, "\uE774", "Language: " + (lang ?? "?"), lang != null, lang != null);
+        SetPageButton(9, "\uED1A", "Hide", true, true);
+        bool hasAch = ss != null && ss.AchTotal > 0;
+        SetPageButton(10, "\uE9F9", hasAch ? "Achievements  (" + ss.Achieved + " / " + ss.AchTotal + ")" : "Achievements", hasAch, hasAch);
+        // which button opens the launcher's menu in this game (some games use the Xbox button themselves)
+        bool menuOn = g.Inst != null && Settings.Get("PadMenu") != "off";
+        SetPageButton(11, "\uE7FC", "In-game menu: " + (GuideLeftTo(g) ? "View + Menu" : "Xbox button"), menuOn, menuOn);
+        // test versions (pre-releases): for a game from GitHub or its own site, and not one that only has those
+        bool canTest = g.Repo != null && !g.Pre && !g.ByStore && g.App == null;
+        SetPageButton(12, "\uE9D9", "Test versions: " + (Engine.TestVersions(g) ? "On" : "Off"), canTest && !running, canTest);
+        if (g.ByStore) {
+            SetPageButton(0, missing ? "\uE896" : "\uE768", missing ? "Install with " + (g.Store == "epic" ? "Epic" : g.StoreName) : "Start", playOk, true);
+            SetPageButton(1, "", "", false, false);
+            SetPageButton(4, "", "", false, false);
+            SetPageButton(5, "\uE74D", "Uninstall", g.Inst != null, g.Inst != null);
+        }
         if (gpIdx >= gpButtons.Count || !gpButtons[gpIdx].Enabled) gpIdx = Math.Max(0, gpButtons.FindIndex(b => b.Enabled && b.Root.Visibility == Visibility.Visible));
         MarkPageButtons();
     }
@@ -232,20 +317,24 @@ partial class Shell {
     }
     void OpenGamePage() {
         if (sel == null || homeLayer == null) return;
+        if (sel.App != null) { PrimaryAction(sel); return; }   // an app has no game page: it opens
+        if (homePage != "game") Sound.Play(Sfx.Open);
         gameBack = homePage == "game" ? gameBack : homePage;
         homePage = "game";
         gpIdx = 0;
         ShowHomePage();
     }
-    void CloseGamePage() { homePage = gameBack; ShowHomePage(); }
+    void CloseGamePage() { Sound.Play(Sfx.Back); homePage = gameBack; ShowHomePage(); }
     bool GamePageMove(string dir) {
         var vis = Enumerable.Range(0, gpButtons.Count).Where(i => gpButtons[i].Root.Visibility == Visibility.Visible && gpButtons[i].Enabled).ToList();
         int at = vis.IndexOf(gpIdx); if (at < 0) at = 0;
+        int was = gpIdx;
         if (dir == "left" || dir == "up") { if (vis.Count > 0) gpIdx = vis[Math.Max(0, at - 1)]; }
         else if (dir == "right" || dir == "down") { if (vis.Count > 0) gpIdx = vis[Math.Min(vis.Count - 1, at + 1)]; }
-        else if (dir == "ok") { if (gpIdx < gpButtons.Count && gpButtons[gpIdx].Enabled) gpButtons[gpIdx].Do(); return true; }
+        else if (dir == "ok") { if (gpIdx < gpButtons.Count && gpButtons[gpIdx].Enabled) { Sound.Play(Sfx.Select); gpButtons[gpIdx].Do(); } else Sound.Play(Sfx.Bump); return true; }
         else if (dir == "back") { CloseGamePage(); return true; }
         else return false;
+        Sound.Play(gpIdx != was ? Sfx.Move : Sfx.Bump);
         MarkPageButtons();
         return true;
     }

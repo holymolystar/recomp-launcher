@@ -20,6 +20,93 @@ The launcher opens on a console-style home screen: your games as a row of big sq
 
 Pick a theme in Settings: Midnight, Neon, Aurora, Ember, Sakura, Daylight (light), Graphite or Abyss.
 
+Little console-style sounds play as you move around, pick and start games (no music). Set their volume, or turn
+them off, in Settings.
+
+## Steam, Epic Games and GOG
+
+The launcher also shows your games from the PC stores, each store in a group of its own, with the store's artwork:
+
+- **Steam**: your whole library (from Steam's own files on this PC, no login or key). Installed games show on Home
+  too; the rest have **Install with Steam**. Start, Uninstall and updates go through Steam. A game's page shows what
+  Steam counted (play time, when you last played, achievements), its size and its wide artwork behind the page.
+- **Epic Games**: your library from the Epic Games Launcher's cache; Install and Start hand over to the Epic Games
+  Launcher.
+- **GOG**: the GOG games installed on this PC (GOG Galaxy's own library isn't read).
+- All games has a pill for each store (Recomps, Steam, Epic Games, GOG) and a **Continue playing** row on top.
+- **Hide** on a game page takes a game off the list; Settings > Library brings it back.
+- Settings > General picks how much of each store shows (your library, installed games, or none).
+- **Friends** on Home: your Steam friends who are online and what they play. It needs a Steam Web API key of your
+  own (Settings > Steam friends; made at steamcommunity.com/dev/apikey).
+
+- **Achievements** on a Steam game's page: each one with its icon, when you unlocked it and how rare it is (all of
+  them with the Steam Web API key, else the part Steam keeps on this PC).
+
+## Phone remote, Discord and more
+
+- **Phone remote** (Settings > Phone remote): open the address it shows on your phone (same Wi-Fi), type the PIN, and
+  start or close games on the PC from there.
+- **Discord** (Settings > Discord): shows what you play on your Discord profile; it needs the Application ID of a
+  Discord application of your own named Recomp Launcher.
+- **Controller battery** by the clock and in the in-game menu (Xbox, PlayStation and Switch Pro controllers), with a
+  note when it gets low.
+- **ScummVM games** (Putt-Putt, Freddi Fish, Pajama Sam, Spy Fox...) get their controller support switched on each
+  time they start: the stick moves the pointer, A clicks, B right-clicks.
+- A short **start-up animation** (Settings > General can turn it off).
+
+## In-game menu
+
+While a game started from the launcher runs, the Xbox, PS or Home button (or View + Menu together) opens a menu
+over it: Resume, Go to the launcher, or Close the game. Over a game in exclusive full screen the menu steps the
+game aside (minimised) and Resume brings it back. To use the Xbox button with Steam running, turn off "Guide button
+focuses Steam" in Steam > Settings > Controller. Settings > General > When a game starts can also close the
+launcher, or have it wait in the tray and come back when the game closes.
+
+## Profiles
+
+Several people can share the launcher, each with their own picture, name and **saves**. Click the picture at the
+top left of Home (or press LB) to see who's playing, switch, edit or add a profile; with more than one profile, the
+launcher asks at start.
+
+![Who's playing?](docs/screenshots/who-is-playing.png)
+
+- When a game starts, the launcher puts the current profile's saves in place first: the previous player's save
+  folders are copied into their own folder (`profiles\`), then the new player's are copied in (a new profile starts
+  each game fresh). It's all or nothing: if anything fails, everything goes back as it was and the game doesn't start.
+- Only save folders change hands. Game settings files (`.ini`, `.json`) stay shared, so a new profile doesn't have to
+  set a game up again. Games whose save folder the launcher doesn't know keep one save for everyone.
+- Deleting a profile only takes it off the list; its saves stay in `profiles\`.
+
+## Personalise and the character creator
+
+**Personalise** sets a profile's picture (the launcher's logo, a game's artwork, a picture of your own in
+`avatars\`, or a character you make), its frame colour and its name.
+
+![Personalise](docs/screenshots/personalise.png)
+
+The **character creator** opens full screen. Your character stands in the middle, blinking and swaying, and the view
+moves in on the face while you work on it. Every choice is shown on your own character.
+
+![The character creator, Face tab](docs/screenshots/creator-face.png)
+
+- 16 tabs: Face, Hair, Eyes, Eyebrows, Nose, Mouth, Beard, Body, Top, Bottoms, Shoes, Hat, Glasses, Extras,
+  Pose and Backdrop.
+- Parts to pick (22 hairstyles, 16 eye styles, 10 tops, 15 hats...) and colours for skin, hair, eyes, eyebrows,
+  lips, beard, clothes and accessories.
+- Sliders to size, move, space and tilt the eyes and eyebrows, size and move the nose, mouth and glasses, and set
+  head size, height and build.
+- A pose for the full-body picture (Who's playing?) and a mood for the round picture on Home, over a backdrop.
+- Undo, Random and Save. With a controller: LB / RB change tab, A picks, left / right move a slider, X random,
+  Y undo, Menu saves, B goes back.
+- An easy-going lounge tune plays while it's open (written for the launcher; it follows the Sounds volume).
+
+| | |
+|---|---|
+| ![Eyes tab](docs/screenshots/creator-eyes.png) | ![Top tab](docs/screenshots/creator-top.png) |
+| Eyes: every style on your own face | Clothes, in two colours with patterns |
+| ![Pose tab, Graphite theme](docs/screenshots/creator-pose.png) | ![Characters made with Random](docs/screenshots/characters.png) |
+| Pose and mood (Graphite theme) | A dozen characters from Random |
+
 ## Screenshots
 
 | | |
@@ -32,6 +119,7 @@ Pick a theme in Settings: Midnight, Neon, Aurora, Ember, Sakura, Daylight (light
 | Home screen (Ember) | |
 
 The tiles in these pictures are the launcher's own drawn ones. Put your own pictures in `icons\` to use them instead.
+
 ## Update checks
 
 At start (and every 3 hours, or with the Check button / F5) the launcher asks GitHub for the latest release of the

@@ -6,31 +6,102 @@
   "nintendo": 3,
   "zelda": 0,
   "sega": 4,
-  "mario": 1
+  "mario": 1,
+  "lego": 7,
+  "xbox": 8,
+  "steam": 9
  },
  "Order": [
   "botw",
   "totk",
   "tp",
   "wwhd",
+  "ww",
   "las",
   "mm",
   "mm2s",
   "oot",
   "hookshot",
+  "hwde",
+  "hwaoi",
+  "tmc",
+  "oracles",
+  "alttp",
+  "zelda2",
+  "zelda1",
   "smo",
   "smg",
   "sms",
   "sm64",
   "nsmbu",
+  "smbw",
   "nsmbw",
   "spm",
+  "mlbs",
+  "wlsi",
+  "wl4",
+  "wl1",
   "mkwii",
+  "mkworld",
   "mk64",
   "mp6",
+  "smm2",
+  "smw",
+  "smas",
+  "smb1r",
+  "pm64",
+  "luigi",
+  "strikers",
+  "mschar",
   "sf64",
   "bk",
+  "bt",
   "dk64",
+  "dkc",
+  "dkr",
+  "dkb",
+  "fefw",
+  "xc3",
+  "xc2",
+  "xcx",
+  "dread",
+  "mpr",
+  "supermetroid",
+  "mph",
+  "melee",
+  "ssb64",
+  "smash4",
+  "kirbyrtdl",
+  "mhgu",
+  "fzgx",
+  "fzerox",
+  "fzero",
+  "mother3",
+  "earthbound",
+  "fess",
+  "goldeneye",
+  "pd",
+  "jfg",
+  "edark",
+  "pw64",
+  "wr64",
+  "blastcorps",
+  "tetrisphere",
+  "bm64",
+  "goemon",
+  "hm64",
+  "cv64",
+  "cvlod",
+  "mm64",
+  "mmx",
+  "quest64",
+  "dinoplanet",
+  "sbk2",
+  "sssv",
+  "snp",
+  "aerogauge",
+  "battletanx",
+  "iss2k",
   "conker",
   "pikmin",
   "pikmin2",
@@ -42,20 +113,92 @@
   "wm2k",
   "wcwwt",
   "revenge",
+  "svr2007",
+  "svr2008",
+  "svr2009",
+  "svr2010",
+  "svr2011",
+  "wweallstars",
+  "wwe13",
+  "wwe2k14",
+  "wwe2k16",
+  "rrxx",
+  "ffny",
+  "djv",
   "vpw64",
   "pkgen",
   "pmd",
   "pkss",
+  "pkplat",
   "pkblack",
   "pkstadium",
   "pksnap",
   "pklgpe",
   "pkswsh",
+  "karpur",
   "pkla",
   "pokopia",
   "tod",
   "acit",
-  "iss"
+  "gow3",
+  "ctrnf",
+  "dod3",
+  "sotn",
+  "sh1",
+  "yfm",
+  "bt3",
+  "mhp3",
+  "iss",
+  "uncharted",
+  "legoisland",
+  "legoland",
+  "haloce",
+  "halo2",
+  "halo3",
+  "gow2",
+  "fable2",
+  "forza2",
+  "forza3",
+  "forza4",
+  "lostody",
+  "ng2",
+  "skate3",
+  "skate2",
+  "fifastreet",
+  "burnoutrev",
+  "fh1",
+  "pgr4",
+  "rr6",
+  "bluedragon",
+  "esonata",
+  "darkness",
+  "dr2cz",
+  "wet",
+  "ao2",
+  "dante",
+  "edgeoftime",
+  "simpsons",
+  "downpour",
+  "condemned2",
+  "vptip",
+  "kingkong",
+  "narutorise",
+  "bknb",
+  "dpremonition",
+  "gowj",
+  "budokai3",
+  "burstlimit",
+  "ttt2",
+  "dao",
+  "jsrf",
+  "ngb",
+  "black",
+  "popsot",
+  "scda",
+  "puttrace",
+  "subnautica",
+  "subnauticabz",
+  "subnautica2"
  ],
  "Games": [
   {
@@ -71,8 +214,9 @@
    "Accent": "#D9B45A",
    "Accent2": "#3FB8A0",
    "Needs": "Your own Tears of the Kingdom base game and its 1.4.3 update (NSP or XCI), and prod.keys from your Switch. Install opens the TotK setup, which asks for them; choose the folder from Settings as its install folder.",
-   "DefaultDir": "C:\\Recomp TOTK",
+   "DefaultDir": "C:\\Games\\TOTK",
    "Series": "zelda",
+   "Platform": "Switch",
    "SettingsLabel": "Tears of the Kingdom",
    "CheckFile": "totk.exe",
    "Saves": "profile;totk.ini",
@@ -101,8 +245,9 @@
    "Replace": "odysseygen",
    "FirstRun": "PowerMoonRecomp.exe",
    "Needs": "Your own Super Mario Odyssey 1.0.0 (no updates), extracted to exefs and romfs folders. The game asks for that folder on its first start, then builds itself (a few minutes, about 7 GB).",
-   "DefaultDir": "C:\\SMO",
+   "DefaultDir": "C:\\Games\\SMO",
    "Series": "mario",
+   "Platform": "Switch",
    "SettingsLabel": "Super Mario Odyssey",
    "CheckFile": "PowerMoonRecomp.exe",
    "Saves": "save;powermoon.ini",
@@ -122,7 +267,8 @@
      "Update": false,
      "Hint": "Your Super Mario Odyssey NSP, version 1.0.0 (the base game, [v0], no update). hactool unpacks it with your keys: about 5 GB, a minute or two."
     }
-   }
+   },
+   "OwnGuide": true
   },
   {
    "Id": "wwhd",
@@ -140,8 +286,9 @@
    "FirstRun": "Wind Waker HD.exe",
    "SetupArg": "--setup",
    "Needs": "Your own Wind Waker HD for Wii U (USA or Europe, version 0): a .wux/.wud disc image with its disc key and the Wii U common key, a Cemu .wua, or an extracted game folder. The game asks for it on its first start (about 2 minutes, 1.7 GB).",
-   "DefaultDir": "C:\\Recomp WWHD",
+   "DefaultDir": "C:\\Games\\WWHD",
    "Series": "zelda",
+   "Platform": "Wii U",
    "SettingsLabel": "The Wind Waker HD",
    "CheckFile": "Wind Waker HD.exe",
    "Saves": "data\\save;data\\user",
@@ -185,10 +332,12 @@
    "Keep": "tod.ini",
    "FirstRun": "Install.bat",
    "Needs": "Your own European PS3 disc (BCES00052, version 1.00), decrypted, as an .iso or a folder with PS3_GAME. About 24 GB free, a CPU with AVX2 and a Direct3D 12 GPU. Its installer copies the disc into the game folder.",
-   "DefaultDir": "C:\\Recomp ToD",
+   "DefaultDir": "C:\\Games\\ToD",
    "Series": "playstation",
+   "Platform": "PS3",
    "SettingsLabel": "Ratchet & Clank: Tools of Destruction",
    "CheckFile": "tod.exe",
+   "Helpers": "tod_setup",
    "Saves": "gamedata;tod.ini",
    "Rom": {
     "Kind": "both",
@@ -227,8 +376,9 @@
    "Backup": "save;config.json",
    "FirstRun": "mp6native.exe",
    "Needs": "Your own Mario Party 6 (USA) disc image or extracted disc folder. The game asks for it on its first start. Work in progress: all six boards, and 49 of the 81 minigames (the others are skipped).",
-   "DefaultDir": "C:\\Recomp MP6",
+   "DefaultDir": "C:\\Games\\MP6",
    "Series": "mario",
+   "Platform": "GameCube",
    "SettingsLabel": "Mario Party 6",
    "CheckFile": "mp6native.exe",
    "Saves": "save;config.json",
@@ -275,10 +425,12 @@
    "Keep": "pikmin_settings.conf",
    "FirstRun": "nectar-launcher.exe",
    "Needs": "Your own Pikmin GameCube disc: USA revision 1 (GPIE01) or Europe (GPIP01), as .iso or .gcm (.rvz, .wia and .gcz need DolphinTool.exe from a Dolphin install). Open Nectar checks the disc and extracts the game (about 1 GB). OpenGL 3.3 graphics driver needed.",
-   "DefaultDir": "C:\\Recomp Pikmin",
+   "DefaultDir": "C:\\Games\\Pikmin",
    "Series": "nintendo",
+   "Platform": "GameCube",
    "SettingsLabel": "Pikmin (Open Nectar)",
    "CheckFile": "nectar-launcher.exe",
+   "Helpers": "nectar-launcher",
    "Saves": "save;pikmin_settings.conf",
    "Rom": {
     "Kind": "file",
@@ -316,10 +468,12 @@
    "Keep": "pikmin_settings.conf",
    "FirstRun": "nectar-launcher.exe",
    "Needs": "Your own Pikmin 2 GameCube disc: USA (GPVE01) or Europe (GPVP01), as .iso or .gcm (.rvz, .wia and .gcz need DolphinTool.exe from a Dolphin install). Open Nectar checks the disc and extracts the game (about 1 GB). Playable from start to finish.",
-   "DefaultDir": "C:\\Recomp Pikmin 2",
+   "DefaultDir": "C:\\Games\\Pikmin 2",
    "Series": "nintendo",
+   "Platform": "GameCube",
    "SettingsLabel": "Pikmin 2 (Open Nectar)",
    "CheckFile": "nectar-launcher.exe",
+   "Helpers": "nectar-launcher",
    "Saves": "save;pikmin2\\save;pikmin_settings.conf",
    "Rom": {
     "Kind": "file",
@@ -355,8 +509,9 @@
    "Accent2": "#FFD100",
    "FirstRun": "WheelWizard.exe",
    "Needs": "Your own clean Mario Kart Wii disc image (PAL RMCP01, NTSC-U RMCE01 or NTSC-J RMCJ01; ISO, WBFS, RVZ and more). In Wheel Wizard: pick the image under Settings, turn on WiiCompiled (beta), then Install on the Home page. About 20 GB free while it builds.",
-   "DefaultDir": "C:\\Recomp MKWii",
+   "DefaultDir": "C:\\Games\\MKWii",
    "Series": "mario",
+   "Platform": "Wii",
    "SettingsLabel": "Mario Kart Wii (Wheel Wizard)",
    "CheckFile": "WheelWizard.exe",
    "Rom": {
@@ -396,8 +551,9 @@
    "Accent2": "#F7C531",
    "FirstRun": "SMS-Launcher-*-win-portable.exe",
    "Needs": "Your own North American Super Mario Sunshine disc image (GMSE01, revision 0) as .iso, .gcm or .ciso. SMS Launcher downloads its build tools and HD textures and builds the game on your PC; its data stays in the SMS-Launcher-Portable folder here.",
-   "DefaultDir": "C:\\Recomp SMS",
+   "DefaultDir": "C:\\Games\\SMS",
    "Series": "mario",
+   "Platform": "GameCube",
    "SettingsLabel": "Super Mario Sunshine (SMS Launcher)",
    "CheckFile": "SMS-Launcher-*-win-portable.exe",
    "Saves": "SMS-Launcher-Portable\\saves;SMS-Launcher-Portable\\Save Backups;SMS-Launcher-Portable\\preferences.json",
@@ -432,8 +588,9 @@
    "FirstRun": "savagewind.exe",
    "Needs": "Your own Breath of the Wild for Switch, updated to version 1.9.0 and extracted (exefs and romfs folders). The game asks for them on its first start. 16 GB of RAM, a Vulkan 1.3 GPU and about 20 GB free. Alpha: the Great Plateau and beyond is playable, expect bugs.",
    "Pre": true,
-   "DefaultDir": "C:\\Recomp BOTW",
+   "DefaultDir": "C:\\Games\\BOTW",
    "Series": "zelda",
+   "Platform": "Switch",
    "SettingsLabel": "Breath of the Wild",
    "CheckFile": "savagewind.exe",
    "Saves": "save;savagewind.ini",
@@ -470,8 +627,9 @@
    "Accent2": "#F2A33A",
    "FirstRun": "RaCACiT Launcher.exe",
    "Needs": "Your own North American PS3 disc (BCUS98124), decrypted, as an .iso or the PS3_GAME folder (with a decrypted EBOOT.elf). The RaCACiT Launcher asks for it on its first start. Work in progress.",
-   "DefaultDir": "C:\\Recomp ACiT",
+   "DefaultDir": "C:\\Games\\ACiT",
    "Series": "playstation",
+   "Platform": "PS3",
    "SettingsLabel": "Ratchet & Clank: A Crack in Time",
    "CheckFile": "RaCACiT Launcher.exe",
    "Rom": {
@@ -509,8 +667,9 @@
    "Accent2": "#E9C46A",
    "FirstRun": "lasrecomp.exe",
    "Needs": "Your own Link's Awakening for Switch, version 1.0.0, 1.0.1 or 1.1.0, extracted (exefs and romfs folders). The start screen's game-file setup asks for that folder, then builds the game (about 12 GB free). Beta, with a randomizer.",
-   "DefaultDir": "C:\\Recomp LAS",
+   "DefaultDir": "C:\\Games\\LAS",
    "Series": "zelda",
+   "Platform": "Switch",
    "SettingsLabel": "Link's Awakening",
    "CheckFile": "lasrecomp.exe",
    "Saves": "save;saves;seeds;settings.ini;settings.json;config.json",
@@ -548,8 +707,9 @@
    "FirstRun": "inFAMOUS Second Son.exe",
    "Needs": "Your own US PS4 copy (CUSA00223): base game 1.00 with update 1.07 copied over it, in one folder with eboot.bin and sce_sys (about 33 GB, dumped from your PS4). Pick that folder under Game folder in its launcher. Playable but in development: 20-30 fps is typical.",
    "Pre": true,
-   "DefaultDir": "C:\\Recomp ISS",
+   "DefaultDir": "C:\\Games\\ISS",
    "Series": "playstation",
+   "Platform": "PS4",
    "SettingsLabel": "inFAMOUS Second Son",
    "CheckFile": "inFAMOUS Second Son.exe",
    "Saves": "user",
@@ -581,8 +741,9 @@
    "Accent2": "#F4D35E",
    "FirstRun": "Nebula-Setup.exe",
    "Needs": "Your own North American Super Mario Galaxy disc (RMGE01, revision 0) as an .iso, .rvz or extracted folder. Nebula Setup asks for it, then translates and builds the game on your PC (about 16 GB free and internet while it installs).",
-   "DefaultDir": "C:\\Recomp SMG",
+   "DefaultDir": "C:\\Games\\SMG",
    "Series": "mario",
+   "Platform": "Wii",
    "SettingsLabel": "Super Mario Galaxy",
    "CheckFile": "Nebula-Setup.exe",
    "Rom": {
@@ -623,8 +784,9 @@
    "Backup": "engine\\UserData",
    "FirstRun": "New Super Paper Bros.exe",
    "Needs": "Your own Super Paper Mario Wii disc, USA (R8PE01, revision 0) or Europe (R8PP01), as .iso, .ciso or .wbfs. Pick it on the Play page the first time; its files are copied in once.",
-   "DefaultDir": "C:\\Recomp SPM",
+   "DefaultDir": "C:\\Games\\SPM",
    "Series": "mario",
+   "Platform": "Wii",
    "SettingsLabel": "Super Paper Mario",
    "CheckFile": "New Super Paper Bros.exe",
    "Saves": "engine\\UserData",
@@ -657,8 +819,9 @@
    "Accent2": "#5E8C61",
    "FirstRun": "dusklight.exe",
    "Needs": "Your own Twilight Princess disc, GameCube or Wii (any region except the Korean Wii one), as an .iso or .rvz. Dusklight asks for it on its first start.",
-   "DefaultDir": "C:\\Recomp Dusklight",
+   "DefaultDir": "C:\\Games\\Dusklight",
    "Series": "zelda",
+   "Platform": "GameCube",
    "SettingsLabel": "Twilight Princess (Dusklight)",
    "CheckFile": "dusklight.exe",
    "Rom": {
@@ -689,8 +852,9 @@
    "Accent2": "#43B047",
    "FirstRun": "NSMBW.exe",
    "Needs": "Your own USA New Super Mario Bros. Wii disc (SMNE01, revision 1 only: Dolphin shows it under Properties > Info), extracted with Dolphin. The first start asks for it. Couch and LAN multiplayer.",
-   "DefaultDir": "C:\\Recomp NSMBW",
+   "DefaultDir": "C:\\Games\\NSMBW",
    "Series": "mario",
+   "Platform": "Wii",
    "SettingsLabel": "New Super Mario Bros. Wii",
    "CheckFile": "NSMBW.exe",
    "Rom": {
@@ -723,8 +887,9 @@
    "Accent2": "#FBC02D",
    "FirstRun": "NSMBU.exe",
    "Needs": "Your own Wii U New Super Mario Bros. U, USA or Europe: a .wux / .wud disc image with its keys, or an extracted folder with code, content and meta (USA update 1.3.0 is the best match). The first start prepares the game once.",
-   "DefaultDir": "C:\\Recomp NSMBU",
+   "DefaultDir": "C:\\Games\\NSMBU",
    "Series": "mario",
+   "Platform": "Wii U",
    "SettingsLabel": "New Super Mario Bros. U",
    "CheckFile": "NSMBU.exe",
    "Saves": "user;save;saves;settings.json;config.json",
@@ -762,8 +927,9 @@
    "Accent2": "#FFCB05",
    "FirstRun": "Gen2Recomped.exe",
    "Needs": "Your own cartridge dumps: Red, Blue, Yellow, Gold, Silver, Crystal and more (.gb / .gbc, also some .gba / .nds). Only exact original dumps are accepted (it checks them). Pick or drop them on the window on its first start; it keeps them.",
-   "DefaultDir": "C:\\Recomp Pokemon Gen12",
+   "DefaultDir": "C:\\Games\\Pokemon Gen12",
    "Series": "pokemon",
+   "Platform": "Game Boy",
    "SettingsLabel": "Pokémon Gen 1 & 2",
    "CheckFile": "Gen2Recomped.exe",
    "Rom": {
@@ -797,8 +963,9 @@
    "Accent2": "#7CC0E8",
    "FirstRun": "pmd_green.exe",
    "Needs": "Your own Red Rescue Team GBA cartridge dump, USA/Australia version (.gba). The game asks for it on its first start.",
-   "DefaultDir": "C:\\Recomp Pokemon PMD",
+   "DefaultDir": "C:\\Games\\Pokemon PMD",
    "Series": "pokemon",
+   "Platform": "GBA",
    "SettingsLabel": "Pokémon Mystery Dungeon",
    "CheckFile": "pmd_green.exe",
    "Saves": "saves;save;settings.json",
@@ -827,8 +994,9 @@
    "Accent2": "#9AD0F5",
    "FirstRun": "eidos.exe",
    "Needs": "Your own Pokémon Black DS dump, USA or Europe (.nds). Early: the opening hours (field, battles, menus, saves) work.",
-   "DefaultDir": "C:\\Recomp Pokemon Black",
+   "DefaultDir": "C:\\Games\\Pokemon Black",
    "Series": "pokemon",
+   "Platform": "NDS",
    "SettingsLabel": "Pokémon Black",
    "CheckFile": "eidos.exe",
    "Rom": {
@@ -856,8 +1024,9 @@
    "Accent2": "#4A6FA5",
    "FirstRun": "ssrecomp-setup-windows-x86_64.exe",
    "Needs": "Your own Pokémon SoulSilver DS dump, US version only (.nds; European ones don't match). Its setup compiles the game on your PC, so it also needs the free MSYS2 build tools (it shows the commands). One screen instead of the DS's two.",
-   "DefaultDir": "C:\\Recomp Pokemon SoulSilver",
+   "DefaultDir": "C:\\Games\\Pokemon SoulSilver",
    "Series": "pokemon",
+   "Platform": "NDS",
    "SettingsLabel": "Pokémon SoulSilver",
    "CheckFile": "ssrecomp-setup-windows-x86_64.exe",
    "Rom": {
@@ -885,8 +1054,9 @@
    "Accent2": "#FFCB05",
    "FirstRun": "PokemonStadiumRecomp.exe",
    "Needs": "Your own Pokémon Stadium N64 ROM, US version 1.0 only (.z64 / .n64 / .v64; Rev A doesn't work). Red, Blue and Yellow saves can be used through its Transfer Pak. Beta.",
-   "DefaultDir": "C:\\Recomp Pokemon Stadium",
+   "DefaultDir": "C:\\Games\\Pokemon Stadium",
    "Series": "pokemon",
+   "Platform": "N64",
    "SettingsLabel": "Pokémon Stadium",
    "CheckFile": "PokemonStadiumRecomp.exe",
    "Saves": "saves;save",
@@ -920,8 +1090,9 @@
    "Backup": "saves",
    "FirstRun": "Snap64Recomp.exe",
    "Needs": "Your own Pokémon Snap N64 ROM, US cartridge only (.z64). The launcher copies it in as pokemonsnap.z64. Plays like the cartridge; every enhancement is optional.",
-   "DefaultDir": "C:\\Recomp Pokemon Snap",
+   "DefaultDir": "C:\\Games\\Pokemon Snap",
    "Series": "pokemon",
+   "Platform": "N64",
    "SettingsLabel": "Pokémon Snap",
    "CheckFile": "Snap64Recomp.exe",
    "Saves": "saves",
@@ -952,8 +1123,9 @@
    "Backup": "save;saves;larecomp.ini",
    "FirstRun": "LetsGoRecomp.exe",
    "Needs": "Your own Let's Go, Eevee! or Pikachu! for Switch, any region, version 1.0.0 (Eevee 1.0.2 also works), extracted (exefs and romfs folders). Pick that folder on its Game page.",
-   "DefaultDir": "C:\\Recomp Pokemon LetsGo",
+   "DefaultDir": "C:\\Games\\Pokemon LetsGo",
    "Series": "pokemon",
+   "Platform": "Switch",
    "SettingsLabel": "Pokémon Let's Go",
    "CheckFile": "LetsGoRecomp.exe",
    "Saves": "save;saves;larecomp.ini",
@@ -986,8 +1158,9 @@
    "FirstRun": "SwShRecomp.exe",
    "Needs": "Your own Pokémon Sword (Shield is untested) for Switch, version 1.3.2, extracted (exefs and romfs folders). Pick that folder in its window. Early test release; the Expansion Pass isn't set up yet.",
    "Pre": true,
-   "DefaultDir": "C:\\Recomp Pokemon SwSh",
+   "DefaultDir": "C:\\Games\\Pokemon SwSh",
    "Series": "pokemon",
+   "Platform": "Switch",
    "SettingsLabel": "Pokémon Sword & Shield",
    "CheckFile": "SwShRecomp.exe",
    "Saves": "save-sword;save-shield;larecomp.ini",
@@ -1020,8 +1193,9 @@
    "FirstRun": "Iniciar_Jogo.bat",
    "Needs": "Your own Legends: Arceus for Switch, extracted (exefs and romfs folders). The launcher copies both into the game's folder; then its first start asks (in Portuguese) to recompile: type 1 and Enter. Amateur project.",
    "Console": true,
-   "DefaultDir": "C:\\Recomp Pokemon Arceus",
+   "DefaultDir": "C:\\Games\\Pokemon Arceus",
    "Series": "pokemon",
+   "Platform": "Switch",
    "SettingsLabel": "Pokémon Legends: Arceus",
    "CheckFile": "arceusrecomp.exe",
    "Saves": "save;saves;larecomp.ini",
@@ -1056,8 +1230,9 @@
    "Accent2": "#F6D365",
    "FirstRun": "PokopiaLauncher.exe",
    "Needs": "Your own Pokopia for Switch 2, version 2.0.1a: an extracted folder, or NSP / XCI files with your keys. Its Set up builds the game (about 7 minutes) and then the shader cache (1 to 2 hours, can be paused).",
-   "DefaultDir": "C:\\Recomp Pokopia",
+   "DefaultDir": "C:\\Games\\Pokopia",
    "Series": "pokemon",
+   "Platform": "Switch 2",
    "SettingsLabel": "Pokémon Pokopia",
    "CheckFile": "PokopiaLauncher.exe",
    "Rom": {
@@ -1082,8 +1257,9 @@
    "Accent2": "#E8B04A",
    "FirstRun": "Zelda64Recompiled.exe",
    "Needs": "Your own North American Majora's Mask N64 ROM (.z64). Pick it in the game's main menu; assets load straight from it.",
-   "DefaultDir": "C:\\Recomp MM",
+   "DefaultDir": "C:\\Games\\MM",
    "Series": "zelda",
+   "Platform": "N64",
    "SettingsLabel": "Majora's Mask",
    "CheckFile": "Zelda64Recompiled.exe",
    "Rom": {
@@ -1116,8 +1292,9 @@
    "Backup": "Save;2ship2harkinian.json",
    "FirstRun": "2ship.exe",
    "Needs": "Your own Majora's Mask N64 ROM (.z64, US; check it at 2ship.equipment). The first start asks for it and builds its asset file once. Lots of enhancements and randomizer options.",
-   "DefaultDir": "C:\\Recomp 2Ship",
+   "DefaultDir": "C:\\Games\\2Ship",
    "Series": "zelda",
+   "Platform": "N64",
    "SettingsLabel": "Majora's Mask (2 Ship)",
    "CheckFile": "2ship.exe",
    "Saves": "Save;2ship2harkinian.json",
@@ -1151,8 +1328,9 @@
    "Backup": "Save;shipofharkinian.json",
    "FirstRun": "soh.exe",
    "Needs": "Your own Ocarina of Time N64 ROM (.z64; check it at ship.equipment). The first start asks for it and builds oot.o2r once. Master Quest works too.",
-   "DefaultDir": "C:\\Recomp SoH",
+   "DefaultDir": "C:\\Games\\SoH",
    "Series": "zelda",
+   "Platform": "N64",
    "SettingsLabel": "Ocarina of Time",
    "CheckFile": "soh.exe",
    "Saves": "Save;shipofharkinian.json",
@@ -1180,7 +1358,7 @@
    "Proc": "hookshot*",
    "SettingsKey": "HookshotDir",
    "Launch": "%USERPROFILE%\\Games\\Hookshot\\hookshot.exe;game\\hookshot.exe;*\\hookshot.exe",
-   "Repo": "NotRexed/Hookshot",
+   "Repo": "https://git.notrexed.dev/Hookshot/Hookshot",
    "Asset": "HookshotBuilder.exe;HookshotBuilder*.zip",
    "Accent": "#3A5FE0",
    "Accent2": "#D4A93A",
@@ -1188,10 +1366,12 @@
    "FirstRun": "HookshotBuilder.exe",
    "Rebuild": "HookshotBuilder.exe",
    "Needs": "Your own Ocarina of Time for Nintendo Switch 2 with update v131072 (build e0f3ccfa): a .nup, or romfs and exefs folders. In Hookshot Builder pick it and a language, and keep its own game folder (Games\\Hookshot in your user folder): Play starts the game from there. The build takes about 40 minutes and 60 GB free. Needs Visual Studio Build Tools (C++), 16 GB of RAM and a GPU with mesh shaders. Experimental.",
-   "DefaultDir": "C:\\Recomp Hookshot",
+   "DefaultDir": "C:\\Games\\Hookshot",
    "Series": "zelda",
+   "Platform": "Switch 2",
    "SettingsLabel": "Ocarina of Time (Switch 2, Hookshot)",
    "CheckFile": "HookshotBuilder.exe",
+   "Helpers": "HookshotBuilder",
    "Saves": "%USERPROFILE%\\Games\\Hookshot\\user\\save;%USERPROFILE%\\Games\\Hookshot\\hookshot_options.ini;%USERPROFILE%\\Games\\Hookshot\\language.txt",
    "Rom": {
     "Kind": "none",
@@ -1216,8 +1396,9 @@
    "Backup": "Save;ghostship.json",
    "FirstRun": "Ghostship.exe",
    "Needs": "Your own Super Mario 64 N64 ROM, US or Japan, in .z64 format. The first start asks for it and builds its asset file once.",
-   "DefaultDir": "C:\\Recomp SM64",
+   "DefaultDir": "C:\\Games\\SM64",
    "Series": "mario",
+   "Platform": "N64",
    "SettingsLabel": "Super Mario 64",
    "CheckFile": "Ghostship.exe",
    "Saves": "Save;ghostship.json",
@@ -1251,8 +1432,9 @@
    "Backup": "Save;spaghettify.json",
    "FirstRun": "Spaghettify.exe",
    "Needs": "Your own Mario Kart 64 N64 ROM, US version only, in .z64 format. The first start asks for it and builds its asset file once.",
-   "DefaultDir": "C:\\Recomp MK64",
+   "DefaultDir": "C:\\Games\\MK64",
    "Series": "mario",
+   "Platform": "N64",
    "SettingsLabel": "Mario Kart 64",
    "CheckFile": "Spaghettify.exe",
    "Saves": "Save;spaghettify.json",
@@ -1287,8 +1469,9 @@
    "FirstRun": "Starship.exe",
    "Needs": "Your own Star Fox 64 N64 ROM, US 1.0 or 1.1 (.z64). The first start asks for it and builds its asset file once. This project publishes no checksum, so the launcher checks the size and the zip instead.",
    "NoSha": true,
-   "DefaultDir": "C:\\Recomp SF64",
+   "DefaultDir": "C:\\Games\\SF64",
    "Series": "nintendo",
+   "Platform": "N64",
    "SettingsLabel": "Star Fox 64",
    "CheckFile": "Starship.exe",
    "Saves": "Save;starship.json",
@@ -1321,8 +1504,9 @@
    "Accent2": "#3B7DD8",
    "FirstRun": "BanjoRecompiled.exe",
    "Needs": "Your own North American Banjo-Kazooie N64 ROM, version 1.0 (.z64). Pick it in the main menu.",
-   "DefaultDir": "C:\\Recomp Banjo",
+   "DefaultDir": "C:\\Games\\Banjo",
    "Series": "nintendo",
+   "Platform": "N64",
    "SettingsLabel": "Banjo-Kazooie",
    "CheckFile": "BanjoRecompiled.exe",
    "Rom": {
@@ -1354,8 +1538,9 @@
    "Accent2": "#F2C230",
    "FirstRun": "DK64Recompiled.exe",
    "Needs": "Your own Donkey Kong 64 N64 ROM, US version only (.z64). Pick it in the main menu.",
-   "DefaultDir": "C:\\Recomp DK64",
+   "DefaultDir": "C:\\Games\\DK64",
    "Series": "nintendo",
+   "Platform": "N64",
    "SettingsLabel": "Donkey Kong 64",
    "CheckFile": "DK64Recompiled.exe",
    "Rom": {
@@ -1374,6 +1559,34 @@
    }
   },
   {
+   "Id": "dkb",
+   "Name": "Donkey Kong Bananza",
+   "Short": "DKB",
+   "Source": "DKB RECOMP  •  GITHUB",
+   "Exe": "dkb.exe",
+   "Proc": "dkb",
+   "SettingsKey": "DkbDir",
+   "Repo": "Lucas-blip-png/dkb-pc-recomp",
+   "Asset": "*windows*.zip",
+   "Setup": "DKB-Setup.exe",
+   "Accent": "#C8691E",
+   "Accent2": "#F2C230",
+   "Needs": "Early and not fully playable yet (the tutorial and first stage, and it can crash). Your own Donkey Kong Bananza 1.0.0 or 3.2.0, dumped from your own Switch 2 as a .nup file or ExeFS and RomFS folders. Install opens the DKB setup, which builds the game on this PC from them (it needs about 24 GB of memory and page file); choose the folder from Settings as its install folder.",
+   "DefaultDir": "C:\\Games\\DKB",
+   "Series": "nintendo",
+   "Platform": "Switch 2",
+   "SettingsLabel": "Donkey Kong Bananza",
+   "CheckFile": "dkb.exe",
+   "Helpers": "DKB-Setup",
+   "Pre": true,
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".nup"
+    ]
+   }
+  },
+  {
    "Id": "conker",
    "Name": "Conker's Bad Fur Day",
    "Short": "CBFD",
@@ -1387,8 +1600,9 @@
    "Accent2": "#8D6E4A",
    "FirstRun": "ConkerBFDReloaded.exe",
    "Needs": "Your own Conker's Bad Fur Day N64 ROM, US version (.z64). Pick it the first time; it's remembered.",
-   "DefaultDir": "C:\\Recomp Conker",
+   "DefaultDir": "C:\\Games\\Conker",
    "Series": "nintendo",
+   "Platform": "N64",
    "SettingsLabel": "Conker's Bad Fur Day",
    "CheckFile": "ConkerBFDReloaded.exe",
    "Rom": {
@@ -1421,8 +1635,9 @@
    "FirstRun": "UnleashedRecomp.exe",
    "Needs": "Your own Xbox 360 Sonic Unleashed (disc dump or game files), plus its title update; the DLC is optional. Its installer asks for them on the first start (6 GB, 10 GB with DLC). No checksum published, so the launcher checks the size and the zip.",
    "NoSha": true,
-   "DefaultDir": "C:\\Recomp Unleashed",
+   "DefaultDir": "C:\\Games\\Unleashed",
    "Series": "sega",
+   "Platform": "Xbox 360",
    "SettingsLabel": "Sonic Unleashed",
    "CheckFile": "UnleashedRecomp.exe",
    "Rom": {
@@ -1448,8 +1663,9 @@
    "Accent2": "#2B2B2B",
    "FirstRun": "THPS1-64Recomp.exe",
    "Needs": "Your own Tony Hawk's Pro Skater N64 cartridge dump, USA 1.0 or 1.1 (.z64, .n64 or .v64). The app builds the game from it.",
-   "DefaultDir": "C:\\Recomp THPS1",
+   "DefaultDir": "C:\\Games\\THPS1",
    "Series": "sports",
+   "Platform": "N64",
    "SettingsLabel": "Tony Hawk's Pro Skater",
    "CheckFile": "THPS1-64Recomp.exe",
    "Rom": {
@@ -1482,8 +1698,9 @@
    "FirstRun": "THPS2-64Recomp.exe",
    "Needs": "Your own Tony Hawk's Pro Skater 2 N64 cartridge dump (.z64, .n64 or .v64). The app builds the game from it. Early preview.",
    "Pre": true,
-   "DefaultDir": "C:\\Recomp THPS2",
+   "DefaultDir": "C:\\Games\\THPS2",
    "Series": "sports",
+   "Platform": "N64",
    "SettingsLabel": "Tony Hawk's Pro Skater 2",
    "CheckFile": "THPS2-64Recomp.exe",
    "Rom": {
@@ -1516,8 +1733,9 @@
    "FirstRun": "THPS3-64Recomp.exe",
    "Needs": "Your own Tony Hawk's Pro Skater 3 N64 cartridge dump (.z64, .n64 or .v64). The app builds the game from it. Early preview.",
    "Pre": true,
-   "DefaultDir": "C:\\Recomp THPS3",
+   "DefaultDir": "C:\\Games\\THPS3",
    "Series": "sports",
+   "Platform": "N64",
    "SettingsLabel": "Tony Hawk's Pro Skater 3",
    "CheckFile": "THPS3-64Recomp.exe",
    "Rom": {
@@ -1550,8 +1768,9 @@
    "FirstRun": "NoMercyRecompiled.exe",
    "Needs": "Your own WWF No Mercy N64 ROM (.z64). Assets load straight from it. Test releases.",
    "Pre": true,
-   "DefaultDir": "C:\\Recomp NoMercy",
+   "DefaultDir": "C:\\Games\\NoMercy",
    "Series": "sports",
+   "Platform": "N64",
    "SettingsLabel": "WWF No Mercy",
    "CheckFile": "NoMercyRecompiled.exe",
    "Rom": {
@@ -1584,8 +1803,9 @@
    "FirstRun": "Wm2kRecompiled.exe",
    "Needs": "Your own WWF WrestleMania 2000 N64 ROM (.z64). Test releases.",
    "Pre": true,
-   "DefaultDir": "C:\\Recomp WM2000",
+   "DefaultDir": "C:\\Games\\WM2000",
    "Series": "sports",
+   "Platform": "N64",
    "SettingsLabel": "WWF WrestleMania 2000",
    "CheckFile": "Wm2kRecompiled.exe",
    "Rom": {
@@ -1618,8 +1838,9 @@
    "FirstRun": "WCWRecompiled.exe",
    "Needs": "Your own WCW vs. nWo: World Tour N64 ROM (.z64). Test releases.",
    "Pre": true,
-   "DefaultDir": "C:\\Recomp WCW World Tour",
+   "DefaultDir": "C:\\Games\\WCW World Tour",
    "Series": "sports",
+   "Platform": "N64",
    "SettingsLabel": "WCW vs. nWo: World Tour",
    "CheckFile": "WCWRecompiled.exe",
    "Rom": {
@@ -1652,8 +1873,9 @@
    "FirstRun": "RevengeRecompiled.exe",
    "Needs": "Your own WCW/nWo Revenge N64 ROM (.z64). Test releases.",
    "Pre": true,
-   "DefaultDir": "C:\\Recomp WCW Revenge",
+   "DefaultDir": "C:\\Games\\WCW Revenge",
    "Series": "sports",
+   "Platform": "N64",
    "SettingsLabel": "WCW/nWo Revenge",
    "CheckFile": "RevengeRecompiled.exe",
    "Rom": {
@@ -1686,8 +1908,9 @@
    "FirstRun": "Vpw64Recompiled.exe",
    "Needs": "Your own Virtual Pro Wrestling 64 N64 ROM (Japan, .z64). Test releases.",
    "Pre": true,
-   "DefaultDir": "C:\\Recomp VPW64",
+   "DefaultDir": "C:\\Games\\VPW64",
    "Series": "sports",
+   "Platform": "N64",
    "SettingsLabel": "Virtual Pro Wrestling 64",
    "CheckFile": "Vpw64Recompiled.exe",
    "Rom": {
@@ -1703,6 +1926,3850 @@
      ".v64"
     ],
     "Filter": "N64 ROM (*.z64;*.n64;*.v64)|*.z64;*.n64;*.v64"
+   }
+  },
+  {
+   "Id": "mlbs",
+   "Name": "Mario & Luigi: Brothership",
+   "Short": "M&L",
+   "Source": "BROTHERSHIP RECOMP  •  GITHUB",
+   "Exe": "BrothershipRecomp.exe",
+   "Proc": "BrothershipRecomp",
+   "SettingsKey": "MlbsDir",
+   "Repo": "Coaltergeist/Brothership-Recomp",
+   "Asset": "BrothershipRecomp-Windows.zip",
+   "Accent": "#2E7FD8",
+   "Accent2": "#E8463C",
+   "FirstRun": "BrothershipRecomp.exe",
+   "Needs": "Your own Mario & Luigi: Brothership for Switch: the base game and its 1.0.1 update as NSP files, and prod.keys from your Switch. On its first start it asks for them (Settings > Keys for prod.keys), then unpacks and builds the game on your PC. Its settings, saves and build are kept in %LOCALAPPDATA%\\brothership-recomp, so updates don't touch them. Beta.",
+   "NoSha": true,
+   "DefaultDir": "C:\\Games\\Brothership",
+   "Series": "mario",
+   "Platform": "Switch",
+   "SettingsLabel": "Mario & Luigi: Brothership",
+   "CheckFile": "BrothershipRecomp.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     "Base game NSP",
+     "1.0.1 update NSP",
+     "prod.keys"
+    ]
+   }
+  },
+  {
+   "Id": "uncharted",
+   "Name": "Uncharted: The Nathan Drake Collection",
+   "Short": "UC",
+   "Source": "UNCHARTED PC PORT  •  GITHUB",
+   "Exe": "Uncharted Launcher.exe",
+   "Proc": "Uncharted",
+   "SettingsKey": "UnchartedDir",
+   "Repo": "bc160201983/Uncharted-The-Nathan-Drake-Collection-PC-port",
+   "Asset": "Uncharted-windows.zip",
+   "Accent": "#C9A15A",
+   "Accent2": "#3B6E8F",
+   "FirstRun": "Uncharted Launcher.exe",
+   "Needs": "Your own PS4 Uncharted: The Nathan Drake Collection (CUSA02344), dumped to a folder, with its update if you have it. Pick that folder in the port's own launcher. Plays Uncharted 1, 2 and 3. Needs a CPU from 2013 or newer (Intel Haswell or any Ryzen) and a Vulkan graphics card. In development.",
+   "NoSha": true,
+   "DefaultDir": "C:\\Games\\Uncharted",
+   "Series": "playstation",
+   "Platform": "PS4",
+   "SettingsLabel": "Uncharted: The Nathan Drake Collection",
+   "CheckFile": "Uncharted Launcher.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     "PS4 game folder (CUSA02344)"
+    ]
+   }
+  },
+  {
+   "Id": "legoisland",
+   "Name": "LEGO Island",
+   "Short": "LEGO",
+   "Source": "ISLE PORTABLE  •  GITHUB",
+   "Exe": "isle.exe",
+   "Proc": "isle",
+   "SettingsKey": "LegoislandDir",
+   "Repo": "isledecomp/isle-portable",
+   "Asset": "isle-*-Windows-x64.zip",
+   "Accent": "#E3000B",
+   "Accent2": "#FFD500",
+   "FirstRun": "isle-config.exe",
+   "Needs": "Your own LEGO Island (the 1997 PC CD, or a copy of its installed files). The first start opens isle-config: point it at the game's disk and data folders, then start the game. Continuous builds: the launcher offers an update when a newer build is published.",
+   "NoSha": true,
+   "DefaultDir": "C:\\Games\\LEGO Island",
+   "Series": "lego",
+   "Platform": "PC",
+   "SettingsLabel": "LEGO Island",
+   "CheckFile": "isle.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     "LEGO Island CD or installed files"
+    ]
+   }
+  },
+  {
+   "Id": "legoland",
+   "Name": "LEGOLAND",
+   "Short": "LL",
+   "Source": "LEGOLAND PORT  •  GITHUB",
+   "Exe": "LEGOLAND-port.exe",
+   "Proc": "LEGOLAND-port",
+   "SettingsKey": "LegolandDir",
+   "Repo": "facundosterzerforino/legoland-port",
+   "Asset": "LEGOLAND-port-windows-*.zip",
+   "NotAsset": "*symbols*",
+   "Accent": "#FFCF00",
+   "Accent2": "#D01012",
+   "FirstRun": "LEGOLAND-port.exe",
+   "Needs": "Your own LEGOLAND (1999) CD, or its .iso/.bin image, in any language. The first start finds the CD in a drive (a mounted ISO counts) or takes the image, and copies about 400 MB next to the program.",
+   "NoSha": true,
+   "DefaultDir": "C:\\Games\\LEGOLAND",
+   "Series": "lego",
+   "Platform": "PC",
+   "SettingsLabel": "LEGOLAND",
+   "CheckFile": "LEGOLAND-port.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     "LEGOLAND CD, .iso or .bin"
+    ]
+   }
+  },
+  {
+   "Id": "haloce",
+   "Name": "Halo: Combat Evolved",
+   "Short": "HCE",
+   "Source": "HALO OG  •  GITHUB",
+   "Exe": "halo.exe",
+   "Proc": "halo",
+   "SettingsKey": "HaloCeDir",
+   "Repo": "pfista/halo-og",
+   "Asset": "halo-windows-release.zip",
+   "Pre": true,
+   "Accent": "#4E8F3A",
+   "Accent2": "#C9A227",
+   "Keep": "config.toml",
+   "FirstRun": "halo.exe",
+   "Needs": "Your own original Xbox Halo: Combat Evolved disc image (.iso or .xiso; USA NTSC for the community maps). PC, Custom Edition, Anniversary and MCC files don't work. Put the image in the game folder next to halo.exe: the first start imports it into the maps folder. OpenGL 4.5 needed. Testing builds (pre-releases).",
+   "DefaultDir": "C:\\Games\\HaloCE",
+   "Series": "xbox",
+   "Platform": "Xbox",
+   "SettingsLabel": "Halo: Combat Evolved (Halo OG)",
+   "CheckFile": "halo.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     "Original Xbox disc image (.iso / .xiso)"
+    ]
+   }
+  },
+  {
+   "Id": "halo2",
+   "Name": "Halo 2",
+   "Short": "H2",
+   "Source": "OPEN HALO 2  •  GITHUB",
+   "Exe": "OpenHalo2.exe",
+   "Proc": "halo2_recomp",
+   "SettingsKey": "Halo2Dir",
+   "Repo": "andrewnakas/openhalo2",
+   "Asset": "OpenHalo2-*-win64.zip",
+   "Accent": "#3F7A4A",
+   "Accent2": "#7FB8D9",
+   "Keep": "halo2.ini",
+   "FirstRun": "OpenHalo2.exe",
+   "Needs": "Your own original Xbox Halo 2, the retail disc: a Redump .iso or XISO, or the default.xbe of a copy you extracted. On the first start it imports the disc and builds the game from it once (10 to 30 minutes, about 10 GB free; without Visual Studio it downloads Microsoft's C++ build files, 85 MB). OpenGL 3.3 needed. Always start it from OpenHalo2.exe.",
+   "DefaultDir": "C:\\Games\\Halo2",
+   "Series": "xbox",
+   "Platform": "Xbox",
+   "SettingsLabel": "Halo 2 (Open Halo 2)",
+   "CheckFile": "OpenHalo2.exe",
+   "Saves": "save;halo2.ini",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     "Original Xbox disc (.iso / XISO)",
+     "or default.xbe"
+    ]
+   }
+  },
+  {
+   "Id": "scda",
+   "Name": "Splinter Cell: Double Agent",
+   "Short": "SCDA",
+   "Source": "SCDA XBE RECOMP  •  GITHUB",
+   "Exe": "SCDA.exe",
+   "Proc": "SCDA*",
+   "SettingsKey": "ScdaDir",
+   "Repo": "TGP482/SCDA-XBERecomp",
+   "Asset": "SCDA-XBERecomp.zip",
+   "Accent": "#2FAF5E",
+   "Accent2": "#1F3A2E",
+   "FirstRun": "SCDA.exe",
+   "Needs": "Your own original Xbox Splinter Cell: Double Agent: a disc image (.iso) or its extracted files. Put them in the assets folder inside the game folder; the first start compiles the game for your PC once. Co-op and Versus (SCDA_Versus.exe) over LAN or by IP. Settings: F10 in the game.",
+   "DefaultDir": "C:\\Games\\SCDA",
+   "Series": "xbox",
+   "Platform": "Xbox",
+   "SettingsLabel": "Splinter Cell: Double Agent",
+   "CheckFile": "SCDA.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     "Original Xbox disc image or game files, in the assets folder"
+    ]
+   }
+  },
+  {
+   "Id": "puttrace",
+   "Name": "Putt-Putt Enters the Race",
+   "Short": "PP",
+   "Source": "STEAM  •  HUMONGOUS",
+   "Steam": "294680",
+   "Exe": "ScummVM_Windows\\scummvm.exe",
+   "Proc": "scummvm",
+   "Accent": "#E8452C",
+   "Accent2": "#F2C230",
+   "Languages": [
+    "English",
+    "French",
+    "German",
+    "Dutch"
+   ],
+   "Needs": "Putt-Putt Enters the Race on Steam: the launcher asks Steam to install it, and Steam keeps it up to date. It runs in ScummVM; a controller works as the mouse (stick moves, A clicks). Language: English, French, German or Dutch, all with voices.",
+   "Series": "steam",
+   "Platform": "PC"
+  },
+  {
+   "Id": "subnautica",
+   "Name": "Subnautica",
+   "Short": "SN",
+   "Source": "STEAM  •  UNKNOWN WORLDS",
+   "Steam": "264710",
+   "Exe": "Subnautica.exe",
+   "Proc": "Subnautica",
+   "Accent": "#1E88C8",
+   "Accent2": "#F2A33A",
+   "Needs": "Subnautica on Steam: the launcher asks Steam to install it (about 9 GB), and Steam keeps it up to date.",
+   "Series": "steam",
+   "Platform": "PC"
+  },
+  {
+   "Id": "subnauticabz",
+   "Name": "Subnautica: Below Zero",
+   "Short": "BZ",
+   "Source": "STEAM  •  UNKNOWN WORLDS",
+   "Steam": "848450",
+   "Exe": "SubnauticaZero.exe",
+   "Proc": "SubnauticaZero",
+   "Accent": "#5FC2E8",
+   "Accent2": "#E8F4FA",
+   "Needs": "Subnautica: Below Zero on Steam: the launcher asks Steam to install it (about 10 GB), and Steam keeps it up to date.",
+   "Series": "steam",
+   "Platform": "PC"
+  },
+  {
+   "Id": "subnautica2",
+   "Name": "Subnautica 2",
+   "Short": "SN2",
+   "Source": "STEAM  •  UNKNOWN WORLDS",
+   "Steam": "1962700",
+   "Exe": "Subnautica2.exe",
+   "Proc": "Subnautica2*",
+   "Accent": "#2B6DE0",
+   "Accent2": "#4FD1C5",
+   "Needs": "Subnautica 2 on Steam (Early Access): the launcher asks Steam to install it, and Steam keeps it up to date.",
+   "Series": "steam",
+   "Platform": "PC"
+  },
+  {
+   "Id": "ww",
+   "Name": "The Wind Waker",
+   "Short": "WW",
+   "Source": "BLUEWAKE  •  GITHUB",
+   "Exe": "BlueWake.exe",
+   "Proc": "BlueWake",
+   "SettingsKey": "WwDir",
+   "Repo": "chrissotraidis/bluewake",
+   "Asset": "*-windows-x64.zip",
+   "Accent": "#1E6FB8",
+   "Accent2": "#F2C14E",
+   "FirstRun": "BlueWake.exe",
+   "Needs": "Your own GameCube Wind Waker disc, USA release (GZLE01, revision 0), as .iso or .gcm (convert a .rvz to ISO in Dolphin first). BlueWake asks for it on its first start. It needs a CPU with AVX2 and a DirectX 12 graphics card. Saves stay in %APPDATA%\\BlueWake.",
+   "DefaultDir": "C:\\Games\\BlueWake",
+   "Series": "zelda",
+   "Platform": "GameCube",
+   "SettingsLabel": "The Wind Waker (BlueWake)",
+   "CheckFile": "BlueWake.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     ".gcm"
+    ]
+   }
+  },
+  {
+   "Id": "tmc",
+   "Name": "The Minish Cap",
+   "Short": "TMC",
+   "Source": "PROJECT PICORI  •  GITHUB",
+   "Exe": "tmc_pc.exe",
+   "Proc": "tmc_pc",
+   "SettingsKey": "TmcDir",
+   "Repo": "999sian/tmc",
+   "Asset": "tmc-multi-windows-x86_64-*.tar.gz",
+   "Accent": "#3E9B4F",
+   "Accent2": "#E7C34A",
+   "Backup": "tmc.sav",
+   "FirstRun": "tmc_pc.exe",
+   "Needs": "Your own Minish Cap GBA ROM, USA release (.gba). The launcher copies it in as baserom.gba; the first start unpacks the game's data from it in a few seconds. (For an EU or JP ROM, put it in the game folder as baserom_eu.gba or baserom_jp.gba instead.)",
+   "DefaultDir": "C:\\Games\\Minish Cap",
+   "Series": "zelda",
+   "Platform": "GBA",
+   "SettingsLabel": "The Minish Cap (Project Picori)",
+   "CheckFile": "tmc_pc.exe",
+   "Ready": "baserom*.gba",
+   "Keep": "tmc.sav",
+   "Saves": "tmc.sav",
+   "Rom": {
+    "Kind": "file",
+    "Formats": [
+     ".gba"
+    ],
+    "Ext": [
+     ".gba"
+    ],
+    "Filter": "GBA ROM (*.gba)|*.gba",
+    "CopyAs": "baserom.gba"
+   }
+  },
+  {
+   "Id": "oracles",
+   "Name": "Oracle of Ages & Seasons",
+   "Short": "OoA",
+   "Source": "ORACLES DECOMP  •  GITHUB",
+   "Exe": "Oracles.exe",
+   "Proc": "Oracles",
+   "SettingsKey": "OraclesDir",
+   "Repo": "kirby-letsgo/oracles-decomp",
+   "Asset": "Oracles-windows-x64.zip",
+   "Accent": "#B0413E",
+   "Accent2": "#3A7BD5",
+   "FirstRun": "Oracles.exe",
+   "Needs": "Your own Oracle of Ages and/or Oracle of Seasons cartridge dumps, USA or European (.gbc, or a .zip with one inside). Add them from the game's menu (each game has a tab with an Add ROM row); after that the ROM isn't needed. Saves stay in %APPDATA%\\oracles-decomp.",
+   "DefaultDir": "C:\\Games\\Oracles",
+   "Series": "zelda",
+   "Platform": "GBC",
+   "SettingsLabel": "Oracle of Ages & Seasons",
+   "CheckFile": "Oracles.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".gbc",
+     ".gb",
+     ".zip"
+    ]
+   }
+  },
+  {
+   "Id": "alttp",
+   "Name": "A Link to the Past",
+   "Short": "LttP",
+   "Source": "ZELDA3  •  GITHUB",
+   "Exe": "zelda3.exe",
+   "Proc": "zelda3",
+   "SettingsKey": "AlttpDir",
+   "Repo": "snesrev/zelda3",
+   "Asset": "zelda3_*.zip",
+   "Accent": "#7B3FA0",
+   "Accent2": "#E2B33C",
+   "FirstRun": "zelda3.exe",
+   "Needs": "Your own A Link to the Past SNES ROM, USA release (.sfc). The launcher copies it in as zelda3.sfc next to the game. Settings are in zelda3.ini in the game folder.",
+   "DefaultDir": "C:\\Games\\Zelda3",
+   "Series": "zelda",
+   "Platform": "SNES",
+   "SettingsLabel": "A Link to the Past (zelda3)",
+   "CheckFile": "zelda3.exe",
+   "Keep": "zelda3.ini",
+   "Rom": {
+    "Kind": "file",
+    "Formats": [
+     ".sfc",
+     ".smc"
+    ],
+    "Ext": [
+     ".sfc",
+     ".smc"
+    ],
+    "Filter": "SNES ROM (*.sfc;*.smc)|*.sfc;*.smc",
+    "CopyAs": "zelda3.sfc"
+   }
+  },
+  {
+   "Id": "zelda2",
+   "Name": "Zelda II: The Adventure of Link",
+   "Short": "Z2",
+   "Source": "Z2RS  •  GITHUB",
+   "Exe": "z2rs-launcher.exe",
+   "Proc": "z2rs",
+   "SettingsKey": "Zelda2Dir",
+   "Repo": "troyedwardsjr/z2rs",
+   "Asset": "z2rs-*-x86_64-pc-windows-msvc.zip",
+   "Accent": "#A23B2A",
+   "Accent2": "#D9A441",
+   "FirstRun": "z2rs-launcher.exe",
+   "Needs": "Your own Zelda II NES ROM, USA release (.nes; only the No-Intro USA dump passes its check). Pick it in the z2rs launcher and press Play; it remembers it after that. Controls, and where saves go, are in HOW-TO-PLAY.txt in the game folder.",
+   "DefaultDir": "C:\\Games\\Zelda2",
+   "Series": "zelda",
+   "Platform": "NES",
+   "SettingsLabel": "Zelda II (z2rs)",
+   "CheckFile": "z2rs-launcher.exe",
+   "Helpers": "z2rs-launcher",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".nes"
+    ]
+   }
+  },
+  {
+   "Id": "zelda1",
+   "Name": "The Legend of Zelda",
+   "Short": "LoZ",
+   "Source": "NES RECOMP  •  GITHUB",
+   "Exe": "LegendOfZeldaNESRecomp.exe",
+   "Proc": "LegendOfZeldaNESRecomp",
+   "SettingsKey": "Zelda1Dir",
+   "Repo": "mstan/LegendOfZeldaNESRecomp",
+   "Asset": "*-windows-x64.zip",
+   "Accent": "#C9A227",
+   "Accent2": "#2E7D4F",
+   "Backup": "saves",
+   "FirstRun": "LegendOfZeldaNESRecomp.exe",
+   "Needs": "Your own Legend of Zelda NES ROM, USA release (PRG0, .nes). The game asks for it on its first start and remembers it. Saves go in the saves folder next to the game.",
+   "DefaultDir": "C:\\Games\\Zelda1",
+   "Series": "zelda",
+   "Platform": "NES",
+   "SettingsLabel": "The Legend of Zelda (NES Recomp)",
+   "CheckFile": "LegendOfZeldaNESRecomp.exe",
+   "Saves": "saves",
+   "NotAsset": "*symbols*",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".nes"
+    ]
+   }
+  },
+  {
+   "Id": "wlsi",
+   "Name": "Wario Land: Shake It!",
+   "Short": "WLSI",
+   "Source": "WARIORECOMP  •  GITHUB",
+   "Exe": "WarioLauncher.exe",
+   "Proc": "WarioLauncher",
+   "SettingsKey": "WlsiDir",
+   "Repo": "santiagovalencia109/Wario-Land-Shake-It-Native-PC",
+   "Asset": "WarioRecomp-*.zip",
+   "Accent": "#F2C230",
+   "Accent2": "#7A3FA0",
+   "Backup": "Play/UserData",
+   "FirstRun": "WarioLauncher.exe",
+   "Needs": "A testing build. Your own Wario Land: Shake It! Wii disc, USA release (RWLE01, unmodified), as .iso, .wbfs, .ciso or .rvz. In WarioLauncher, press Install and pick the disc: it extracts the game and builds the port on this PC (15 to 45 minutes, about 7.5 GB). Then press PLAY there. Saves stay in Play\\UserData.",
+   "DefaultDir": "C:\\Games\\WarioRecomp",
+   "Series": "mario",
+   "Platform": "Wii",
+   "SettingsLabel": "Wario Land: Shake It! (WarioRecomp)",
+   "CheckFile": "WarioLauncher.exe",
+   "Helpers": "WarioLauncher",
+   "Saves": "Play\\UserData",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     ".wbfs",
+     ".ciso",
+     ".rvz"
+    ]
+   }
+  },
+  {
+   "Id": "wl4",
+   "Name": "Wario Land 4",
+   "Short": "WL4",
+   "Source": "WL4 NATIVE PORT  •  GITHUB",
+   "Exe": "wl4-launcher.exe",
+   "Proc": "wl4",
+   "SettingsKey": "Wl4Dir",
+   "Repo": "BioRhythmicStudios/warioland4",
+   "Asset": "*-Windows-x64.zip",
+   "Accent": "#E8B21E",
+   "Accent2": "#8E3FB5",
+   "FirstRun": "wl4-launcher.exe",
+   "Needs": "A beta. Your own Wario Land 4 GBA ROM, US/EU release (AWAE, unmodified, 8 MB); Japanese ROMs and hacks are refused. Pick it in wl4-launcher. Saves stay in %APPDATA%\\wl4.",
+   "DefaultDir": "C:\\Games\\Wario Land 4",
+   "Series": "mario",
+   "Platform": "GBA",
+   "SettingsLabel": "Wario Land 4 (native port)",
+   "CheckFile": "wl4-launcher.exe",
+   "Helpers": "wl4-launcher",
+   "NotAsset": "*.sha256",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".gba"
+    ]
+   }
+  },
+  {
+   "Id": "wl1",
+   "Name": "Wario Land: Super Mario Land 3",
+   "Short": "WL",
+   "Source": "BIGODAO  •  GITHUB",
+   "Exe": "bigodao_*_win.exe",
+   "Proc": "bigodao*",
+   "SettingsKey": "Wl1Dir",
+   "Repo": "GABRIELNNK/Bigodao",
+   "Asset": "bigodao_*_win.zip",
+   "Accent": "#E3B32B",
+   "Accent2": "#5B8F3A",
+   "FirstRun": "bigodao_*_win.exe",
+   "Needs": "Your own Wario Land: Super Mario Land 3 Game Boy ROM (World) and the Super Mario Land 3 DX v1.2 IPS patch by korxo. The game checks both and patches the ROM in memory (the file on disk is left alone); keep them in the game folder. Adds widescreen and an optional 3D mode.",
+   "DefaultDir": "C:\\Games\\Bigodao",
+   "Series": "mario",
+   "Platform": "Game Boy",
+   "SettingsLabel": "Wario Land (Bigodao)",
+   "CheckFile": "bigodao_*_win.exe",
+   "Ready": "*.gb",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".gb",
+     ".ips"
+    ]
+   }
+  },
+  {
+   "Id": "mkworld",
+   "Name": "Mario Kart World",
+   "Short": "MKW",
+   "Source": "MKW RECOMP  •  GITHUB",
+   "Exe": "mkw.exe",
+   "Proc": "mkw",
+   "SettingsKey": "MkworldDir",
+   "Repo": "adriadam10/mkw-recomp",
+   "Asset": "mkw-recomp-*-windows-x64.zip",
+   "Accent": "#E4332B",
+   "Accent2": "#F7C531",
+   "FirstRun": "mkw.exe",
+   "Needs": "Early. Your own Mario Kart World 1.0.0, dumped from your own Switch 2 as decrypted exefs and romfs folders. In mkw.exe, open Game files, point it at the dump and press Prepare: the first time it builds the game on this PC (a while, about 30 GB free, and it downloads NVIDIA's shader tools, 126 MB). Then Play. Needs a CPU with AVX2 and a Vulkan 1.3 graphics card; 16 GB of memory recommended.",
+   "DefaultDir": "E:\\Games\\MKWorld",
+   "Series": "mario",
+   "Platform": "Switch 2",
+   "SettingsLabel": "Mario Kart World",
+   "CheckFile": "mkw.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     "exefs + romfs folders"
+    ]
+   }
+  },
+  {
+   "Id": "smbw",
+   "Name": "Super Mario Bros. Wonder",
+   "Short": "SMBW",
+   "Source": "SUPERWONDERS  •  GITHUB",
+   "Exe": "Start WonderBuilder.cmd",
+   "Proc": "wonder",
+   "SettingsKey": "SmbwDir",
+   "Repo": "vfjoo888/SuperWonders",
+   "Asset": "SuperWonders-builder*.zip",
+   "Accent": "#E85A9B",
+   "Accent2": "#F6C643",
+   "FirstRun": "Start WonderBuilder.cmd",
+   "Needs": "Experimental (tested through World 1). Your own Super Mario Bros. Wonder 1.0.0, dumped from your own Switch as extracted ExeFS and RomFS folders. The builder opens on install: press Install prerequisites once (it installs development tools, with UAC prompts), pick the folders, and choose the output folder output\\ inside this game's folder so Play finds wonder.exe. Then Build. Needs a CPU with AVX2 and a Vulkan 1.3 card; 32 GB of memory recommended while building.",
+   "DefaultDir": "E:\\Games\\SuperWonders",
+   "Series": "mario",
+   "Platform": "Switch",
+   "SettingsLabel": "Super Mario Bros. Wonder (SuperWonders)",
+   "CheckFile": "Start WonderBuilder.cmd",
+   "Helpers": "WonderBuilder",
+   "Ready": "output\\wonder.exe;*\\wonder.exe;*\\*\\wonder.exe",
+   "Launch": "output\\wonder.exe;*\\wonder.exe;*\\*\\wonder.exe;Start WonderBuilder.cmd",
+   "Pre": true,
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     "ExeFS + RomFS folders"
+    ]
+   }
+  },
+  {
+   "Id": "karpur",
+   "Name": "Pokémon Scarlet & Violet",
+   "Short": "SV",
+   "Source": "KARPUR  •  GITHUB",
+   "Exe": "KarPur-Launcher.exe",
+   "Proc": "karpur",
+   "SettingsKey": "KarpurDir",
+   "Repo": "Grunttanamo/KarPur",
+   "Asset": "KarPur-Launcher.exe",
+   "Accent": "#D8412F",
+   "Accent2": "#7B3FA0",
+   "FirstRun": "KarPur-Launcher.exe",
+   "Needs": "Your own Pokémon Violet (tested) or Scarlet as .xci, the 4.0.0 update .nsp (only that one) and prod.keys from the same Switch. In KarPur-Launcher's Setup tab pick them and a target folder without spaces (this game's folder works), then Build: the first build takes 30 to 60 minutes and about 30 GB (13 GB after), and downloads about 250 MB of tools. Then Play there. Needs a CPU with AVX2 and a Vulkan 1.3 card.",
+   "DefaultDir": "E:\\Games\\KarPur",
+   "Series": "pokemon",
+   "Platform": "Switch",
+   "SettingsLabel": "Pokémon Scarlet & Violet (KarPur)",
+   "CheckFile": "KarPur-Launcher.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".xci",
+     "4.0.0 update .nsp",
+     "prod.keys"
+    ]
+   }
+  },
+  {
+   "Id": "halo3",
+   "Name": "Halo 3 (Mythic multiplayer)",
+   "Short": "H3",
+   "Source": "SPARTAN (OPENH3M)  •  GITHUB",
+   "Exe": "OpenH3M.exe",
+   "Proc": "OpenH3M",
+   "SettingsKey": "Halo3Dir",
+   "Repo": "GTTeancum/OpenH3M",
+   "Asset": "OpenH3M-*-win-x64.zip",
+   "Accent": "#3F5A3A",
+   "Accent2": "#A8B37A",
+   "Needs": "A beta: Halo 3's multiplayer (Custom Games, 1-4 player split screen, Forge); no online play. Your own Halo 3: ODST Multiplayer Disc (disc 2), extracted with an Xbox (XDVDFS) extraction tool into the game folder inside this game's folder, so that game\\default.xex and game\\maps are there. Needs a DirectX 12 graphics card; a controller is recommended.",
+   "DefaultDir": "E:\\Games\\Halo3",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Halo 3 (Spartan / OpenH3M)",
+   "CheckFile": "OpenH3M.exe",
+   "Ready": "game\\default.xex",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     "Extracted disc files (default.xex + maps)"
+    ]
+   }
+  },
+  {
+   "Id": "gow3",
+   "Name": "God of War III Remastered",
+   "Short": "GoW3",
+   "Source": "SPARTANPORT  •  GITHUB",
+   "Exe": "SpartanPort.exe",
+   "Proc": "SpartanPort*",
+   "SettingsKey": "Gow3Dir",
+   "Repo": "FelipePrado0/SpartanPort",
+   "Asset": "spartanport-windows.zip",
+   "Accent": "#8E1B1B",
+   "Accent2": "#D9A441",
+   "Backup": "user",
+   "FirstRun": "SpartanPort.exe",
+   "Launch": "Play SpartanPort.exe;SpartanPort.exe",
+   "Needs": "Your own God of War III Remastered, dumped from your own PS4 (CUSA01623 or CUSA01715, version 01.00 or 01.02), as the game folder with eboot.bin, sce_module and sce_sys. On the first start, choose that folder (Choose the game folder), then PLAY: the first start prepares the game once. After that the launcher starts it straight away. The in-game menu of the port is R3 + L2. Saves stay in the user folder here.",
+   "DefaultDir": "E:\\Games\\God of War III",
+   "Series": "playstation",
+   "Platform": "PS4",
+   "SettingsLabel": "God of War III Remastered (SpartanPort)",
+   "CheckFile": "SpartanPort.exe",
+   "Saves": "user",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     "Game folder (eboot.bin, sce_module, sce_sys)"
+    ]
+   }
+  },
+  {
+   "Id": "hwaoi",
+   "Name": "Hyrule Warriors: Age of Imprisonment",
+   "Short": "HWAoI",
+   "Source": "HWAOI RECOMP  •  GITHUB",
+   "Exe": "HWAoI-Compiler.exe",
+   "Proc": "HWAoI*",
+   "SettingsKey": "HwaoiDir",
+   "Repo": "Alano6678/hwaoi-recomp",
+   "Asset": "HWAoI-Compiler-Windows-x64.zip",
+   "Accent": "#2E5E3A",
+   "Accent2": "#C9A227",
+   "FirstRun": "HWAoI-Compiler.exe",
+   "Needs": "Early and experimental (it reaches exploration and the first battles). Your own Hyrule Warriors: Age of Imprisonment, dumped from your own Switch 2 as a .nup, update 196608 only (encrypted XCI or NSP won't work). In HWAoI-Compiler pick the .nup and an output folder, then Compile / update; then Open compiled game. Needs about 20 GB free, a CPU with AVX2, a Vulkan card and ideally 32 GB of memory.",
+   "DefaultDir": "E:\\Games\\Hyrule Warriors AoI",
+   "Series": "zelda",
+   "Platform": "Switch 2",
+   "SettingsLabel": "Hyrule Warriors: Age of Imprisonment",
+   "CheckFile": "HWAoI-Compiler.exe",
+   "Pre": true,
+   "Helpers": "HWAoI-Compiler",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".nup"
+    ]
+   }
+  },
+  {
+   "Id": "fefw",
+   "Name": "Fire Emblem: Fortune's Weave",
+   "Short": "FE",
+   "Source": "FEFW RECOMP  •  GITHUB",
+   "Exe": "fefw-launcher.exe",
+   "Proc": "fefw*",
+   "SettingsKey": "FefwDir",
+   "Repo": "Goldoire/fefw-recomp",
+   "Asset": "fefw-recomp-*-win64.zip",
+   "Accent": "#1F3F8A",
+   "Accent2": "#D9A441",
+   "Backup": "save",
+   "FirstRun": "fefw-launcher.exe",
+   "Launch": "fefw.exe;*\\fefw.exe",
+   "Needs": "Your own Fire Emblem: Fortune's Weave, dumped from your own Switch 2, update 131072 only: a folder with exefs and romfs, a dump folder with base and updates, or a .nup. In fefw-launcher choose it on the Setup page and press Set up: it builds the game on this PC (a while; about 30 GB free, 16 GB of memory, a Vulkan 1.3 card). After that the launcher starts the game straight away. Saves stay in the save folder here. The author says this is probably its last update.",
+   "DefaultDir": "E:\\Games\\Fire Emblem Fortunes Weave",
+   "Series": "nintendo",
+   "Platform": "Switch 2",
+   "SettingsLabel": "Fire Emblem: Fortune's Weave",
+   "CheckFile": "fefw-launcher.exe",
+   "Saves": "save",
+   "Helpers": "fefw-launcher",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     "exefs + romfs folders",
+     ".nup"
+    ]
+   }
+  },
+  {
+   "Id": "xc3",
+   "Name": "Xenoblade Chronicles 3",
+   "Short": "XC3",
+   "Source": "XC3 RECOMP  •  GITHUB",
+   "Exe": "xc3.exe",
+   "Proc": "xc3",
+   "SettingsKey": "Xc3Dir",
+   "Repo": "jmars125/xc3-recomp",
+   "Asset": "XC3-Setup-*-windows.zip",
+   "Setup": "XC3-Setup.exe",
+   "Accent": "#2A6F97",
+   "Accent2": "#E3C26B",
+   "Needs": "Your own Xenoblade Chronicles 3: the base game and the 2.2.1 update (add-on content optional), dumped from your own Switch as NSP files, with prod.keys from the same Switch. Install opens XC3-Setup.exe: pick your files and the language, and choose this game's folder as its install folder (Settings > Game folders shows it). It builds the game once (about 36 GB free while it builds, 20 GB after). Updating runs the new setup on the same folder; saves and settings are kept. Needs a CPU with SSE4.2 and a Vulkan 1.3 card.",
+   "DefaultDir": "E:\\Games\\Xenoblade 3",
+   "Series": "nintendo",
+   "Platform": "Switch",
+   "SettingsLabel": "Xenoblade Chronicles 3",
+   "CheckFile": "xc3.exe",
+   "Helpers": "XC3-Setup",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     "NSP files",
+     "prod.keys"
+    ]
+   }
+  },
+  {
+   "Id": "xc2",
+   "Name": "Xenoblade Chronicles 2",
+   "Short": "XC2",
+   "Source": "XC2 RECOMP  •  GITHUB",
+   "Exe": "xc2.exe",
+   "Proc": "xc2",
+   "SettingsKey": "Xc2Dir",
+   "Repo": "AksharDP/xc2-recomp",
+   "Asset": "XC2-Setup-*-windows.zip",
+   "Setup": "XC2-Setup.exe",
+   "Accent": "#B23A3A",
+   "Accent2": "#F2C14E",
+   "Needs": "Your own Xenoblade Chronicles 2: the base game and the 3.0.1 (3.0.0 for Japan) update (add-on content optional), dumped from your own Switch as NSP files, with prod.keys from the same Switch. Install opens XC2-Setup.exe: pick your files and the language, and choose this game's folder as its install folder (Settings > Game folders shows it). It builds the game once (about 25 GB free while it builds, 20 GB after). Updating runs the new setup on the same folder; saves and settings are kept. Needs a CPU with AVX2 and a Vulkan 1.3 card.",
+   "DefaultDir": "E:\\Games\\Xenoblade 2",
+   "Series": "nintendo",
+   "Platform": "Switch",
+   "SettingsLabel": "Xenoblade Chronicles 2",
+   "CheckFile": "xc2.exe",
+   "Helpers": "XC2-Setup",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     "NSP files",
+     "prod.keys"
+    ]
+   }
+  },
+  {
+   "Id": "xcx",
+   "Name": "Xenoblade Chronicles X",
+   "Short": "XCX",
+   "Source": "XCX RECOMP  •  GITHUB",
+   "Exe": "xcx.exe",
+   "Proc": "xcx",
+   "SettingsKey": "XcxDir",
+   "Repo": "jmars125/xcx-recomp",
+   "Asset": "XCX-Setup-*-windows.zip",
+   "Setup": "XCX-Setup.exe",
+   "Accent": "#3B4A5A",
+   "Accent2": "#57CBDE",
+   "Needs": "Your own Xenoblade Chronicles X: the base game and the 2.0.0 update (add-on content optional), dumped from your own Switch as NSP files, with prod.keys from the same Switch. Install opens XCX-Setup.exe: pick your files and the language, and choose this game's folder as its install folder (Settings > Game folders shows it). It builds the game once (about 36 GB free while it builds, 20 GB after). Updating runs the new setup on the same folder; saves and settings are kept. Needs a CPU with AVX2 and a Vulkan 1.3 card.",
+   "DefaultDir": "E:\\Games\\Xenoblade X",
+   "Series": "nintendo",
+   "Platform": "Switch",
+   "SettingsLabel": "Xenoblade Chronicles X",
+   "CheckFile": "xcx.exe",
+   "Helpers": "XCX-Setup",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     "NSP files",
+     "prod.keys"
+    ]
+   }
+  },
+  {
+   "Id": "gow2",
+   "Name": "Gears of War 2",
+   "Short": "GoW2",
+   "Source": "GEARS OF WAR 2 PC PORT  •  GITHUB",
+   "Exe": "gow2.exe",
+   "Proc": "gow2",
+   "SettingsKey": "Gow2Dir",
+   "Repo": "santiquiroz/gears-of-war-2-pc-port",
+   "Asset": "gow2-recomp-*-win64.zip",
+   "Accent": "#5A1A12",
+   "Accent2": "#B8A27A",
+   "FirstRun": "gow2.exe",
+   "Needs": "Your own Gears of War 2 Xbox 360 disc (US release, title ID 4D53082D) as an .iso, or the extracted game (default.xex with the GearGame folder). The first start asks for it and remembers it; the first start also builds its shaders and can sit on the title screen for a few minutes. Campaign co-op over System Link works.",
+   "DefaultDir": "E:\\Games\\Gears of War 2",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Gears of War 2",
+   "CheckFile": "gow2.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "fable2",
+   "Name": "Fable II",
+   "Short": "F2",
+   "Source": "FABLE 2 RECOMP  •  GITHUB",
+   "Exe": "Fable2Launcher.exe",
+   "Proc": "fable_2",
+   "SettingsKey": "Fable2Dir",
+   "Repo": "himdo/Fable-2-Recomp",
+   "Asset": "Fable_2_recomp_v*_windows.zip",
+   "Accent": "#3E2A5A",
+   "Accent2": "#C9A227",
+   "Backup": "saves",
+   "FirstRun": "Fable2Launcher.exe",
+   "Needs": "Your own Fable II Game of the Year Xbox 360 disc image (.iso; USA/Europe or German), about 7 GB free. In Fable2Launcher press Extract from ISO and pick it; the game goes into this folder. Then play from Fable2Launcher. Saves stay in the saves folder here.",
+   "DefaultDir": "E:\\Games\\Fable II",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Fable II",
+   "CheckFile": "Fable2Launcher.exe",
+   "Saves": "saves",
+   "Helpers": "Fable2Launcher",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "forza2",
+   "Name": "Forza Motorsport 2",
+   "Short": "FM2",
+   "Source": "HL360 FORZA 2  •  GITHUB",
+   "Exe": "Forza2Launcher.exe",
+   "Proc": "forza2",
+   "SettingsKey": "Forza2Dir",
+   "Repo": "0herculabs/hl360-Forza2",
+   "Asset": "Forza2-Native-*-windows-x64.zip",
+   "Accent": "#1F3F8A",
+   "Accent2": "#E8453C",
+   "FirstRun": "Forza2Launcher.exe",
+   "Needs": "A work in progress. Your own Forza Motorsport 2 Xbox 360 disc (European or American) as an .iso. Forza2Launcher extracts it into the game folder and checks every file (a minute or two), then prepares shaders and starts the game.",
+   "DefaultDir": "E:\\Games\\Forza Motorsport 2",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Forza Motorsport 2",
+   "CheckFile": "Forza2Launcher.exe",
+   "Helpers": "Forza2Launcher",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "forza3",
+   "Name": "Forza Motorsport 3",
+   "Short": "FM3",
+   "Source": "HL360 FORZA 3  •  GITHUB",
+   "Exe": "fm3-launcher.exe",
+   "Proc": "fm3",
+   "SettingsKey": "Forza3Dir",
+   "Repo": "0herculabs/hl360-forza3",
+   "Asset": "FM3.zip",
+   "Accent": "#8E1B1B",
+   "Accent2": "#F2C14E",
+   "FirstRun": "fm3-launcher.exe",
+   "Needs": "A work in progress. Your own Forza Motorsport 3: Ultimate Collection (USA) Xbox 360 discs as .iso files: disc 1 (play disc) and disc 2 (content). fm3-launcher installs both (about 7 GB for disc 1) and checks the files. Keep the game folder's path short.",
+   "DefaultDir": "E:\\Games\\Forza Motorsport 3",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Forza Motorsport 3",
+   "CheckFile": "fm3-launcher.exe",
+   "Helpers": "fm3-launcher",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "forza4",
+   "Name": "Forza Motorsport 4",
+   "Short": "FM4",
+   "Source": "HL360 FORZA 4  •  GITHUB",
+   "Exe": "fm4-launcher.exe",
+   "Proc": "fm4",
+   "SettingsKey": "Forza4Dir",
+   "Repo": "0herculabs/hl360-forza4",
+   "Asset": "FM4-v*-windows-x64.zip",
+   "Accent": "#0B4F8A",
+   "Accent2": "#E3E3E3",
+   "FirstRun": "fm4-launcher.exe",
+   "Needs": "A work in progress (races work; full career not yet checked). Your own Forza Motorsport 4 Xbox 360 discs as .iso files (unzipped). In fm4-launcher: Install, step 1 the disc 1 ISO, then disc 2. Steering wheels with force feedback are supported (experimental). Keep the game folder's path short.",
+   "DefaultDir": "E:\\Games\\Forza Motorsport 4",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Forza Motorsport 4",
+   "CheckFile": "fm4-launcher.exe",
+   "Helpers": "fm4-launcher",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "lostody",
+   "Name": "Lost Odyssey",
+   "Short": "LO",
+   "Source": "LOST ODYSSEY RECOMP  •  GITHUB",
+   "Exe": "LostOdysseyRecomp.exe",
+   "Proc": "LostOdysseyRecomp",
+   "SettingsKey": "LostodyDir",
+   "Repo": "freefrank/LostOdysseyRecomp",
+   "Asset": "LostOdysseyRecomp-windows-x64-*.zip",
+   "Accent": "#2E3A5A",
+   "Accent2": "#B4A06A",
+   "FirstRun": "LostOdysseyRecomp.exe",
+   "Needs": "Your own Lost Odyssey Xbox 360 discs: the importer opens on the first start and takes an extracted game folder, default.xex, ISO images or Games on Demand data (all four discs). The first start offers ready-made shaders. Needs a CPU with AVX.",
+   "DefaultDir": "E:\\Games\\Lost Odyssey",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Lost Odyssey",
+   "CheckFile": "LostOdysseyRecomp.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "ng2",
+   "Name": "Ninja Gaiden II",
+   "Short": "NG2",
+   "Source": "NG2 RECOMP  •  GITHUB",
+   "Exe": "ng2.exe",
+   "Proc": "ng2*",
+   "SettingsKey": "Ng2Dir",
+   "Repo": "gamboozino/ng2recomp",
+   "Asset": "NinjaGaiden2-windows-x64.zip",
+   "Accent": "#5A0F0F",
+   "Accent2": "#C9A227",
+   "FirstRun": "ng2.exe",
+   "Needs": "Your own Ninja Gaiden II Xbox 360 game (World release, title ID 544307D5) as an .iso, Games on Demand package or extracted folder, plus its Title Update 3 (required). The first start asks for both, in that order; the DLC (Mission Mode, costumes) is optional.",
+   "DefaultDir": "E:\\Games\\Ninja Gaiden II",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Ninja Gaiden II",
+   "CheckFile": "ng2.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "skate3",
+   "Name": "Skate 3",
+   "Short": "S3",
+   "Source": "SKATE 3 RECOMP  •  GITHUB",
+   "Exe": "skate3.exe",
+   "Proc": "skate3",
+   "SettingsKey": "Skate3Dir",
+   "Repo": "mchughalex/skate3recomp",
+   "Asset": "Skate3Recomp-Windows.zip",
+   "Accent": "#1A1A1A",
+   "Accent2": "#E8453C",
+   "FirstRun": "skate3.exe",
+   "Needs": "Your own Skate 3 Xbox 360 disc as an .iso: on the first start press Select ISO and pick it; it extracts the game files into this folder. Native Direct3D 12 / Vulkan renderer.",
+   "DefaultDir": "E:\\Games\\Skate 3",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Skate 3",
+   "CheckFile": "skate3.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "smm2",
+   "Name": "Super Mario Maker 2",
+   "Short": "SMM2",
+   "Source": "SMM2RECOMP  •  GITHUB",
+   "Exe": "smm2recomp.exe",
+   "Proc": "smm2recomp",
+   "SettingsKey": "Smm2Dir",
+   "Repo": "smm2recomp/smm2recomp",
+   "Asset": "SMM2Recomp-windows-x86_64.zip",
+   "Accent": "#F6C643",
+   "Accent2": "#E52521",
+   "FirstRun": "smm2recomp.exe",
+   "Needs": "Your own Super Mario Maker 2, dumped from your own Switch: an NSP/XCI or the extracted ExeFS and RomFS folders, plus the prod.keys (and firmware files) that go with it. The download is the recompiler: on the first start it takes your dump and builds the game on this PC, once. Mods go in the data folder's mods.",
+   "DefaultDir": "E:\\Games\\Super Mario Maker 2",
+   "Series": "mario",
+   "Platform": "Switch",
+   "SettingsLabel": "Super Mario Maker 2",
+   "CheckFile": "smm2recomp.exe",
+   "Helpers": "smm2recomp",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     "ExeFS + RomFS folders",
+     "prod.keys"
+    ]
+   }
+  },
+  {
+   "Id": "dread",
+   "Name": "Metroid Dread",
+   "Short": "MD",
+   "Source": "METROID DREAD RECOMP  •  GITHUB",
+   "Exe": "Metroid Dread.exe",
+   "Proc": "Metroid Dread",
+   "SettingsKey": "DreadDir",
+   "Repo": "yozander2009-stack/Metroid-Dread-Recomp",
+   "Asset": "MetroidDread-PC-*-Windows-x64.zip",
+   "NotAsset": "update*",
+   "Accent": "#C0392B",
+   "Accent2": "#F39C12",
+   "FirstRun": "Metroid Dread.exe",
+   "Needs": "Your own Metroid Dread, update 2.1.0, dumped from your own Switch as extracted ExeFS and RomFS folders (choose the folder that holds both, with the update as Update folder). On the first start it checks every file and compiles the game, once.",
+   "DefaultDir": "E:\\Games\\Metroid Dread",
+   "Series": "nintendo",
+   "Platform": "Switch",
+   "SettingsLabel": "Metroid Dread",
+   "CheckFile": "Metroid Dread.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     "ExeFS + RomFS folders",
+     "prod.keys"
+    ]
+   }
+  },
+  {
+   "Id": "mpr",
+   "Name": "Metroid Prime Remastered",
+   "Short": "MPR",
+   "Source": "PRIMERECOMP  •  GITHUB",
+   "Exe": "primerecomp.exe",
+   "Proc": "primerecomp",
+   "SettingsKey": "MprDir",
+   "Repo": "gminustwo/primerecomp",
+   "Asset": "PrimeRecomp-*-windows.zip",
+   "Accent": "#D35400",
+   "Accent2": "#3A6EA5",
+   "FirstRun": "primerecomp.exe",
+   "Needs": "Your own Metroid Prime Remastered, version 1.0.0 (no updates), dumped from your own Switch as the extracted exefs and romfs folders (NSP and XCI aren't read). On the first start choose the folder that holds both, then Set up: it recompiles the game once.",
+   "DefaultDir": "E:\\Games\\Metroid Prime Remastered",
+   "Series": "nintendo",
+   "Platform": "Switch",
+   "SettingsLabel": "Metroid Prime Remastered",
+   "CheckFile": "primerecomp.exe",
+   "Helpers": "primerecomp",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     "ExeFS + RomFS folders",
+     "prod.keys"
+    ]
+   }
+  },
+  {
+   "Id": "hwde",
+   "Name": "Hyrule Warriors: Definitive Edition",
+   "Short": "HWDE",
+   "Source": "HWDER  •  GITHUB",
+   "Exe": "HWDER Setup.exe",
+   "Proc": "HWDER*",
+   "SettingsKey": "HwdeDir",
+   "Repo": "blocker-3/HWDER",
+   "Asset": "HWDER-setup-*.zip",
+   "Accent": "#2E5E3A",
+   "Accent2": "#D9A441",
+   "FirstRun": "HWDER Setup.exe",
+   "Needs": "Your own Hyrule Warriors: Definitive Edition, dumped from your own Switch as an .nsp, with prod.keys from the same Switch (the 1.0.1 update is optional). HWDER Setup opens: choose them and press Install; it downloads its own build tools (about 260 MB) and builds the game here (about 15 minutes). A newer Setup shows Update and keeps your saves.",
+   "DefaultDir": "E:\\Games\\Hyrule Warriors DE",
+   "Series": "zelda",
+   "Platform": "Switch",
+   "SettingsLabel": "Hyrule Warriors: Definitive Edition",
+   "CheckFile": "HWDER Setup.exe",
+   "Helpers": "HWDER Setup",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     "ExeFS + RomFS folders",
+     "prod.keys"
+    ]
+   }
+  },
+  {
+   "Id": "mhgu",
+   "Name": "Monster Hunter Generations Ultimate",
+   "Short": "MHGU",
+   "Source": "MHGURECOMP  •  GITHUB",
+   "Exe": "mhgurecomp.exe",
+   "Proc": "mhgurecomp",
+   "SettingsKey": "MhguDir",
+   "Repo": "morerokk/MHGURecomp",
+   "Asset": "Windows-MHGURecomp.*.zip",
+   "Accent": "#8E5A2B",
+   "Accent2": "#E3C26B",
+   "FirstRun": "mhgurecomp.exe",
+   "Needs": "Your own Monster Hunter Generations Ultimate with the 1.4.0 update, dumped from your own Switch: the exefs (from the 1.4.0 update) and romfs (base game with the update's files copied over it) folders, put in the data folder inside this game's folder.",
+   "DefaultDir": "E:\\Games\\Monster Hunter GU",
+   "Series": "nintendo",
+   "Platform": "Switch",
+   "SettingsLabel": "Monster Hunter Generations Ultimate (MHGURecomp)",
+   "CheckFile": "mhgurecomp.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     "ExeFS + RomFS folders",
+     "prod.keys"
+    ]
+   }
+  },
+  {
+   "Id": "smash4",
+   "Name": "Super Smash Bros. for Wii U",
+   "Short": "SSB4",
+   "Source": "SMASH4PC  •  GITHUB",
+   "Exe": "Smash 4 PC.exe",
+   "Proc": "smash*",
+   "SettingsKey": "Smash4Dir",
+   "Repo": "josiahg2502-glitch/Smash4PC",
+   "Asset": "Smash4PC-*-Windows.zip",
+   "Accent": "#2B6CE0",
+   "Accent2": "#E8453C",
+   "FirstRun": "Smash 4 PC.exe",
+   "Needs": "Early (version 0.1). Your own Super Smash Bros. for Wii U (USA), dumped from your own Wii U: the game's files and its update. Smash 4 PC asks for them on the first start.",
+   "DefaultDir": "E:\\Games\\Smash 4",
+   "Series": "nintendo",
+   "Platform": "Wii U",
+   "SettingsLabel": "Super Smash Bros. for Wii U",
+   "CheckFile": "Smash 4 PC.exe",
+   "Helpers": "Smash 4 PC",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     "Wii U game files (code, content, meta)"
+    ]
+   }
+  },
+  {
+   "Id": "mschar",
+   "Name": "Mario Strikers Charged",
+   "Short": "MSC",
+   "Source": "RECHARGED  •  GITHUB",
+   "Exe": "recharged.exe",
+   "Proc": "recharged",
+   "SettingsKey": "MscharDir",
+   "Repo": "previouslevelgames/recharged",
+   "Asset": "recharged-*-windows-x86_64.zip",
+   "Accent": "#1F9E5A",
+   "Accent2": "#F6C643",
+   "FirstRun": "recharged.exe",
+   "Needs": "Your own Mario Strikers Charged Wii disc as an .iso, .rvz or .wbfs (USA R4QE01, or the European release). The game asks for it on its first start and remembers it.",
+   "DefaultDir": "E:\\Games\\Mario Strikers Charged",
+   "Series": "mario",
+   "Platform": "Wii",
+   "SettingsLabel": "Mario Strikers Charged",
+   "CheckFile": "recharged.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     ".rvz",
+     ".wbfs"
+    ]
+   }
+  },
+  {
+   "Id": "kirbyrtdl",
+   "Name": "Kirby's Return to Dream Land",
+   "Short": "KRtDL",
+   "Source": "MODERNGEKKO KIRBY  •  GITHUB",
+   "Exe": "KirbyWiiRecomp\\KirbyWiiRecomp.exe",
+   "Proc": "Kirby*",
+   "SettingsKey": "KirbyrtdlDir",
+   "Repo": "ExpansionPak/ModernGekko",
+   "Asset": "KirbyWiiRecomp-Windows-x86_64.zip",
+   "Accent": "#F49AC2",
+   "Accent2": "#F6C643",
+   "FirstRun": "KirbyWiiRecomp\\KirbyWiiRecomp.exe",
+   "Needs": "Your own Kirby's Return to Dream Land Wii disc (.iso or .rvz). The game asks for it on its first start and remembers it.",
+   "DefaultDir": "E:\\Games\\Kirby Return to Dream Land",
+   "Series": "nintendo",
+   "Platform": "Wii",
+   "SettingsLabel": "Kirby's Return to Dream Land",
+   "CheckFile": "KirbyWiiRecomp\\KirbyWiiRecomp.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     ".rvz",
+     ".wbfs"
+    ]
+   }
+  },
+  {
+   "Id": "melee",
+   "Name": "Super Smash Bros. Melee",
+   "Short": "SSBM",
+   "Source": "MELEE PC  •  GITHUB",
+   "Exe": "melee.exe",
+   "Proc": "melee",
+   "SettingsKey": "MeleeDir",
+   "Repo": "999sian/melee-pc",
+   "Asset": "Melee-Windows-x86_64.zip",
+   "Accent": "#C0392B",
+   "Accent2": "#BDC3C7",
+   "FirstRun": "melee.exe",
+   "Needs": "Your own Super Smash Bros. Melee GameCube disc, NTSC-U version 1.02 (.iso or .rvz; the PAL disc is experimental). The game asks for it on its first start and remembers it.",
+   "DefaultDir": "E:\\Games\\Smash Bros Melee",
+   "Series": "nintendo",
+   "Platform": "GameCube",
+   "SettingsLabel": "Super Smash Bros. Melee",
+   "CheckFile": "melee.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     ".rvz",
+     ".gcm"
+    ]
+   }
+  },
+  {
+   "Id": "luigi",
+   "Name": "Luigi's Mansion",
+   "Short": "LM",
+   "Source": "LUIGI'S MANSION RECOMPILED  •  GITHUB",
+   "Exe": "LuigisMansionRecomp.exe",
+   "Proc": "LuigisMansionRecomp",
+   "SettingsKey": "LuigiDir",
+   "Repo": "rob646464/luigis-mansion-recompiled",
+   "Asset": "LuigisMansionRecompiled-*-windows-x64.zip",
+   "Accent": "#2E8B57",
+   "Accent2": "#6A4C93",
+   "FirstRun": "LuigisMansionRecomp.exe",
+   "Needs": "Your own Luigi's Mansion GameCube disc: USA (GLME01) and/or Europe (GLMP01), as .iso, .rvz or an extracted game folder. The game asks for it on its first start and remembers it.",
+   "DefaultDir": "E:\\Games\\Luigis Mansion",
+   "Series": "mario",
+   "Platform": "GameCube",
+   "SettingsLabel": "Luigi's Mansion",
+   "CheckFile": "LuigisMansionRecomp.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     ".rvz",
+     ".gcm"
+    ]
+   }
+  },
+  {
+   "Id": "strikers",
+   "Name": "Super Mario Strikers",
+   "Short": "SMS",
+   "Source": "STRIKERS  •  GITHUB",
+   "Exe": "strikers.exe",
+   "Proc": "strikers",
+   "SettingsKey": "StrikersDir",
+   "Repo": "new-coke/strikers",
+   "Asset": "strikers-windows-x86_64.zip",
+   "Accent": "#1F9E5A",
+   "Accent2": "#E52521",
+   "FirstRun": "strikers.exe",
+   "Needs": "Your own Super Mario Strikers GameCube disc (US, European or Japanese) as .iso, .gcm, .ciso or .gcz, or an extracted game folder. The game asks for it on its first start and remembers it. strikers-settings.exe in the game folder sets graphics, controls and the game data's location. Online play with rollback netcode.",
+   "DefaultDir": "E:\\Games\\Super Mario Strikers",
+   "Series": "mario",
+   "Platform": "GameCube",
+   "SettingsLabel": "Super Mario Strikers",
+   "CheckFile": "strikers.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     ".rvz",
+     ".gcm"
+    ]
+   }
+  },
+  {
+   "Id": "edark",
+   "Name": "Eternal Darkness: Sanity's Requiem",
+   "Short": "ED",
+   "Source": "ETERNAL DARKNESS RECOMP  •  GITHUB",
+   "Exe": "EternalDarkness.exe",
+   "Proc": "EternalDarkness",
+   "SettingsKey": "EdarkDir",
+   "Repo": "griches/EternalDarknessRecomp",
+   "Asset": "EternalDarkness-windows-x64-*.zip",
+   "Accent": "#5A1A12",
+   "Accent2": "#B4A06A",
+   "FirstRun": "EternalDarkness.exe",
+   "Needs": "Your own Eternal Darkness GameCube disc, the European release (GEDP01) only, as .iso or .ciso (the USA disc isn't supported). The game asks for it on its first start and remembers it.",
+   "DefaultDir": "E:\\Games\\Eternal Darkness",
+   "Series": "nintendo",
+   "Platform": "GameCube",
+   "SettingsLabel": "Eternal Darkness: Sanity's Requiem",
+   "CheckFile": "EternalDarkness.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     ".rvz",
+     ".gcm"
+    ]
+   }
+  },
+  {
+   "Id": "fzgx",
+   "Name": "F-Zero GX",
+   "Short": "FZGX",
+   "Source": "F-ZERO GLINUX  •  GITHUB",
+   "Exe": "F-ZERO GLINUX.exe",
+   "Proc": "ModernGekko*",
+   "SettingsKey": "FzgxDir",
+   "Repo": "Mabec-games/F-ZERO-GLINUX",
+   "Asset": "F-ZERO-GLINUX-*-windows-x64.zip",
+   "Accent": "#1F3F8A",
+   "Accent2": "#E8453C",
+   "FirstRun": "F-ZERO GLINUX.exe",
+   "Needs": "Your own F-Zero GX GameCube disc, USA (GFZE01) or PAL (GFZP01), as .iso or .rvz. In the launcher press Browse for ISO / RVZ; the first start of the game compiles shaders for a few minutes.",
+   "DefaultDir": "E:\\Games\\F-Zero GX",
+   "Series": "nintendo",
+   "Platform": "GameCube",
+   "SettingsLabel": "F-Zero GX",
+   "CheckFile": "F-ZERO GLINUX.exe",
+   "Helpers": "F-ZERO GLINUX",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     ".rvz",
+     ".gcm"
+    ]
+   }
+  },
+  {
+   "Id": "ssb64",
+   "Name": "Super Smash Bros.",
+   "Short": "SSB",
+   "Source": "BATTLESHIP  •  GITHUB",
+   "Exe": "BattleShip.exe",
+   "Proc": "BattleShip",
+   "SettingsKey": "Ssb64Dir",
+   "Repo": "JRickey/BattleShip",
+   "Asset": "BattleShip-windows.zip",
+   "Accent": "#E8453C",
+   "Accent2": "#F6C643",
+   "FirstRun": "BattleShip.exe",
+   "Needs": "Your own Super Smash Bros. N64 ROM, US version 1.0 (.z64). The game asks for it on its first start and remembers it.",
+   "DefaultDir": "E:\\Games\\Super Smash Bros 64",
+   "Series": "nintendo",
+   "Platform": "N64",
+   "SettingsLabel": "Super Smash Bros.",
+   "CheckFile": "BattleShip.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".z64",
+     ".n64",
+     ".v64"
+    ]
+   }
+  },
+  {
+   "Id": "goldeneye",
+   "Name": "GoldenEye 007",
+   "Short": "GE",
+   "Source": "PROJECT MIDAS  •  GITHUB",
+   "Exe": "ProjectMidas.exe",
+   "Proc": "ProjectMidas",
+   "SettingsKey": "GoldeneyeDir",
+   "Repo": "murkantor/Project-Midas",
+   "Asset": "ProjectMidas-*-windows.zip",
+   "Accent": "#7A6A2B",
+   "Accent2": "#C9A227",
+   "FirstRun": "ProjectMidas.exe",
+   "Needs": "A work in progress. Your own GoldenEye 007 N64 ROM, USA cart: put it in the Data folder inside this game's folder (Data\\README.txt lists the accepted formats). Settings are in midas.ini.",
+   "DefaultDir": "E:\\Games\\GoldenEye 007",
+   "Series": "nintendo",
+   "Platform": "N64",
+   "SettingsLabel": "GoldenEye 007",
+   "CheckFile": "ProjectMidas.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".z64",
+     ".n64",
+     ".v64"
+    ]
+   }
+  },
+  {
+   "Id": "pd",
+   "Name": "Perfect Dark",
+   "Short": "PD",
+   "Source": "PERFECT DARK PORT  •  GITHUB",
+   "Exe": "pd.x86_64.exe",
+   "Proc": "pd*",
+   "SettingsKey": "PdDir",
+   "Repo": "perfect-dark-pc-port/perfect_dark",
+   "Asset": "pd-x86_64-windows.zip",
+   "Accent": "#8E1B1B",
+   "Accent2": "#5DADE2",
+   "FirstRun": "pd.x86_64.exe",
+   "Needs": "Your own Perfect Dark N64 ROM, the US final (V1.1, Rev 1) .z64. The launcher copies it in as data\\pd.ntsc-final.z64. (For the PAL or Japanese ROM, put it in data as pd.pal-final.z64 or pd.jpn-final.z64 and start pd.pal.x86_64.exe or pd.jpn.x86_64.exe.)",
+   "DefaultDir": "E:\\Games\\Perfect Dark",
+   "Series": "nintendo",
+   "Platform": "N64",
+   "SettingsLabel": "Perfect Dark",
+   "CheckFile": "pd.x86_64.exe",
+   "Rom": {
+    "Kind": "file",
+    "Formats": [
+     ".z64",
+     ".n64",
+     ".v64"
+    ],
+    "Ext": [
+     ".z64",
+     ".n64",
+     ".v64"
+    ],
+    "Filter": "N64 ROM (*.z64;*.n64;*.v64)|*.z64;*.n64;*.v64",
+    "CopyAs": "data\\pd.ntsc-final.z64"
+   }
+  },
+  {
+   "Id": "pm64",
+   "Name": "Paper Mario",
+   "Short": "PM",
+   "Source": "PAPERBOAT  •  GITHUB",
+   "Exe": "Paperboat.exe",
+   "Proc": "Paperboat",
+   "SettingsKey": "Pm64Dir",
+   "Repo": "HarbourMasters/PaperBoat",
+   "Asset": "Paperboat-*-Win64.zip",
+   "Accent": "#E52521",
+   "Accent2": "#F6C643",
+   "FirstRun": "Paperboat.exe",
+   "Needs": "Your own Paper Mario N64 ROM, USA only (.z64; .n64 and .v64 are converted). The game asks for it on its first start and remembers it.",
+   "DefaultDir": "E:\\Games\\Paper Mario",
+   "Series": "mario",
+   "Platform": "N64",
+   "SettingsLabel": "Paper Mario",
+   "CheckFile": "Paperboat.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".z64",
+     ".n64",
+     ".v64"
+    ]
+   }
+  },
+  {
+   "Id": "bt",
+   "Name": "Banjo-Tooie",
+   "Short": "BT",
+   "Source": "SCURVY DOG PORT  •  GITHUB",
+   "Exe": "BanjoTooieScurvyDogPort.exe",
+   "Proc": "BanjoTooieScurvyDogPort",
+   "SettingsKey": "BtDir",
+   "Repo": "some-scurvy-dog/banjo-tooie-scurvy-dog-port",
+   "Asset": "BanjoTooieScurvyDogPort-*-Windows-x64.zip",
+   "NotAsset": "*.sha256",
+   "Accent": "#E8A33C",
+   "Accent2": "#3D7FD9",
+   "FirstRun": "BanjoTooieScurvyDogPort.exe",
+   "Needs": "An alpha (test versions only). Your own Banjo-Tooie N64 ROM, NTSC-U 1.0 only (.z64; .n64 and .v64 are converted). The game asks for it on its first start and remembers it.",
+   "DefaultDir": "E:\\Games\\Banjo-Tooie",
+   "Series": "nintendo",
+   "Platform": "N64",
+   "SettingsLabel": "Banjo-Tooie",
+   "CheckFile": "BanjoTooieScurvyDogPort.exe",
+   "Pre": true,
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".z64",
+     ".n64",
+     ".v64"
+    ]
+   }
+  },
+  {
+   "Id": "dkr",
+   "Name": "Diddy Kong Racing",
+   "Short": "DKR",
+   "Source": "DKR-R  •  GITHUB",
+   "Exe": "DKR-R.exe",
+   "Proc": "DKR-R",
+   "SettingsKey": "DkrDir",
+   "Repo": "ThatGuyMcd/DKR-R",
+   "Asset": "DKR-R-*-Windows-x64.zip",
+   "Accent": "#E8453C",
+   "Accent2": "#F2C230",
+   "FirstRun": "DKR-R.exe",
+   "Needs": "Your own Diddy Kong Racing N64 ROM, US v1.0 or US Rev A (v1.1). Add it once in Play; Skip launcher starts the game straight away after that.",
+   "DefaultDir": "E:\\Games\\Diddy Kong Racing",
+   "Series": "nintendo",
+   "Platform": "N64",
+   "SettingsLabel": "Diddy Kong Racing",
+   "CheckFile": "DKR-R.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".z64",
+     ".n64",
+     ".v64"
+    ]
+   }
+  },
+  {
+   "Id": "fzerox",
+   "Name": "F-Zero X",
+   "Short": "FZX",
+   "Source": "G-DIFFUSER  •  GITHUB",
+   "Exe": "G-Diffuser.exe",
+   "Proc": "G-Diffuser",
+   "SettingsKey": "FzeroxDir",
+   "Repo": "Zorkats/G-Diffuser",
+   "Asset": "G-Diffuser-*-windows-x64.zip",
+   "Accent": "#1F3F8A",
+   "Accent2": "#E8453C",
+   "FirstRun": "G-Diffuser.exe",
+   "Needs": "Your own F-Zero X N64 ROM, US rev0 only (.z64; .n64 and .v64 are converted). The game asks for it on its first start and remembers it. The 64DD Expansion Kit is optional. Comes with a course and machine editor.",
+   "DefaultDir": "E:\\Games\\F-Zero X",
+   "Series": "nintendo",
+   "Platform": "N64",
+   "SettingsLabel": "F-Zero X",
+   "CheckFile": "G-Diffuser.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".z64",
+     ".n64",
+     ".v64"
+    ]
+   }
+  },
+  {
+   "Id": "jfg",
+   "Name": "Jet Force Gemini",
+   "Short": "JFG",
+   "Source": "JFG RECOMP  •  GITHUB",
+   "Exe": "JFG-Launcher.exe",
+   "Proc": "JFG*",
+   "SettingsKey": "JfgDir",
+   "Repo": "TK22-26/JetForceGemini-Recomp",
+   "Asset": "JFG-*-windows-x64.zip",
+   "NotAsset": "*.json",
+   "Accent": "#2E8B57",
+   "Accent2": "#E8453C",
+   "FirstRun": "JFG-Launcher.exe",
+   "Needs": "Your own Jet Force Gemini N64 ROM: USA, PAL or Japan (Star Twins). In JFG-Launcher import it, pick its cartridge and press Play; it keeps its own copy.",
+   "DefaultDir": "E:\\Games\\Jet Force Gemini",
+   "Series": "nintendo",
+   "Platform": "N64",
+   "SettingsLabel": "Jet Force Gemini",
+   "CheckFile": "JFG-Launcher.exe",
+   "Helpers": "JFG-Launcher",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".z64",
+     ".n64",
+     ".v64"
+    ]
+   }
+  },
+  {
+   "Id": "pw64",
+   "Name": "Pilotwings 64",
+   "Short": "PW64",
+   "Source": "PILOTWINGS 64 RECOMP  •  GITHUB",
+   "Exe": "Pilotwings64Recomp.exe",
+   "Proc": "Pilotwings64Recomp",
+   "SettingsKey": "Pw64Dir",
+   "Repo": "danielgomesvieira2000/pilotwings-64-recomp",
+   "Asset": "Pilotwings64Recomp-*-windows-x64.zip",
+   "NotAsset": "*debug*",
+   "Accent": "#3D7FD9",
+   "Accent2": "#F2C230",
+   "FirstRun": "Pilotwings64Recomp.exe",
+   "Needs": "Your own Pilotwings 64 N64 ROM, USA only (.z64; .n64 and .v64 are converted). The game asks for it on its first start and remembers it.",
+   "DefaultDir": "E:\\Games\\Pilotwings 64",
+   "Series": "nintendo",
+   "Platform": "N64",
+   "SettingsLabel": "Pilotwings 64",
+   "CheckFile": "Pilotwings64Recomp.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".z64",
+     ".n64",
+     ".v64"
+    ]
+   }
+  },
+  {
+   "Id": "wr64",
+   "Name": "Wave Race 64",
+   "Short": "WR64",
+   "Source": "RACEWAVE46  •  GITHUB",
+   "Exe": "WaveRace64Recompiled.exe",
+   "Proc": "WaveRace64Recompiled",
+   "SettingsKey": "Wr64Dir",
+   "Repo": "DomazinUS/RaceWave46",
+   "Asset": "RaceWave46-Windows-x64-*.zip",
+   "NotAsset": "*.sha256",
+   "Accent": "#1F78C8",
+   "Accent2": "#F6C643",
+   "FirstRun": "WaveRace64Recompiled.exe",
+   "Needs": "Your own Wave Race 64 N64 ROM, USA Rev 1: press Select USA ROM on the first start. Saves and settings stay in the .runtime folder here.",
+   "DefaultDir": "E:\\Games\\Wave Race 64",
+   "Series": "nintendo",
+   "Platform": "N64",
+   "SettingsLabel": "Wave Race 64",
+   "CheckFile": "WaveRace64Recompiled.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".z64",
+     ".n64",
+     ".v64"
+    ]
+   }
+  },
+  {
+   "Id": "blastcorps",
+   "Name": "Blast Corps",
+   "Short": "BC",
+   "Source": "POWER DOZER  •  GITHUB",
+   "Exe": "power-dozer.exe",
+   "Proc": "power-dozer",
+   "SettingsKey": "BlastcorpsDir",
+   "Repo": "djultra64/Power-Dozer",
+   "Asset": "power-dozer-*-windows-x86_64.zip",
+   "NotAsset": "*.sha256",
+   "Accent": "#F2C230",
+   "Accent2": "#3B4A5A",
+   "FirstRun": "power-dozer.exe",
+   "Needs": "Your own Blast Corps N64 ROM, USA Rev 1 only (.z64; .n64 and .v64 are converted). The game asks for it on its first start and remembers it.",
+   "DefaultDir": "E:\\Games\\Blast Corps",
+   "Series": "nintendo",
+   "Platform": "N64",
+   "SettingsLabel": "Blast Corps",
+   "CheckFile": "power-dozer.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".z64",
+     ".n64",
+     ".v64"
+    ]
+   }
+  },
+  {
+   "Id": "tetrisphere",
+   "Name": "Tetrisphere",
+   "Short": "TS",
+   "Source": "BLOCKSPHERE  •  GITHUB",
+   "Exe": "blocksphere-launcher.exe",
+   "Proc": "blocksphere*",
+   "SettingsKey": "TetrisphereDir",
+   "Repo": "djultra64/Blocksphere",
+   "Asset": "blocksphere-*-windows-x86_64.zip",
+   "Accent": "#7B3FA0",
+   "Accent2": "#57CBDE",
+   "FirstRun": "blocksphere-launcher.exe",
+   "Needs": "Your own Tetrisphere N64 ROM (or a zip with it). In the Blocksphere launcher pick it, choose an empty folder to install into and press Install; then Play.",
+   "DefaultDir": "E:\\Games\\Tetrisphere",
+   "Series": "nintendo",
+   "Platform": "N64",
+   "SettingsLabel": "Tetrisphere",
+   "CheckFile": "blocksphere-launcher.exe",
+   "Helpers": "blocksphere-launcher",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".z64",
+     ".n64",
+     ".v64"
+    ]
+   }
+  },
+  {
+   "Id": "bm64",
+   "Name": "Bomberman 64",
+   "Short": "BM64",
+   "Source": "BM64: RECOMPILED  •  GITHUB",
+   "Exe": "BM64Recompiled.exe",
+   "Proc": "BM64Recompiled",
+   "SettingsKey": "Bm64Dir",
+   "Repo": "RevoSucks/BM64Recomp",
+   "Asset": "BM64Recompiled-Windows-*.zip",
+   "Accent": "#3D7FD9",
+   "Accent2": "#E8453C",
+   "FirstRun": "BM64Recompiled.exe",
+   "Needs": "Your own Bomberman 64 N64 ROM, US version only (.z64). Pick it in the main menu.",
+   "DefaultDir": "E:\\Games\\Bomberman 64",
+   "Series": "nintendo",
+   "Platform": "N64",
+   "SettingsLabel": "Bomberman 64",
+   "CheckFile": "BM64Recompiled.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".z64",
+     ".n64",
+     ".v64"
+    ]
+   }
+  },
+  {
+   "Id": "goemon",
+   "Name": "Mystical Ninja Starring Goemon",
+   "Short": "MN",
+   "Source": "GOEMON64: RECOMPILED  •  GITHUB",
+   "Exe": "Goemon64Recompiled.exe",
+   "Proc": "Goemon64Recompiled",
+   "SettingsKey": "GoemonDir",
+   "Repo": "klorfmorf/Goemon64Recomp",
+   "Asset": "Goemon64Recompiled-Windows-*.zip",
+   "Accent": "#2B6CE0",
+   "Accent2": "#E8453C",
+   "FirstRun": "Goemon64Recompiled.exe",
+   "Needs": "Your own Mystical Ninja Starring Goemon N64 ROM, US version only (.z64). Pick it in the main menu.",
+   "DefaultDir": "E:\\Games\\Goemon 64",
+   "Series": "nintendo",
+   "Platform": "N64",
+   "SettingsLabel": "Mystical Ninja Starring Goemon",
+   "CheckFile": "Goemon64Recompiled.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".z64",
+     ".n64",
+     ".v64"
+    ]
+   }
+  },
+  {
+   "Id": "hm64",
+   "Name": "Harvest Moon 64",
+   "Short": "HM64",
+   "Source": "HARVEST MOON 64: RECOMPILED  •  GITHUB",
+   "Exe": "HarvestMoon64Recompiled.exe",
+   "Proc": "HarvestMoon64Recompiled",
+   "SettingsKey": "Hm64Dir",
+   "Repo": "HarvestMoon64Recomp/HarvestMoon64Recomp",
+   "Asset": "HarvestMoon64Recompiled-*-Windows.zip",
+   "Accent": "#6AA84F",
+   "Accent2": "#F2C230",
+   "FirstRun": "HarvestMoon64Recompiled.exe",
+   "Needs": "Your own Harvest Moon 64 N64 ROM, US version (.z64). Pick it in the main menu.",
+   "DefaultDir": "E:\\Games\\Harvest Moon 64",
+   "Series": "nintendo",
+   "Platform": "N64",
+   "SettingsLabel": "Harvest Moon 64",
+   "CheckFile": "HarvestMoon64Recompiled.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".z64",
+     ".n64",
+     ".v64"
+    ]
+   }
+  },
+  {
+   "Id": "cv64",
+   "Name": "Castlevania",
+   "Short": "CV64",
+   "Source": "CV64 RECOMP  •  GITHUB",
+   "Exe": "CV64Recompiled.exe",
+   "Proc": "CV64Recompiled",
+   "SettingsKey": "Cv64Dir",
+   "Repo": "DankZoneStudios/CV64Recomp",
+   "Asset": "CV64-*-Windows-x64.zip",
+   "NotAsset": "*source*",
+   "Accent": "#5A0F0F",
+   "Accent2": "#C9A227",
+   "FirstRun": "CV64Recompiled.exe",
+   "Needs": "Your own Castlevania (N64) N64 ROM, North American only (.z64; .n64 and .v64 are converted). The game asks for it on its first start and remembers it.",
+   "DefaultDir": "E:\\Games\\Castlevania 64",
+   "Series": "nintendo",
+   "Platform": "N64",
+   "SettingsLabel": "Castlevania 64",
+   "CheckFile": "CV64Recompiled.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".z64",
+     ".n64",
+     ".v64"
+    ]
+   }
+  },
+  {
+   "Id": "cvlod",
+   "Name": "Castlevania: Legacy of Darkness",
+   "Short": "LoD",
+   "Source": "LODRECOMP  •  GITHUB",
+   "Exe": "LodRecomp.exe",
+   "Proc": "LodRecomp",
+   "SettingsKey": "CvlodDir",
+   "Repo": "fliperama86/cvlod_recomp",
+   "Asset": "LodRecomp-*-windows-x64.zip",
+   "NotAsset": "*.sha256",
+   "Accent": "#3B1F4A",
+   "Accent2": "#C9A227",
+   "FirstRun": "LodRecomp.exe",
+   "Needs": "Your own Castlevania: Legacy of Darkness N64 ROM, the stock USA ROM (.z64). The launcher copies it in as rom.z64 next to the game.",
+   "DefaultDir": "E:\\Games\\Castlevania LoD",
+   "Series": "nintendo",
+   "Platform": "N64",
+   "SettingsLabel": "Castlevania: Legacy of Darkness",
+   "CheckFile": "LodRecomp.exe",
+   "Rom": {
+    "Kind": "file",
+    "Formats": [
+     ".z64",
+     ".n64",
+     ".v64"
+    ],
+    "Ext": [
+     ".z64",
+     ".n64",
+     ".v64"
+    ],
+    "Filter": "N64 ROM (*.z64;*.n64;*.v64)|*.z64;*.n64;*.v64",
+    "CopyAs": "rom.z64"
+   }
+  },
+  {
+   "Id": "mm64",
+   "Name": "Mega Man 64",
+   "Short": "MM64",
+   "Source": "MEGA MAN 64: RECOMPILED  •  GITHUB",
+   "Exe": "MegaMan64Recompiled.exe",
+   "Proc": "MegaMan64Recompiled",
+   "SettingsKey": "Mm64Dir",
+   "Repo": "MegaMan64Recomp/MegaMan64Recompiled",
+   "Asset": "MegaMan64Recompiled-*-Windows.zip",
+   "Accent": "#2B6CE0",
+   "Accent2": "#F2C230",
+   "FirstRun": "MegaMan64Recompiled.exe",
+   "Needs": "Your own Mega Man 64 N64 ROM, US version (.z64). Pick it in the main menu.",
+   "DefaultDir": "E:\\Games\\Mega Man 64",
+   "Series": "nintendo",
+   "Platform": "N64",
+   "SettingsLabel": "Mega Man 64",
+   "CheckFile": "MegaMan64Recompiled.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".z64",
+     ".n64",
+     ".v64"
+    ]
+   }
+  },
+  {
+   "Id": "quest64",
+   "Name": "Quest 64",
+   "Short": "Q64",
+   "Source": "QUEST 64: RECOMPILED  •  GITHUB",
+   "Exe": "Quest64Recompiled.exe",
+   "Proc": "Quest64Recompiled",
+   "SettingsKey": "Quest64Dir",
+   "Repo": "Rainchus/Quest64-Recomp",
+   "Asset": "Quest64Recompiled*.zip",
+   "Accent": "#3E2A5A",
+   "Accent2": "#E3C26B",
+   "FirstRun": "Quest64Recompiled.exe",
+   "Needs": "Your own Quest 64 N64 ROM, US version only (.z64). Pick it in the main menu.",
+   "DefaultDir": "E:\\Games\\Quest 64",
+   "Series": "nintendo",
+   "Platform": "N64",
+   "SettingsLabel": "Quest 64",
+   "CheckFile": "Quest64Recompiled.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".z64",
+     ".n64",
+     ".v64"
+    ]
+   }
+  },
+  {
+   "Id": "dinoplanet",
+   "Name": "Dinosaur Planet",
+   "Short": "DP",
+   "Source": "DINOSAUR PLANET: RECOMPILED  •  GITHUB",
+   "Exe": "DinosaurPlanetRecompiled.exe",
+   "Proc": "DinosaurPlanetRecompiled",
+   "SettingsKey": "DinoplanetDir",
+   "Repo": "DinosaurPlanetRecomp/dino-recomp",
+   "Asset": "DinosaurPlanetRecompiled-*-Windows-x64.zip",
+   "Accent": "#2E6F57",
+   "Accent2": "#E3A23C",
+   "FirstRun": "DinosaurPlanetRecompiled.exe",
+   "Needs": "Your own copy of the unreleased December 2000 Dinosaur Planet prototype ROM (the one released on 20 Feb 2021), unpatched. Pick it in the main menu; patches come as recomp mods instead.",
+   "DefaultDir": "E:\\Games\\Dinosaur Planet",
+   "Series": "nintendo",
+   "Platform": "N64",
+   "SettingsLabel": "Dinosaur Planet",
+   "CheckFile": "DinosaurPlanetRecompiled.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".z64",
+     ".n64",
+     ".v64"
+    ]
+   }
+  },
+  {
+   "Id": "sbk2",
+   "Name": "Snowboard Kids 2",
+   "Short": "SBK2",
+   "Source": "SNOWBOARD KIDS 2: RECOMPILED  •  GITHUB",
+   "Exe": "SnowboardKids2Recompiled.exe",
+   "Proc": "SnowboardKids2Recompiled",
+   "SettingsKey": "Sbk2Dir",
+   "Repo": "cdlewis/snowboardkids2-recomp",
+   "Asset": "SnowboardKids2Recompiled-Windows.zip",
+   "Accent": "#57CBDE",
+   "Accent2": "#E85A9B",
+   "FirstRun": "SnowboardKids2Recompiled.exe",
+   "Needs": "Your own Snowboard Kids 2 N64 ROM, US version only (.z64). Pick it in the main menu.",
+   "DefaultDir": "E:\\Games\\Snowboard Kids 2",
+   "Series": "sports",
+   "Platform": "N64",
+   "SettingsLabel": "Snowboard Kids 2",
+   "CheckFile": "SnowboardKids2Recompiled.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".z64",
+     ".n64",
+     ".v64"
+    ]
+   }
+  },
+  {
+   "Id": "sssv",
+   "Name": "Space Station Silicon Valley",
+   "Short": "SSSV",
+   "Source": "SSSV RECOMPILED  •  GITHUB",
+   "Exe": "SSSVRecompiled.exe",
+   "Proc": "SSSVRecompiled",
+   "SettingsKey": "SssvDir",
+   "Repo": "Cellenseres/SSSV_Recomp",
+   "Asset": "SSSVRecompiled_*_Windows.zip",
+   "Accent": "#6AA84F",
+   "Accent2": "#3B4A5A",
+   "FirstRun": "SSSVRecompiled.exe",
+   "Needs": "Your own Space Station Silicon Valley N64 ROM, US 1.0 only (.z64). Pick it in the main menu.",
+   "DefaultDir": "E:\\Games\\SSSV",
+   "Series": "nintendo",
+   "Platform": "N64",
+   "SettingsLabel": "Space Station Silicon Valley",
+   "CheckFile": "SSSVRecompiled.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".z64",
+     ".n64",
+     ".v64"
+    ]
+   }
+  },
+  {
+   "Id": "snp",
+   "Name": "Sin and Punishment",
+   "Short": "SnP",
+   "Source": "SNPRECOMP  •  GITHUB",
+   "Exe": "SnPRecompiled.exe",
+   "Proc": "SnPRecompiled",
+   "SettingsKey": "SnpDir",
+   "Repo": "wootbeer/snprecomp",
+   "Asset": "SnPRecompiled-*-windows.zip",
+   "Accent": "#8E1B1B",
+   "Accent2": "#57CBDE",
+   "FirstRun": "SnPRecompiled.exe",
+   "Needs": "Your own Sin and Punishment N64 ROM (Japanese or an English translation; .z64, .n64 or .v64). Start the game, pick Load ROM and choose it, once.",
+   "DefaultDir": "E:\\Games\\Sin and Punishment",
+   "Series": "nintendo",
+   "Platform": "N64",
+   "SettingsLabel": "Sin and Punishment",
+   "CheckFile": "SnPRecompiled.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".z64",
+     ".n64",
+     ".v64"
+    ]
+   }
+  },
+  {
+   "Id": "aerogauge",
+   "Name": "AeroGauge",
+   "Short": "AG",
+   "Source": "AEROGAUGE RECOMP  •  GITHUB",
+   "Exe": "aerogauge_modern.exe",
+   "Proc": "aerogauge_modern",
+   "SettingsKey": "AerogaugeDir",
+   "Repo": "alondero/aerogauge-recomp",
+   "Asset": "aerogauge-recomp-windows-x64.zip",
+   "Accent": "#1F3F8A",
+   "Accent2": "#F39C12",
+   "FirstRun": "aerogauge_modern.exe",
+   "Needs": "Your own AeroGauge N64 ROM, USA or Japanese Rev A only (.z64; .n64 and .v64 are converted). The game asks for it on its first start and remembers it.",
+   "DefaultDir": "E:\\Games\\AeroGauge",
+   "Series": "nintendo",
+   "Platform": "N64",
+   "SettingsLabel": "AeroGauge",
+   "CheckFile": "aerogauge_modern.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".z64",
+     ".n64",
+     ".v64"
+    ]
+   }
+  },
+  {
+   "Id": "battletanx",
+   "Name": "BattleTanx: Global Assault",
+   "Short": "BTGA",
+   "Source": "BATTLETANX PC PORT  •  GITHUB",
+   "Exe": "BattleTanxGA.exe",
+   "Proc": "BattleTanxGA",
+   "SettingsKey": "BattletanxDir",
+   "Repo": "TheGh0stShip/BattleTanx-Global-Assault-PC-Port",
+   "Asset": "BattleTanxGA-*-windows-x64-portable.zip",
+   "Accent": "#4A5A2B",
+   "Accent2": "#E8453C",
+   "FirstRun": "BattleTanxGA.exe",
+   "Needs": "Your own BattleTanx: Global Assault N64 ROM, USA Rev 0 only (.z64; .n64 and .v64 are converted). The game asks for it on its first start and remembers it.",
+   "DefaultDir": "E:\\Games\\BattleTanx",
+   "Series": "nintendo",
+   "Platform": "N64",
+   "SettingsLabel": "BattleTanx: Global Assault",
+   "CheckFile": "BattleTanxGA.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".z64",
+     ".n64",
+     ".v64"
+    ]
+   }
+  },
+  {
+   "Id": "iss2k",
+   "Name": "International Superstar Soccer 2000",
+   "Short": "ISS",
+   "Source": "ISS 2000 WIDESCREEN  •  GITHUB",
+   "Exe": "ISS2000Recompiled.exe",
+   "Proc": "ISS2000Recompiled",
+   "SettingsKey": "Iss2kDir",
+   "Repo": "Mabec-games/iss2000-recomp",
+   "Asset": "Mabecs_ISS2000_Widescreen-Windows-x64.zip",
+   "Accent": "#1F9E5A",
+   "Accent2": "#E3E3E3",
+   "FirstRun": "ISS2000Recompiled.exe",
+   "Needs": "Your own International Superstar Soccer 2000 N64 ROM, USA Rev 1 or either European version only (.z64; .n64 and .v64 are converted). The game asks for it on its first start and remembers it.",
+   "DefaultDir": "E:\\Games\\ISS 2000",
+   "Series": "sports",
+   "Platform": "N64",
+   "SettingsLabel": "International Superstar Soccer 2000",
+   "CheckFile": "ISS2000Recompiled.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".z64",
+     ".n64",
+     ".v64"
+    ]
+   }
+  },
+  {
+   "Id": "smw",
+   "Name": "Super Mario World",
+   "Short": "SMW",
+   "Source": "SMW RECOMP  •  GITHUB",
+   "Exe": "SuperMarioWorldSNESRecomp.exe",
+   "Proc": "SuperMarioWorldSNESRecomp",
+   "SettingsKey": "SmwDir",
+   "Repo": "mstan/SuperMarioWorldRecomp",
+   "Asset": "SuperMarioWorldRecomp-windows-x64-*.zip",
+   "Accent": "#E52521",
+   "Accent2": "#F6C643",
+   "FirstRun": "SuperMarioWorldSNESRecomp.exe",
+   "Needs": "Your own Super Mario World SNES ROM, USA (.sfc or .smc). The game asks for it on its first start and remembers it. Controls are in keybinds.ini next to the game.",
+   "DefaultDir": "E:\\Games\\Super Mario World",
+   "Series": "mario",
+   "Platform": "SNES",
+   "SettingsLabel": "Super Mario World (SNES Recomp)",
+   "CheckFile": "SuperMarioWorldSNESRecomp.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".sfc",
+     ".smc"
+    ]
+   }
+  },
+  {
+   "Id": "smas",
+   "Name": "Super Mario All-Stars",
+   "Short": "SMAS",
+   "Source": "SMAS RECOMP  •  GITHUB",
+   "Exe": "SuperMarioAllStars.exe",
+   "Proc": "SuperMarioAllStars",
+   "SettingsKey": "SmasDir",
+   "Repo": "TanookiStudios/SuperMarioAllStarsRecomp",
+   "Asset": "SuperMarioAllStars-Windows.zip",
+   "Accent": "#E52521",
+   "Accent2": "#3D7FD9",
+   "FirstRun": "SuperMarioAllStars.exe",
+   "Needs": "Your own Super Mario All-Stars SNES ROM: the 2010 25th Anniversary re-release, USA (.sfc). The 1993 cartridge doesn't work. The launcher shows ROM verified when it's the right one.",
+   "DefaultDir": "E:\\Games\\Super Mario All-Stars",
+   "Series": "mario",
+   "Platform": "SNES",
+   "SettingsLabel": "Super Mario All-Stars",
+   "CheckFile": "SuperMarioAllStars.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".sfc",
+     ".smc"
+    ]
+   }
+  },
+  {
+   "Id": "dkc",
+   "Name": "Donkey Kong Country",
+   "Short": "DKC",
+   "Source": "DKC1RECOMP  •  GITHUB",
+   "Exe": "DKC1Recomp.exe",
+   "Proc": "DKC1Recomp",
+   "SettingsKey": "DkcDir",
+   "Repo": "elliotttate/DKC1Recomp",
+   "Asset": "DKC1Recomp-*-Windows-x64.zip",
+   "NotAsset": "*.sha256",
+   "Accent": "#8B5A2B",
+   "Accent2": "#F2C230",
+   "FirstRun": "DKC1Recomp.exe",
+   "Needs": "Your own Donkey Kong Country SNES ROM, USA v1.0 (headerless .sfc). The game asks for it on its first start and remembers it.",
+   "DefaultDir": "E:\\Games\\Donkey Kong Country",
+   "Series": "nintendo",
+   "Platform": "SNES",
+   "SettingsLabel": "Donkey Kong Country",
+   "CheckFile": "DKC1Recomp.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".sfc",
+     ".smc"
+    ]
+   }
+  },
+  {
+   "Id": "supermetroid",
+   "Name": "Super Metroid",
+   "Short": "SM",
+   "Source": "SUPER METROID LAUNCHER  •  GITHUB",
+   "Exe": "Super Metroid Launcher.exe",
+   "Proc": "Super Metroid Launcher",
+   "SettingsKey": "SupermetroidDir",
+   "Repo": "RadzPrower/Super-Metroid-Launcher",
+   "Asset": "Super_Metroid_Launcher_*.zip",
+   "Accent": "#C0392B",
+   "Accent2": "#2E8B57",
+   "FirstRun": "Super Metroid Launcher.exe",
+   "Needs": "Your own Super Metroid SNES ROM, US (.sfc). The launcher copies it in as sm.sfc; in Super Metroid Launcher press the download button: it fetches the sm port and sets it up, then Play.",
+   "DefaultDir": "E:\\Games\\Super Metroid",
+   "Series": "nintendo",
+   "Platform": "SNES",
+   "SettingsLabel": "Super Metroid",
+   "CheckFile": "Super Metroid Launcher.exe",
+   "Helpers": "Super Metroid Launcher",
+   "Rom": {
+    "Kind": "file",
+    "Formats": [
+     ".sfc",
+     ".smc"
+    ],
+    "Ext": [
+     ".sfc",
+     ".smc"
+    ],
+    "Filter": "SNES ROM (*.sfc;*.smc)|*.sfc;*.smc",
+    "CopyAs": "sm.sfc"
+   }
+  },
+  {
+   "Id": "mmx",
+   "Name": "Mega Man X",
+   "Short": "MMX",
+   "Source": "MEGA MAN X RECOMP  •  GITHUB",
+   "Exe": "MegaManXSNESRecomp.exe",
+   "Proc": "MegaManXSNESRecomp",
+   "SettingsKey": "MmxDir",
+   "Repo": "mstan/MegaManXSNESRecomp",
+   "Asset": "MegaManXSNESRecomp-windows-*.zip",
+   "Accent": "#2B6CE0",
+   "Accent2": "#57CBDE",
+   "FirstRun": "MegaManXSNESRecomp.exe",
+   "Needs": "Your own Mega Man X SNES ROM, USA Rev 1 (.sfc or .smc, headered or not): pick it in the launcher, turn on the extras you want under Mods, then Play. Playing as Zero also uses your Mega Man X3 USA ROM.",
+   "DefaultDir": "E:\\Games\\Mega Man X",
+   "Series": "nintendo",
+   "Platform": "SNES",
+   "SettingsLabel": "Mega Man X",
+   "CheckFile": "MegaManXSNESRecomp.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".sfc",
+     ".smc"
+    ]
+   }
+  },
+  {
+   "Id": "fzero",
+   "Name": "F-Zero",
+   "Short": "FZ",
+   "Source": "F-ZERO FOREVER  •  GITHUB",
+   "Exe": "F-Zero Forever.exe",
+   "Proc": "F-Zero Forever",
+   "SettingsKey": "FzeroDir",
+   "Repo": "RetroPortingToolKit/FZeroSNESRecomp",
+   "Asset": "F-Zero-Forever-*-windows-x64-without-msu.zip",
+   "Accent": "#1F3F8A",
+   "Accent2": "#F6C643",
+   "FirstRun": "F-Zero Forever.exe",
+   "Needs": "Your own F-Zero SNES ROM, USA (.sfc). The game asks for it on its first start and remembers it. Comes with community Grand Prix hacks; the Custom Content importer takes more.",
+   "DefaultDir": "E:\\Games\\F-Zero SNES",
+   "Series": "nintendo",
+   "Platform": "SNES",
+   "SettingsLabel": "F-Zero (F-Zero Forever)",
+   "CheckFile": "F-Zero Forever.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".sfc",
+     ".smc"
+    ]
+   }
+  },
+  {
+   "Id": "earthbound",
+   "Name": "EarthBound",
+   "Short": "EB",
+   "Source": "PHASE DISTORTER  •  GITHUB",
+   "Exe": "Phase Distorter.exe",
+   "Proc": "Phase Distorter",
+   "SettingsKey": "EarthboundDir",
+   "Repo": "TheRunaway5/Phase-Distorter",
+   "Asset": "Phase-Distorter-*-windows-x86_64.zip",
+   "Accent": "#E85A9B",
+   "Accent2": "#57CBDE",
+   "FirstRun": "Phase Distorter.exe",
+   "Needs": "Your own EarthBound (or Mother 2) SNES ROM. If ROM setup appears on the first start, import it there.",
+   "DefaultDir": "E:\\Games\\EarthBound",
+   "Series": "nintendo",
+   "Platform": "SNES",
+   "SettingsLabel": "EarthBound",
+   "CheckFile": "Phase Distorter.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".sfc",
+     ".smc"
+    ]
+   }
+  },
+  {
+   "Id": "smb1r",
+   "Name": "Super Mario Bros. Remastered",
+   "Short": "SMBR",
+   "Source": "SMB REMASTERED  •  GITHUB",
+   "Exe": "SMB1R.exe",
+   "Proc": "SMB1R",
+   "SettingsKey": "Smb1rDir",
+   "Repo": "JHDev2006/Super-Mario-Bros.-Remastered-Public",
+   "Asset": "Windows.zip",
+   "Accent": "#E52521",
+   "Accent2": "#3D7FD9",
+   "FirstRun": "SMB1R.exe",
+   "Needs": "Your own Super Mario Bros. NES ROM (.nes). The game asks for it on its first start and remembers it. A remake with level editor, extra modes and more.",
+   "DefaultDir": "E:\\Games\\SMB Remastered",
+   "Series": "mario",
+   "Platform": "NES",
+   "SettingsLabel": "Super Mario Bros. Remastered",
+   "CheckFile": "SMB1R.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".nes"
+    ]
+   }
+  },
+  {
+   "Id": "mother3",
+   "Name": "Mother 3",
+   "Short": "M3",
+   "Source": "MOTHER3RECOMP  •  GITHUB",
+   "Exe": "Mother3Recomp.exe",
+   "Proc": "Mother3Recomp",
+   "SettingsKey": "Mother3Dir",
+   "Repo": "josiahg2502-glitch/Mother3Recomp",
+   "Asset": "Mother3Recomp-*-windows-x64.zip",
+   "Accent": "#E8A33C",
+   "Accent2": "#3D7FD9",
+   "FirstRun": "Mother3Recomp.exe",
+   "Needs": "Your own Mother 3 GBA ROM (Japanese; a fan translation patch is asked for with it) and your own GBA BIOS. The first start asks for them. Saves from emulators can be imported.",
+   "DefaultDir": "E:\\Games\\Mother 3",
+   "Series": "nintendo",
+   "Platform": "GBA",
+   "SettingsLabel": "Mother 3",
+   "CheckFile": "Mother3Recomp.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".gba"
+    ]
+   }
+  },
+  {
+   "Id": "fess",
+   "Name": "Fire Emblem: The Sacred Stones",
+   "Short": "FE8",
+   "Source": "SACREDSTONESRECOMP  •  GITHUB",
+   "Exe": "SacredStonesRecomp.exe",
+   "Proc": "SacredStonesRecomp",
+   "SettingsKey": "FessDir",
+   "Repo": "Lordingard/SacredStonesRecomp",
+   "Asset": "SacredStonesRecomp-*-win64.zip",
+   "NotAsset": "*.sha256",
+   "Accent": "#1F3F8A",
+   "Accent2": "#D9A441",
+   "FirstRun": "SacredStonesRecomp.exe",
+   "Needs": "Your own Fire Emblem: The Sacred Stones GBA ROM, USA (.gba), and your own GBA BIOS. The game asks for it on its first start and remembers it.",
+   "DefaultDir": "E:\\Games\\Fire Emblem Sacred Stones",
+   "Series": "nintendo",
+   "Platform": "GBA",
+   "SettingsLabel": "Fire Emblem: The Sacred Stones",
+   "CheckFile": "SacredStonesRecomp.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".gba"
+    ]
+   }
+  },
+  {
+   "Id": "mph",
+   "Name": "Metroid Prime Hunters",
+   "Short": "MPH",
+   "Source": "SECOND HUNT  •  GITHUB",
+   "Exe": "SecondHunt.exe",
+   "Proc": "SecondHunt",
+   "SettingsKey": "MphDir",
+   "Repo": "BountyHunterKanden/SecondHunt",
+   "Asset": "SecondHunt-*-windows-x64.zip",
+   "NotAsset": "*.sha256",
+   "Accent": "#D35400",
+   "Accent2": "#57CBDE",
+   "FirstRun": "SecondHunt.exe",
+   "Needs": "Your own Metroid Prime Hunters DS ROM, USA version 1.0 or 1.1 (.nds). Pick it on the first start; Second Hunt unpacks it once and then goes straight into the game. Adds new weapons, characters and maps.",
+   "DefaultDir": "E:\\Games\\Metroid Prime Hunters",
+   "Series": "nintendo",
+   "Platform": "NDS",
+   "SettingsLabel": "Metroid Prime Hunters (Second Hunt)",
+   "CheckFile": "SecondHunt.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".nds"
+    ]
+   }
+  },
+  {
+   "Id": "pkplat",
+   "Name": "Pokémon Platinum",
+   "Short": "PtPt",
+   "Source": "POKEPLATINUM  •  GITHUB",
+   "Exe": "main.exe",
+   "Proc": "main",
+   "SettingsKey": "PkplatDir",
+   "Repo": "cybervisi0n/pokeplatinum",
+   "Asset": "release_win64.zip",
+   "Accent": "#8E9AAF",
+   "Accent2": "#C9A227",
+   "FirstRun": "main.exe",
+   "Needs": "Your own Pokémon Platinum DS ROM, US (CPUE01) only (.nds). On the first start it asks for it and extracts it next to the game. Saves work with emulators and real hardware.",
+   "DefaultDir": "E:\\Games\\Pokemon Platinum",
+   "Series": "pokemon",
+   "Platform": "NDS",
+   "SettingsLabel": "Pokémon Platinum",
+   "CheckFile": "main.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".nds"
+    ]
+   }
+  },
+  {
+   "Id": "svr2007",
+   "Name": "WWE SmackDown vs. Raw 2007",
+   "Short": "SvR07",
+   "Source": "SVR2007 NATIVE  •  GITHUB",
+   "Exe": "svr2007.exe",
+   "Proc": "svr2007*",
+   "SettingsKey": "Svr2007Dir",
+   "Repo": "nefariousjosiah/WWE-SVR2007-RECOMP",
+   "Asset": "SVR2007-NATIVE.zip",
+   "Accent": "#8E1B1B",
+   "Accent2": "#C9A227",
+   "FirstRun": "svr2007.exe",
+   "Needs": "Your own WWE SmackDown vs. Raw 2007 Xbox 360 disc image (.iso), the USA / Europe release (title ID 545107E0). Copy the .iso into this game's folder, next to svr2007.exe, then start it. (svr2007_vulkan.exe in the folder is the Vulkan version.)",
+   "DefaultDir": "E:\\Games\\SvR 2007",
+   "Series": "sports",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "WWE SmackDown vs. Raw 2007",
+   "CheckFile": "svr2007.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "svr2008",
+   "Name": "WWE SmackDown vs. Raw 2008",
+   "Short": "SvR08",
+   "Source": "SVR2008 NATIVE  •  GITHUB",
+   "Exe": "svr2008.exe",
+   "Proc": "svr2008*",
+   "SettingsKey": "Svr2008Dir",
+   "Repo": "nefariousjosiah/WWE-SVR2008-RECOMP",
+   "Asset": "SVR2008-NATIVE.zip",
+   "Accent": "#1A1A1A",
+   "Accent2": "#C9A227",
+   "FirstRun": "svr2008.exe",
+   "Needs": "Your own WWE SmackDown vs. Raw 2008 Xbox 360 disc image (.iso), the USA / Europe release (title ID 5451080B). Copy the .iso into this game's folder, next to svr2008.exe, then start it. (svr2008_vulkan.exe in the folder is the Vulkan version.)",
+   "DefaultDir": "E:\\Games\\SvR 2008",
+   "Series": "sports",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "WWE SmackDown vs. Raw 2008",
+   "CheckFile": "svr2008.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "svr2009",
+   "Name": "WWE SmackDown vs. Raw 2009",
+   "Short": "SvR09",
+   "Source": "SVR2009 NATIVE  •  GITHUB",
+   "Exe": "svr2009.exe",
+   "Proc": "svr2009*",
+   "SettingsKey": "Svr2009Dir",
+   "Repo": "nefariousjosiah/WWE-SVR2009-RECOMP",
+   "Asset": "SVR2009-NATIVE.zip",
+   "Accent": "#5A0F0F",
+   "Accent2": "#C9A227",
+   "FirstRun": "svr2009.exe",
+   "Needs": "Your own WWE SmackDown vs. Raw 2009 Xbox 360 disc image (.iso), the USA / Europe release (title ID 54510826). Copy the .iso into this game's folder, next to svr2009.exe, then start it. (svr2009_vulkan.exe in the folder is the Vulkan version.)",
+   "DefaultDir": "E:\\Games\\SvR 2009",
+   "Series": "sports",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "WWE SmackDown vs. Raw 2009",
+   "CheckFile": "svr2009.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "svr2010",
+   "Name": "WWE SmackDown vs. Raw 2010",
+   "Short": "SvR10",
+   "Source": "SVR2010 NATIVE  •  GITHUB",
+   "Exe": "svr2010.exe",
+   "Proc": "svr2010*",
+   "SettingsKey": "Svr2010Dir",
+   "Repo": "nefariousjosiah/WWE-SVR2010-RECOMP",
+   "Asset": "SVR2010-NATIVE.zip",
+   "Accent": "#3B1F4A",
+   "Accent2": "#C9A227",
+   "FirstRun": "svr2010.exe",
+   "Needs": "Your own WWE SmackDown vs. Raw 2010 Xbox 360 disc image (.iso), the USA / Europe release (title ID 54510844). Copy the .iso into this game's folder, next to svr2010.exe, then start it. (svr2010_vulkan.exe in the folder is the Vulkan version.)",
+   "DefaultDir": "E:\\Games\\SvR 2010",
+   "Series": "sports",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "WWE SmackDown vs. Raw 2010",
+   "CheckFile": "svr2010.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "svr2011",
+   "Name": "WWE SmackDown vs. Raw 2011",
+   "Short": "SvR11",
+   "Source": "SVR2011 RECOMP  •  GITHUB",
+   "Exe": "SVR 2011.exe",
+   "Proc": "SVR*2011*",
+   "SettingsKey": "Svr2011Dir",
+   "Repo": "shaneomac1337/SVR2011-Recomp",
+   "Asset": "SVR2011-*.zip",
+   "Accent": "#B23A3A",
+   "Accent2": "#E3E3E3",
+   "FirstRun": "SVR 2011.exe",
+   "Needs": "Your own WWE SmackDown vs. Raw 2011 Xbox 360 disc image (.iso), USA/Europe. In the launcher pick it: it checks every file and copies the game out once.",
+   "DefaultDir": "E:\\Games\\SvR 2011",
+   "Series": "sports",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "WWE SmackDown vs. Raw 2011",
+   "CheckFile": "SVR 2011.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "wweallstars",
+   "Name": "WWE All Stars",
+   "Short": "WAS",
+   "Source": "WWE ALL STARS RECOMP  •  GITHUB",
+   "Exe": "WWEAllStarsLauncher.exe",
+   "Proc": "WWEAllStars*",
+   "SettingsKey": "WweallstarsDir",
+   "Repo": "shaneomac1337/WWE-AllStars-Recomp",
+   "Asset": "WWEAllStarsRecomp-*-win-x64.zip",
+   "NotAsset": "*.sha256",
+   "Accent": "#C0392B",
+   "Accent2": "#F2C14E",
+   "FirstRun": "WWEAllStarsLauncher.exe",
+   "Needs": "Your own WWE All Stars Xbox 360 disc image (.iso), USA/Europe. plus its Title Update 2, both from your own console. The launcher copies the game files out once. Online Player Match works.",
+   "DefaultDir": "E:\\Games\\WWE All Stars",
+   "Series": "sports",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "WWE All Stars",
+   "CheckFile": "WWEAllStarsLauncher.exe",
+   "Helpers": "WWEAllStarsLauncher",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "wwe13",
+   "Name": "WWE '13",
+   "Short": "W13",
+   "Source": "WWE13 RECOMP  •  GITHUB",
+   "Exe": "WWE13 Launcher.exe",
+   "Proc": "wwe13*",
+   "SettingsKey": "Wwe13Dir",
+   "Repo": "PromethenDev/wwe13-recomp",
+   "Asset": "WWE13-Recomp-v*.zip",
+   "Accent": "#8E1B1B",
+   "Accent2": "#1A1A1A",
+   "FirstRun": "WWE13 Launcher.exe",
+   "Needs": "Your own WWE '13 Xbox 360 game files (default.xex, default.xexp and data) and its title update. In WWE13 Launcher choose the game, then Add TU or DLC for the update, then Play.",
+   "DefaultDir": "E:\\Games\\WWE 13",
+   "Series": "sports",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "WWE '13",
+   "CheckFile": "WWE13 Launcher.exe",
+   "Helpers": "WWE13 Launcher",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "wwe2k14",
+   "Name": "WWE 2K14",
+   "Short": "2K14",
+   "Source": "WWE2K14 RECOMP  •  GITHUB",
+   "Exe": "WWE 2K14 Launcher.exe",
+   "Proc": "wwe2k14*",
+   "SettingsKey": "Wwe2k14Dir",
+   "Repo": "PromethenDev/wwe2k14-recomp",
+   "Asset": "WWE2K14-Recomp-v*-x64.zip",
+   "NotAsset": "Linux-*",
+   "Accent": "#1A1A1A",
+   "Accent2": "#C9A227",
+   "FirstRun": "WWE 2K14 Launcher.exe",
+   "Needs": "Your own WWE 2K14 Xbox 360 game files (default.xex and data) and its title update. In the WWE 2K14 Launcher choose the game, then Add TU or DLC for the update and any DLC, then Play.",
+   "DefaultDir": "E:\\Games\\WWE 2K14",
+   "Series": "sports",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "WWE 2K14",
+   "CheckFile": "WWE 2K14 Launcher.exe",
+   "Helpers": "WWE 2K14 Launcher",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "ffny",
+   "Name": "Def Jam: Fight for NY",
+   "Short": "FFNY",
+   "Source": "DEF JAM FFNY RECOMP  •  GITHUB",
+   "Exe": "DefJamRecompiled.exe",
+   "Proc": "DefJamRecompiled",
+   "SettingsKey": "FfnyDir",
+   "Repo": "vyanhursky/DefJamFFNY-recomp",
+   "Asset": "DefJamRecompiled-*-windows-x64.exe",
+   "Accent": "#1A1A1A",
+   "Accent2": "#C0392B",
+   "FirstRun": "DefJamRecompiled.exe",
+   "Needs": "Your own Def Jam: Fight for NY Xbox disc image or extracted dump, USA. Open it, choose your copy and the Modern or Original experience, then Play.",
+   "DefaultDir": "E:\\Games\\Def Jam FFNY",
+   "Series": "xbox",
+   "Platform": "Xbox",
+   "SettingsLabel": "Def Jam: Fight for NY",
+   "CheckFile": "DefJamRecompiled.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xbe)"
+    ]
+   }
+  },
+  {
+   "Id": "burnoutrev",
+   "Name": "Burnout Revenge",
+   "Short": "BR",
+   "Source": "XERENGE  •  GITHUB",
+   "Exe": "Burnout_Revenge_Installer.exe",
+   "Proc": "Burnout*",
+   "SettingsKey": "BurnoutrevDir",
+   "Repo": "shipa-2/Xerenge",
+   "Asset": "Burnout_Revenge_Installer-win-amd64.exe",
+   "Accent": "#E8453C",
+   "Accent2": "#F39C12",
+   "FirstRun": "Burnout_Revenge_Installer.exe",
+   "Needs": "Your own Burnout Revenge Xbox 360 disc image, European or American release. The installer asks for it, an install folder and a few settings, and builds the game from your disc; start the installed game from there (the launcher's Play opens the installer).",
+   "DefaultDir": "E:\\Games\\Burnout Revenge",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Burnout Revenge",
+   "CheckFile": "Burnout_Revenge_Installer.exe",
+   "Helpers": "Burnout_Revenge_Installer",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "fifastreet",
+   "Name": "FIFA Street",
+   "Short": "FS",
+   "Source": "RESTREET  •  GITHUB",
+   "Exe": "ReStreet-Setup.exe",
+   "Proc": "*Street*",
+   "SettingsKey": "FifastreetDir",
+   "Repo": "samuelit0davila/fifa-street-pc-port",
+   "Asset": "ReStreet-*-Setup.exe",
+   "NotAsset": "*.sha256",
+   "Accent": "#1F9E5A",
+   "Accent2": "#F2C14E",
+   "FirstRun": "ReStreet-Setup.exe",
+   "Needs": "Your own FIFA Street (2012) Xbox 360 .iso. The setup asks for it, an install folder, your online name and a server (Europe or South America), then installs ReStreet. Online play.",
+   "DefaultDir": "E:\\Games\\FIFA Street",
+   "Series": "sports",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "FIFA Street",
+   "CheckFile": "ReStreet-Setup.exe",
+   "Helpers": "ReStreet*",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "dod3",
+   "Name": "Drakengard 3",
+   "Short": "DoD3",
+   "Source": "DOD3 RECOMP  •  GITHUB",
+   "Exe": "dod3.exe",
+   "Proc": "dod3",
+   "SettingsKey": "Dod3Dir",
+   "Repo": "soyjxck/dod3-recomp",
+   "Asset": "dod3-recomp-*-win64.zip",
+   "Accent": "#7A1F3D",
+   "Accent2": "#D9D9D9",
+   "FirstRun": "dod3.exe",
+   "Needs": "An alpha (test versions only). Your own Drakengard 3 PS3 disc, US, decrypted (PS3 Disc Dumper makes a usable dump; an ordinary disc image is still encrypted), plus the game's 1.01 update .pkg. The first start asks for them.",
+   "DefaultDir": "E:\\Games\\Drakengard 3",
+   "Series": "playstation",
+   "Platform": "PS3",
+   "SettingsLabel": "Drakengard 3",
+   "CheckFile": "dod3.exe",
+   "Pre": true,
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     "Decrypted disc dump",
+     ".pkg update"
+    ]
+   }
+  },
+  {
+   "Id": "darkness",
+   "Name": "The Darkness",
+   "Short": "TD",
+   "Source": "ESTACADO  •  GITHUB",
+   "Exe": "TheDarkness.exe",
+   "Proc": "TheDarkness*",
+   "SettingsKey": "DarknessDir",
+   "Repo": "invinceble55-wq/Estacado-The-Darkness-Recomp",
+   "Asset": "Estacado-*-windows-x64.zip",
+   "Accent": "#1A1A1A",
+   "Accent2": "#8E1B1B",
+   "FirstRun": "TheDarkness.exe",
+   "Needs": "Test versions only. Your own The Darkness Xbox 360 disc image (.iso), USA/Europe (title ID 545407EE). The first start asks for it and copies the game files out once. TheDarknessSettings.exe in the folder has the settings.",
+   "DefaultDir": "E:\\Games\\The Darkness",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "The Darkness",
+   "CheckFile": "TheDarkness.exe",
+   "Pre": true,
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "dr2cz",
+   "Name": "Dead Rising 2: Case Zero",
+   "Short": "DR2CZ",
+   "Source": "CASE ZERO RECOMP  •  GITHUB",
+   "Exe": "cz_runtime.exe",
+   "Proc": "cz_runtime",
+   "SettingsKey": "Dr2czDir",
+   "Repo": "wivi514/Dead_Rising_2_Case_Zero_Xenon_Recomp",
+   "Asset": "CaseZeroRecomp-windows-x86_64.zip",
+   "Accent": "#C0392B",
+   "Accent2": "#2E2E2E",
+   "FirstRun": "cz_runtime.exe",
+   "Needs": "Your own Dead Rising 2: Case Zero (Xbox Live Arcade) game package, from your own console. The first run sets everything up by itself under a progress bar (about a minute).",
+   "DefaultDir": "E:\\Games\\DR2 Case Zero",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Dead Rising 2: Case Zero",
+   "CheckFile": "cz_runtime.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "wet",
+   "Name": "WET",
+   "Short": "WET",
+   "Source": "WET RECOMP  •  GITHUB",
+   "Exe": "WetLauncher.exe",
+   "Proc": "wet*",
+   "SettingsKey": "WetDir",
+   "Repo": "Supermedo/wet-recomp",
+   "Asset": "wet-recomp-windows-x64.zip",
+   "Accent": "#8E1B1B",
+   "Accent2": "#E3A23C",
+   "FirstRun": "WetLauncher.exe",
+   "Needs": "Your own WET Xbox 360 disc image (.iso), any region. In WetLauncher press ADD ISO and pick it; the files go into the game folder.",
+   "DefaultDir": "E:\\Games\\WET",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "WET",
+   "CheckFile": "WetLauncher.exe",
+   "Helpers": "WetLauncher",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "ao2",
+   "Name": "Army of Two",
+   "Short": "AO2",
+   "Source": "ARMY OF TWO RECOMP  •  GITHUB",
+   "Exe": "armyoftworecomp.exe",
+   "Proc": "armyoftworecomp",
+   "SettingsKey": "Ao2Dir",
+   "Repo": "nikolaygorb/ArmyOfTwoRecomp",
+   "Asset": "Ao2-win64.zip",
+   "Accent": "#3B4A5A",
+   "Accent2": "#E3A23C",
+   "FirstRun": "armyoftworecomp.exe",
+   "Needs": "Your own Army of Two Xbox 360 disc, dumped as an extracted folder (default.xex and the game files; extract-xiso unpacks an .iso). The first start asks for it.",
+   "DefaultDir": "E:\\Games\\Army of Two",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Army of Two",
+   "CheckFile": "armyoftworecomp.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "skate2",
+   "Name": "Skate 2",
+   "Short": "S2",
+   "Source": "SKATE 2 PC  •  GITHUB",
+   "Exe": "Launch Skate 2.exe",
+   "Proc": "skate2",
+   "SettingsKey": "Skate2Dir",
+   "Repo": "christianortel/skate2-recompile-pc",
+   "Asset": "Skate2-PC-v*-Windows-x64.zip",
+   "NotAsset": "*Source*",
+   "Accent": "#1A1A1A",
+   "Accent2": "#57CBDE",
+   "FirstRun": "Launch Skate 2.exe",
+   "Needs": "Your own Skate 2 Xbox 360 game, extracted as a folder with default.xex and data (an .iso must be extracted first). Before the first Play, run Import Game Files.cmd in the game folder and pick that folder: a one-time copy and check.",
+   "DefaultDir": "E:\\Games\\Skate 2",
+   "Series": "sports",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Skate 2",
+   "CheckFile": "Launch Skate 2.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "djv",
+   "Name": "Def Jam Vendetta",
+   "Short": "DJV",
+   "Source": "DEF JAM VENDETTA RECOMP  •  GITHUB",
+   "Exe": "Def Jam Vendetta Recompiled Settings.exe",
+   "Proc": "Def Jam Vendetta*",
+   "SettingsKey": "DjvDir",
+   "Repo": "jcsix694/def-jam-vendetta-recomp",
+   "Asset": "Def-Jam-Vendetta-Recompiled-Windows.zip",
+   "Accent": "#1A1A1A",
+   "Accent2": "#E3A23C",
+   "FirstRun": "Def Jam Vendetta Recompiled Settings.exe",
+   "Needs": "Your own Def Jam Vendetta PS2 disc, USA (SLUS-20639), as .iso or .chd, plus about 8 GB free and the internet once. Pick the disc file: it's checked, and the game is built on this PC. Then choose settings and PLAY.",
+   "DefaultDir": "E:\\Games\\Def Jam Vendetta",
+   "Series": "playstation",
+   "Platform": "PS2",
+   "SettingsLabel": "Def Jam Vendetta",
+   "CheckFile": "Def Jam Vendetta Recompiled Settings.exe",
+   "Helpers": "Def Jam Vendetta Recompiled Settings",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso"
+    ]
+   }
+  },
+  {
+   "Id": "wwe2k16",
+   "Name": "WWE 2K16",
+   "Short": "2K16",
+   "Source": "WWE 2K16 PC  •  GITHUB",
+   "Exe": "WWE 2K16 PC.exe",
+   "Proc": "wwe2k16*",
+   "SettingsKey": "Wwe2k16Dir",
+   "Repo": "itsbybanshee/wwe2k16-pc",
+   "Asset": "WWE2K16-PC-v*.zip",
+   "Accent": "#1A1A1A",
+   "Accent2": "#C0392B",
+   "FirstRun": "WWE 2K16 PC.exe",
+   "Needs": "Your own WWE 2K16 Xbox 360 disc image (.iso) or an extracted copy. Under Game files press Choose ISO (or Choose folder), pick your settings and Play.",
+   "DefaultDir": "E:\\Games\\WWE 2K16",
+   "Series": "sports",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "WWE 2K16",
+   "CheckFile": "WWE 2K16 PC.exe",
+   "Helpers": "WWE 2K16 PC",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "sotn",
+   "Name": "Castlevania: Symphony of the Night",
+   "Short": "SotN",
+   "Source": "SYMPHONYRECOMP  •  GITHUB",
+   "Exe": "sotn.exe",
+   "Proc": "sotn",
+   "SettingsKey": "SotnDir",
+   "Repo": "BlackLabelHQ/SymphonyRecomp",
+   "Asset": "SymphonyRecomp-v*-windows-x64.zip",
+   "Accent": "#3B1F4A",
+   "Accent2": "#C9A227",
+   "FirstRun": "sotn.exe",
+   "Needs": "Your own Castlevania: Symphony of the Night PS1 disc, the English North American (NTSC-U) release, as .bin/.cue (both tracks). The first start asks for it.",
+   "DefaultDir": "E:\\Games\\Symphony of the Night",
+   "Series": "playstation",
+   "Platform": "PS1",
+   "SettingsLabel": "Castlevania: Symphony of the Night",
+   "CheckFile": "sotn.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".bin/.cue"
+    ]
+   }
+  },
+  {
+   "Id": "fh1",
+   "Name": "Forza Horizon",
+   "Short": "FH",
+   "Source": "PINYON SHIFT  •  GITHUB",
+   "Exe": "PinyonShiftLauncher.exe",
+   "Proc": "Pinyon*",
+   "SettingsKey": "Fh1Dir",
+   "Repo": "arcanite24/pinyon-shift",
+   "Asset": "PinyonShift-Launcher.zip",
+   "Accent": "#E85A9B",
+   "Accent2": "#F39C12",
+   "FirstRun": "PinyonShiftLauncher.exe",
+   "Needs": "Your own Forza Horizon Xbox 360 disc image (.iso), dumped from your own disc. Drop it on PinyonShiftLauncher or press Choose ISO; the game is built on this PC (internal resolution up to 4K). Then Play; F6 in game opens the settings.",
+   "DefaultDir": "E:\\Games\\Forza Horizon",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Forza Horizon",
+   "CheckFile": "PinyonShiftLauncher.exe",
+   "Helpers": "PinyonShiftLauncher",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "bluedragon",
+   "Name": "Blue Dragon",
+   "Short": "BD",
+   "Source": "REBLUE  •  GITHUB",
+   "Exe": "reblue.exe",
+   "Proc": "reblue*",
+   "SettingsKey": "BluedragonDir",
+   "Repo": "zolaware/reblue",
+   "Asset": "reblue-*-win-amd64.zip",
+   "NotAsset": "*symbols*",
+   "Accent": "#1F78C8",
+   "Accent2": "#F2C14E",
+   "FirstRun": "reblue.exe",
+   "Needs": "Your own Blue Dragon: all three Xbox 360 discs as disc images, US/EU (Global) release. A setup wizard asks for each disc in turn, checks it and copies the game out.",
+   "DefaultDir": "E:\\Games\\Blue Dragon",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Blue Dragon",
+   "CheckFile": "reblue.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "sh1",
+   "Name": "Silent Hill",
+   "Short": "SH",
+   "Source": "SILENT HILL DECOMP  •  GITHUB",
+   "Exe": "SilentHillPC_Launcher.exe",
+   "Proc": "SilentHillPC*",
+   "SettingsKey": "Sh1Dir",
+   "Repo": "SlickAmogus/silent-hill-decomp",
+   "Asset": "SHPC_beta-*.zip",
+   "NotAsset": "*OLD*",
+   "Accent": "#5A5A5A",
+   "Accent2": "#8E1B1B",
+   "FirstRun": "SilentHillPC_Launcher.exe",
+   "Needs": "A beta. Your own Silent Hill PS1 disc image. SilentHillPC_Launcher asks for it.",
+   "DefaultDir": "E:\\Games\\Silent Hill",
+   "Series": "playstation",
+   "Platform": "PS1",
+   "SettingsLabel": "Silent Hill",
+   "CheckFile": "SilentHillPC_Launcher.exe",
+   "Helpers": "SilentHillPC_Launcher",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".bin/.cue"
+    ]
+   }
+  },
+  {
+   "Id": "dante",
+   "Name": "Dante's Inferno",
+   "Short": "DI",
+   "Source": "HELL'S GATE  •  GITHUB",
+   "Exe": "DantesInfernoLauncher.exe",
+   "Proc": "dantes_inferno",
+   "SettingsKey": "DanteDir",
+   "Repo": "florinp93/hells-gate-recomp",
+   "Asset": "DantesInferno-*-portable.zip",
+   "Accent": "#8E1B1B",
+   "Accent2": "#F39C12",
+   "FirstRun": "DantesInfernoLauncher.exe",
+   "Needs": "A beta. Your own Dante's Inferno Xbox 360 disc image (.iso), dumped from your own disc. DantesInfernoLauncher asks for it and extracts the game.",
+   "DefaultDir": "E:\\Games\\Dantes Inferno",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Dante's Inferno",
+   "CheckFile": "DantesInfernoLauncher.exe",
+   "Helpers": "DantesInfernoLauncher",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "bt3",
+   "Name": "Dragon Ball Z: Budokai Tenkaichi 3",
+   "Short": "BT3",
+   "Source": "TENKAICHI 3 DECOMP  •  GITHUB",
+   "Exe": "Tenkaichi3Decomp.exe",
+   "Proc": "Tenkaichi3Decomp",
+   "SettingsKey": "Bt3Dir",
+   "Repo": "z3xox/Tenkaichi3Decomp",
+   "Asset": "Tenkaichi3Decomp-windows-x64.zip",
+   "NotAsset": "*.sig",
+   "Accent": "#F39C12",
+   "Accent2": "#1F78C8",
+   "FirstRun": "Tenkaichi3Decomp-setup.exe",
+   "Needs": "Your own Dragon Ball Z: Budokai Tenkaichi 3 PS2 disc image, USA (SLUS-21678). The first start opens the setup, which reads it.",
+   "DefaultDir": "E:\\Games\\Tenkaichi 3",
+   "Series": "playstation",
+   "Platform": "PS2",
+   "SettingsLabel": "Dragon Ball Z: Budokai Tenkaichi 3",
+   "CheckFile": "Tenkaichi3Decomp.exe",
+   "Helpers": "Tenkaichi3Decomp-setup",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso"
+    ]
+   }
+  },
+  {
+   "Id": "mhp3",
+   "Name": "Monster Hunter Portable 3rd",
+   "Short": "MHP3",
+   "Source": "YAKUMO  •  GITHUB",
+   "Exe": "Yakumo.exe",
+   "Proc": "Yakumo",
+   "SettingsKey": "Mhp3Dir",
+   "Repo": "TeamGDB/Yakumo",
+   "Asset": "yakumo-*-windows-x86_64-portable.zip",
+   "Accent": "#8E5A2B",
+   "Accent2": "#E3C26B",
+   "FirstRun": "Yakumo.exe",
+   "Needs": "Your own Monster Hunter Portable 3rd PSP disc image (.iso). The first-run setup checks it and prepares the game. Saves and quests from a PSP can be imported.",
+   "DefaultDir": "E:\\Games\\MH Portable 3rd",
+   "Series": "playstation",
+   "Platform": "PSP",
+   "SettingsLabel": "Monster Hunter Portable 3rd",
+   "CheckFile": "Yakumo.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso"
+    ]
+   }
+  },
+  {
+   "Id": "edgeoftime",
+   "Name": "Spider-Man: Edge of Time",
+   "Short": "SMEoT",
+   "Source": "EDGEOFTIMERECOMP  •  GITHUB",
+   "Exe": "EdgeOfTimeRecomp.exe",
+   "Proc": "EdgeOfTimeRecomp",
+   "SettingsKey": "EdgeoftimeDir",
+   "Repo": "goliathret/EdgeOfTimeRecomp",
+   "Asset": "EdgeOfTimeRecomp-*-win-amd64.zip",
+   "Accent": "#C0392B",
+   "Accent2": "#1F78C8",
+   "FirstRun": "EdgeOfTimeRecomp.exe",
+   "Needs": "Your own Spider-Man: Edge of Time Xbox 360 disc image (.iso), dumped from your own disc. The game asks for it.",
+   "DefaultDir": "E:\\Games\\Spider-Man Edge of Time",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Spider-Man: Edge of Time",
+   "CheckFile": "EdgeOfTimeRecomp.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "simpsons",
+   "Name": "The Simpsons Game",
+   "Short": "TSG",
+   "Source": "SIMPSONS GAME RECOMP  •  GITHUB",
+   "Exe": "simpsons-launcher.exe",
+   "Proc": "simpsons*",
+   "SettingsKey": "SimpsonsDir",
+   "Repo": "YesterMester/TheSimpsonsGameRecomp",
+   "Asset": "TheSimpsonsGame-Recompiled-Windows-x64.zip",
+   "Accent": "#F6C643",
+   "Accent2": "#3D7FD9",
+   "FirstRun": "simpsons-launcher.exe",
+   "Needs": "Your own The Simpsons Game Xbox 360 disc image (.iso), dumped from your own disc. In the launcher's Install tab pick it: it extracts and installs the game. (Without AVX2, use the NoAVX2 download.)",
+   "DefaultDir": "E:\\Games\\The Simpsons Game",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "The Simpsons Game",
+   "CheckFile": "simpsons-launcher.exe",
+   "Helpers": "simpsons-launcher",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "downpour",
+   "Name": "Silent Hill: Downpour",
+   "Short": "SHD",
+   "Source": "DOWNPOURRECOMP  •  GITHUB",
+   "Exe": "PlayDownpour.exe",
+   "Proc": "downpour",
+   "SettingsKey": "DownpourDir",
+   "Repo": "LittleBitUA/DownpourRecomp",
+   "Asset": "DownpourRecomp-v*.zip",
+   "Accent": "#2E3A5A",
+   "Accent2": "#8E9AAF",
+   "FirstRun": "PlayDownpour.exe",
+   "Needs": "Your own Silent Hill: Downpour Xbox 360 disc image (.iso), dumped from your own disc. On the first start a wizard asks for it and extracts everything itself.",
+   "DefaultDir": "E:\\Games\\Silent Hill Downpour",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Silent Hill: Downpour",
+   "CheckFile": "PlayDownpour.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "condemned2",
+   "Name": "Condemned 2: Bloodshot",
+   "Short": "C2",
+   "Source": "CONDEMNED2RECOMP  •  GITHUB",
+   "Exe": "condemned2recomp.exe",
+   "Proc": "condemned2recomp",
+   "SettingsKey": "Condemned2Dir",
+   "Repo": "psxrestore/Condemned2Recomp",
+   "Asset": "condemned2recompV*_windows.zip",
+   "Accent": "#3B3B3B",
+   "Accent2": "#8E1B1B",
+   "FirstRun": "condemned2recomp.exe",
+   "Needs": "A work in progress. Your own Condemned 2: Bloodshot Xbox 360 game files, extracted from your own disc. The game asks for them. F1 in game opens the PC settings.",
+   "DefaultDir": "E:\\Games\\Condemned 2",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Condemned 2: Bloodshot",
+   "CheckFile": "condemned2recomp.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "vptip",
+   "Name": "Viva Piñata: Trouble in Paradise",
+   "Short": "VPTiP",
+   "Source": "RETIP  •  GITHUB",
+   "Exe": "retip.exe",
+   "Proc": "retip",
+   "SettingsKey": "VptipDir",
+   "Repo": "SolarCookies/TiP-Recomp",
+   "Asset": "retip-*-win-amd64.zip",
+   "Accent": "#6AA84F",
+   "Accent2": "#E85A9B",
+   "FirstRun": "retip.exe",
+   "Needs": "Your own Viva Piñata: Trouble in Paradise Xbox 360 disc image (.iso), the retail disc. The first start asks for it.",
+   "DefaultDir": "E:\\Games\\Viva Pinata TiP",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Viva Piñata: Trouble in Paradise",
+   "CheckFile": "retip.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "kingkong",
+   "Name": "Peter Jackson's King Kong",
+   "Short": "KK",
+   "Source": "KING KONG RECOMPILED  •  GITHUB",
+   "Exe": "king_kong.exe",
+   "Proc": "king_kong",
+   "SettingsKey": "KingkongDir",
+   "Repo": "TekRantGaming/king-kong-recompiled",
+   "Asset": "KingKong-v*-windows-x64.zip",
+   "Accent": "#4A3A2B",
+   "Accent2": "#C9A227",
+   "FirstRun": "king_kong.exe",
+   "Needs": "Your own Peter Jackson's King Kong Xbox 360 disc image, about 7 GB free. Choose Select disc image: it checks it and copies the game files (about 6.3 GB) into a game folder here. Updates itself; saves stay in userdata.",
+   "DefaultDir": "E:\\Games\\King Kong",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Peter Jackson's King Kong",
+   "CheckFile": "king_kong.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "pgr4",
+   "Name": "Project Gotham Racing 4",
+   "Short": "PGR4",
+   "Source": "PGR4 RECOMP  •  GITHUB",
+   "Exe": "pgr4_recompiled.exe",
+   "Proc": "pgr4_recompiled",
+   "SettingsKey": "Pgr4Dir",
+   "Repo": "beatrixzy/PGR4-Recomp",
+   "Asset": "PGR4-Recomp-v*.zip",
+   "Accent": "#1F3F8A",
+   "Accent2": "#E8453C",
+   "FirstRun": "pgr4_recompiled.exe",
+   "Needs": "Far from finished. Your own Project Gotham Racing 4 Xbox 360 game, dumped from your own disc: Setup.md on the project's page says which files go where.",
+   "DefaultDir": "E:\\Games\\PGR4",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Project Gotham Racing 4",
+   "CheckFile": "pgr4_recompiled.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "narutorise",
+   "Name": "Naruto: Rise of a Ninja",
+   "Short": "NRoaN",
+   "Source": "NARUTO RISE RECOMP  •  GITHUB",
+   "Exe": "narutorise.exe",
+   "Proc": "narutorise",
+   "SettingsKey": "NarutoriseDir",
+   "Repo": "jorjbarbosa/naruto-rise-recomp",
+   "Asset": "naruto-rise-recomp-win-amd64.zip",
+   "Accent": "#F39C12",
+   "Accent2": "#1F3F8A",
+   "FirstRun": "narutorise.exe",
+   "Needs": "A beta. Your own Naruto: Rise of a Ninja Xbox 360 disc image (.iso), the supported revision. or default.xex from a complete extracted copy. The first start asks for it and reads the ISO directly.",
+   "DefaultDir": "E:\\Games\\Naruto Rise of a Ninja",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Naruto: Rise of a Ninja",
+   "CheckFile": "narutorise.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "bknb",
+   "Name": "Banjo-Kazooie: Nuts & Bolts",
+   "Short": "BKNB",
+   "Source": "RENUT  •  GITHUB",
+   "Exe": "renut.exe",
+   "Proc": "renut",
+   "SettingsKey": "BknbDir",
+   "Repo": "masterspike52/reNut",
+   "Asset": "renut-windows.zip",
+   "Accent": "#E8A33C",
+   "Accent2": "#3D7FD9",
+   "FirstRun": "renut.exe",
+   "Needs": "Your own Banjo-Kazooie: Nuts & Bolts Xbox 360 .iso (USA) and its Title Update 3 package (DLC optional). In reNut press Extract Game Disk and pick the ISO, then Extract Title Update and pick the update.",
+   "DefaultDir": "E:\\Games\\Nuts and Bolts",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Banjo-Kazooie: Nuts & Bolts",
+   "CheckFile": "renut.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "dpremonition",
+   "Name": "Deadly Premonition",
+   "Short": "DP",
+   "Source": "DPRECOMP  •  GITHUB",
+   "Exe": "PlayDeadlyPremonition.exe",
+   "Proc": "deadlyprem*",
+   "SettingsKey": "DpremonitionDir",
+   "Repo": "LittleBitUA/DPRecomp",
+   "Asset": "DPRecomp-*-win64.zip",
+   "Accent": "#5A0F0F",
+   "Accent2": "#B4A06A",
+   "FirstRun": "PlayDeadlyPremonition.exe",
+   "Needs": "Your own Deadly Premonition Xbox 360 disc (PAL or USA) as an .iso or extracted files, about 6 GB free. The launcher's installer extracts the .iso into assets (a few minutes), then PLAY. The first start compiles shaders for a minute.",
+   "DefaultDir": "E:\\Games\\Deadly Premonition",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Deadly Premonition",
+   "CheckFile": "PlayDeadlyPremonition.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "esonata",
+   "Name": "Eternal Sonata",
+   "Short": "ES",
+   "Source": "ETERNAL SONATA REPRISE  •  GITHUB",
+   "Exe": "eternalsonata.exe",
+   "Proc": "eternalsonata",
+   "SettingsKey": "EsonataDir",
+   "Repo": "birabittoh/EternalSonataReprise",
+   "Asset": "eternalsonata-v*-win-amd64.zip",
+   "Accent": "#E85A9B",
+   "Accent2": "#57CBDE",
+   "FirstRun": "eternalsonata.exe",
+   "Needs": "Your own Eternal Sonata Xbox 360 or PS3 disc image or extracted folder. The game asks for it and prepares its own copy without changing your dump.",
+   "DefaultDir": "E:\\Games\\Eternal Sonata",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Eternal Sonata",
+   "CheckFile": "eternalsonata.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "gowj",
+   "Name": "Gears of War: Judgment",
+   "Short": "GoWJ",
+   "Source": "GEARS JUDGMENT RECOMP  •  GITHUB",
+   "Exe": "GearsOfWarJudgment.exe",
+   "Proc": "GearsOfWarJudgment",
+   "SettingsKey": "GowjDir",
+   "Repo": "OverkillLabs3/gears-judgement-recomp",
+   "Asset": "GearsOfWarJudgment-PC-v*.zip",
+   "Accent": "#5A1A12",
+   "Accent2": "#B8A27A",
+   "FirstRun": "GearsOfWarJudgment.exe",
+   "Needs": "Early. Your own Gears of War: Judgment Xbox 360 game folder (the one with default.xex), from your own disc. The game asks for it; Graphics Settings.exe in the folder has the settings.",
+   "DefaultDir": "E:\\Games\\Gears Judgment",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Gears of War: Judgment",
+   "CheckFile": "GearsOfWarJudgment.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "yfm",
+   "Name": "Yu-Gi-Oh! Forbidden Memories",
+   "Short": "YFM",
+   "Source": "YFM RE-DECOMP  •  GITHUB",
+   "Exe": "memories-pc.exe",
+   "Proc": "memories-pc",
+   "SettingsKey": "YfmDir",
+   "Repo": "Unchiga/Yu-Gi-Oh-Forbidden-Memories-Recompiled",
+   "Asset": "yfm-redecomp-v*-windows.zip",
+   "Accent": "#7B3FA0",
+   "Accent2": "#C9A227",
+   "FirstRun": "memories-pc.exe",
+   "Needs": "Your own Yu-Gi-Oh! Forbidden Memories PS1 disc, USA, as .bin. The first start asks for it. For the best look: Video > Resolution > Internal 4x and Video > HD text.",
+   "DefaultDir": "E:\\Games\\Forbidden Memories",
+   "Series": "playstation",
+   "Platform": "PS1",
+   "SettingsLabel": "Yu-Gi-Oh! Forbidden Memories",
+   "CheckFile": "memories-pc.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".bin/.cue"
+    ]
+   }
+  },
+  {
+   "Id": "budokai3",
+   "Name": "Dragon Ball Z: Budokai 3",
+   "Short": "B3",
+   "Source": "BUDOKAI 3 HD COLLECTION  •  GITHUB",
+   "Exe": "dbz3.exe",
+   "Proc": "dbz3",
+   "SettingsKey": "Budokai3Dir",
+   "Repo": "novapowers0/DBZ-Budokai-3-HD-Collection",
+   "Asset": "DBZ-Budokai-3-HD-Collection-v*.zip",
+   "NotAsset": "*Kit*",
+   "Accent": "#F39C12",
+   "Accent2": "#1F78C8",
+   "FirstRun": "dbz3.exe",
+   "Needs": "Your own Dragon Ball Z Budokai HD Collection (Xbox 360): its default.xex and the data_*.afs files for your region, from your own disc. The project's page says how to take them out of your ISO and where they go.",
+   "DefaultDir": "E:\\Games\\Budokai 3",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Dragon Ball Z: Budokai 3",
+   "CheckFile": "dbz3.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "ttt2",
+   "Name": "Tekken Tag Tournament 2",
+   "Short": "TTT2",
+   "Source": "TTT2 PC  •  GITHUB",
+   "Exe": "ttt2_setup.exe",
+   "Proc": "ttt2*",
+   "SettingsKey": "Ttt2Dir",
+   "Repo": "shihabal3amri/tekken-tag-tournament-2-pc",
+   "Asset": "ttt2_setup.exe",
+   "Accent": "#8E1B1B",
+   "Accent2": "#F2C14E",
+   "FirstRun": "ttt2_setup.exe",
+   "Needs": "Your own Tekken Tag Tournament 2 Xbox 360 disc image (.iso), USA/Europe. plus Title Update 3. The setup asks for both and builds the sound, stages and movies on this PC; start the installed game from there (the launcher's Play opens the setup). Online and two-player work.",
+   "DefaultDir": "E:\\Games\\Tekken Tag 2",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Tekken Tag Tournament 2",
+   "CheckFile": "ttt2_setup.exe",
+   "Helpers": "ttt2_setup",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "rr6",
+   "Name": "Ridge Racer 6",
+   "Short": "RR6",
+   "Source": "RR6 RECOMPILATION  •  GITHUB",
+   "Exe": "RR6 Launcher.exe",
+   "Proc": "RR6*",
+   "SettingsKey": "Rr6Dir",
+   "Repo": "Sirhalo23/RidgeRacer6-Recompilation",
+   "Asset": "RidgeRacer6-PC-v*.zip",
+   "Accent": "#1F78C8",
+   "Accent2": "#E8453C",
+   "FirstRun": "RR6 Launcher.exe",
+   "Needs": "Your own Ridge Racer 6 Xbox 360 disc image (.iso), USA. In RR6 Launcher press Choose disc image..., pick your settings and Play.",
+   "DefaultDir": "E:\\Games\\Ridge Racer 6",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Ridge Racer 6",
+   "CheckFile": "RR6 Launcher.exe",
+   "Helpers": "RR6 Launcher",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "burstlimit",
+   "Name": "Dragon Ball Z: Burst Limit",
+   "Short": "BL",
+   "Source": "BURST LIMIT RECOMPILED  •  GITHUB",
+   "Exe": "burstlimit.exe",
+   "Proc": "burstlimit",
+   "SettingsKey": "BurstlimitDir",
+   "Repo": "iExplosiveRage/DBZ-Burst-Limit-Recompiled",
+   "Asset": "DBZ-Burst-Limit-Recompiled-v*-alpha.zip",
+   "NotAsset": "*linux*",
+   "Accent": "#F39C12",
+   "Accent2": "#C0392B",
+   "FirstRun": "burstlimit.exe",
+   "Needs": "An alpha. Your own Dragon Ball Z: Burst Limit Xbox 360 disc image (.iso), US (NTSC-U) only. It's checked, and the game files are copied in next to burstlimit.exe (about 3.3 GB, once).",
+   "DefaultDir": "E:\\Games\\Burst Limit",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Dragon Ball Z: Burst Limit",
+   "CheckFile": "burstlimit.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "rrxx",
+   "Name": "Rumble Roses XX",
+   "Short": "RRXX",
+   "Source": "RRXX RECOMP  •  GITHUB",
+   "Exe": "rrxx-launcher.exe",
+   "Proc": "rrxx*",
+   "SettingsKey": "RrxxDir",
+   "Repo": "JesusTaylo/rumble-roses-xx-recomp",
+   "Asset": "rrxx-launcher.exe",
+   "Accent": "#E85A9B",
+   "Accent2": "#8E1B1B",
+   "FirstRun": "rrxx-launcher.exe",
+   "Needs": "Your own Rumble Roses XX Xbox 360 disc image (.iso), the retail disc. rrxx-launcher asks for it and builds the game.",
+   "DefaultDir": "E:\\Games\\Rumble Roses XX",
+   "Series": "sports",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Rumble Roses XX",
+   "CheckFile": "rrxx-launcher.exe",
+   "Helpers": "rrxx-launcher",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "jsrf",
+   "Name": "Jet Set Radio Future",
+   "Short": "JSRF",
+   "Source": "JSRF UNLEASHED  •  GITHUB",
+   "Exe": "JSRF Unleashed.exe",
+   "Proc": "JSRF*",
+   "SettingsKey": "JsrfDir",
+   "Repo": "JuMatt/JetSetRadioFuture-Unleashed",
+   "Asset": "JSRF-Unleashed-windows-x86_64.zip",
+   "Accent": "#6AA84F",
+   "Accent2": "#F6C643",
+   "FirstRun": "JSRF Unleashed.exe",
+   "Needs": "Your own Jet Set Radio Future Xbox disc: a disc image (.iso), unpacked once by itself, or a folder with default.xbe. The first start asks where it is.",
+   "DefaultDir": "E:\\Games\\Jet Set Radio Future",
+   "Series": "xbox",
+   "Platform": "Xbox",
+   "SettingsLabel": "Jet Set Radio Future",
+   "CheckFile": "JSRF Unleashed.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xbe)"
+    ]
+   }
+  },
+  {
+   "Id": "dao",
+   "Name": "Dragon Age: Origins",
+   "Short": "DAO",
+   "Source": "DAO RECOMP  •  GITHUB",
+   "Exe": "DAORecomp-Installer.exe",
+   "Proc": "DAORecomp*",
+   "SettingsKey": "DaoDir",
+   "Repo": "96dot/Dragon-Age-Origins-Recomp",
+   "Asset": "DAORecomp-Installer.exe",
+   "Accent": "#5A0F0F",
+   "Accent2": "#B4A06A",
+   "FirstRun": "DAORecomp-Installer.exe",
+   "Needs": "Test versions only. Your own Dragon Age: Origins Xbox 360 disc image (.iso; the English, Italian and Spanish edition, media ID 186A1115), DLC optional. The installer extracts and translates the game into an install folder; start it from there (the launcher's Play opens the installer).",
+   "DefaultDir": "E:\\Games\\Dragon Age Origins",
+   "Series": "xbox",
+   "Platform": "Xbox 360",
+   "SettingsLabel": "Dragon Age: Origins",
+   "CheckFile": "DAORecomp-Installer.exe",
+   "Helpers": "DAORecomp-Installer",
+   "Pre": true,
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xex)"
+    ]
+   }
+  },
+  {
+   "Id": "ctrnf",
+   "Name": "Crash Team Racing Nitro-Fueled",
+   "Short": "CTRNF",
+   "Source": "OCTR NITRO-FUELED PC  •  GITHUB",
+   "Exe": "Crash*.exe",
+   "Proc": "Crash*",
+   "SettingsKey": "CtrnfDir",
+   "Repo": "Ryu7w7/OCTR-NitroFueled-PC",
+   "Asset": "CTR-NitroFueled-PC-portable-v*-windows.zip",
+   "Accent": "#F39C12",
+   "Accent2": "#1F78C8",
+   "FirstRun": "Crash*.exe",
+   "Needs": "Your own Crash Team Racing Nitro-Fueled, dumped from your own PS4, with its 1.21 update. The first start asks for it and prepares the shaders once. Online play.",
+   "DefaultDir": "E:\\Games\\CTR Nitro-Fueled",
+   "Series": "playstation",
+   "Platform": "PS4",
+   "SettingsLabel": "Crash Team Racing Nitro-Fueled",
+   "CheckFile": "Crash*.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     "Game dump (eboot.bin)"
+    ]
+   }
+  },
+  {
+   "Id": "ngb",
+   "Name": "Ninja Gaiden Black",
+   "Short": "NGB",
+   "Source": "NGB RECOMP  •  GITHUB",
+   "Exe": "NinjaGaidenBlack.exe",
+   "Proc": "Ninja*",
+   "SettingsKey": "NgbDir",
+   "Repo": "gamboozino/ngbrecomp",
+   "Asset": "NinjaGaidenBlack-windows-x64.zip",
+   "Accent": "#5A0F0F",
+   "Accent2": "#C9A227",
+   "FirstRun": "NinjaGaidenBlack.exe",
+   "Needs": "Your own Ninja Gaiden Black Xbox disc, retail USA (title ID 5443000D): a disc image (.iso, a Redump dump, or the .7z/.zip it came in) or a folder with default.xbe. The first start asks for it and installs the game.",
+   "DefaultDir": "E:\\Games\\Ninja Gaiden Black",
+   "Series": "xbox",
+   "Platform": "Xbox",
+   "SettingsLabel": "Ninja Gaiden Black",
+   "CheckFile": "NinjaGaidenBlack.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xbe)"
+    ]
+   }
+  },
+  {
+   "Id": "black",
+   "Name": "Black",
+   "Short": "BLK",
+   "Source": "BLACK XBE RECOMP  •  GITHUB",
+   "Exe": "BLACK.exe",
+   "Proc": "BLACK",
+   "SettingsKey": "BlackDir",
+   "Repo": "TGP482/BLACK-XBERecomp",
+   "Asset": "BLACK-XBERecomp.zip",
+   "Accent": "#1A1A1A",
+   "Accent2": "#E3A23C",
+   "FirstRun": "BLACK.exe",
+   "Needs": "Your own Black Xbox game, USA or Europe: put the .iso or the extracted data files in the assets folder inside this game's folder, then start it. The first start compiles the game's code for this PC, once.",
+   "DefaultDir": "E:\\Games\\Black",
+   "Series": "xbox",
+   "Platform": "Xbox",
+   "SettingsLabel": "Black",
+   "CheckFile": "BLACK.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xbe)"
+    ]
+   }
+  },
+  {
+   "Id": "popsot",
+   "Name": "Prince of Persia: The Sands of Time",
+   "Short": "PoP",
+   "Source": "REPOP  •  GITHUB",
+   "Exe": "sot-xbox-retail.exe",
+   "Proc": "sot-xbox*",
+   "SettingsKey": "PopsotDir",
+   "Repo": "FulGerNet/rePOP",
+   "Asset": "sot-xbox-retail.exe",
+   "Accent": "#C9A227",
+   "Accent2": "#5A3A8A",
+   "FirstRun": "sot-xbox-retail.exe",
+   "Needs": "Your own Prince of Persia: The Sands of Time Xbox disc, NTSC retail (the PAL disc mostly works too). The launcher it opens takes your game folder or installs your .iso.",
+   "DefaultDir": "E:\\Games\\Prince of Persia SoT",
+   "Series": "xbox",
+   "Platform": "Xbox",
+   "SettingsLabel": "Prince of Persia: The Sands of Time",
+   "CheckFile": "sot-xbox-retail.exe",
+   "Rom": {
+    "Kind": "none",
+    "Formats": [
+     ".iso",
+     "Extracted disc (default.xbe)"
+    ]
    }
   }
  ]
