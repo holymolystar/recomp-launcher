@@ -103,13 +103,17 @@ partial class Shell {
         // open the Xbox button closes it as usual)
         bool guideOurs = playing == null || OverlayOpen || !GuideLeftTo(playing);
         bool menuKey = (guideOurs && (b & Pad.Guide) != 0) || (b & (Pad.Back | Pad.Start)) == (Pad.Back | Pad.Start);
-        if (menuKey && !menuKeyWas && (playing != null || (BrowserViewOpen && padActive)) && (Settings.Get("PadMenu") != "off" || BrowserViewOpen)) { menuKeyWas = true; padPrev = b; ToggleOverlay(); return; }
+        if (menuKey && !menuKeyWas && (playing != null || (BrowserViewOpen && padActive) || (!padActive && HelperInFront())) && (Settings.Get("PadMenu") != "off" || BrowserViewOpen)) { menuKeyWas = true; padPrev = b; ToggleOverlay(); return; }
         if (menuKey && !menuKeyWas && browserMode && !OverlayOpen && !padActive && EdgeInFront()) { menuKeyWas = true; padPrev = b; LeaveBrowser(); return; }
         menuKeyWas = menuKey;
         // the browser inside the launcher: the controller is its mouse and keys (BrowserView.cs)
         if (BrowserViewOpen && padActive && !OverlayOpen && !OskOpen) { padPrev = 0; BrowserPad(st, b); return; }
         // the controller browser: while its Edge window is in front, the controller is its mouse and keys (Browser.cs)
         if (browserMode && !OverlayOpen && !padActive && EdgeInFront()) { padPrev = 0; BrowserPad(st, b); return; }
+        // a port's own setup or launcher window in front (or the in-game menu's Controller as mouse): the controller is
+        // a mouse there (PadMouse.cs)
+        if (!padActive && !OverlayOpen && !OskOpen && (HelperInFront() || (mouseMode && OtherInFront()))) { padPrev = 0; MousePad(st, b); MouseHint(true); return; }
+        MouseOff(); MouseHint(false);
         // the launcher answers the controller only while it's in front, or while its in-game menu is open
         if (!padActive && !OverlayOpen) { padPrev = 0; return; }
         // the left stick works like the d-pad

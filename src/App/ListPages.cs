@@ -117,6 +117,7 @@ partial class Shell {
     }
     void ListPageHints(List<string[]> spec) {
         var p = lpOpen;
+        if (p.Idx < 0 || p.Idx >= p.Items.Count) p.Idx = Math.Max(0, Math.Min(p.Idx, p.Items.Count - 1));
         if (p.Idx < p.Items.Count && p.Items[p.Idx].Do != null) spec.Add(new[] { "A", "OK" });
         if (p.Idx < p.Items.Count && p.Items[p.Idx].Alt != null) spec.Add(new[] { "Y", p.Items[p.Idx].AltLabel ?? "More" });
         if (p.Extra != null && p.Extra.IsEnabled) spec.Add(new[] { "X", p.ExtraLabel });

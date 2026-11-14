@@ -15,6 +15,7 @@ namespace RecompLauncher {
 
 partial class Shell {
     MediaPlayer music; string musicStyle; DispatcherTimer musicTimer; double musicLevel;
+    string musicOutput; DateTime outputCheckedAt = DateTime.MinValue;
     string MusicStyle() {
         string v = Settings.Get("HomeMusic");
         if (v == "calm" || v == "bright") return v;
@@ -28,6 +29,13 @@ partial class Shell {
     }
     void TickHomeMusic() {
         string style = MusicStyle();
+        // the sound output changed (a TV started streaming, headphones went in): the music moves there too
+        if (music != null && (DateTime.Now - outputCheckedAt).TotalSeconds > 2) {
+            outputCheckedAt = DateTime.Now;
+            string cur = null; try { Audio.Outputs(out cur); } catch { }
+            if (cur != null && musicOutput != null && cur != musicOutput) { music.Close(); music = null; musicStyle = null; }
+            if (cur != null) musicOutput = cur;
+        }
         bool want = MusicOn && MusicVolume > 0 && W.IsVisible && W.IsActive && !inTray && playing == null && !BrowserViewOpen && !SaverOn;
         double target = want ? 0.5 * Math.Pow(MusicVolume / 100.0, 1.6) : 0;
         if (want && (music == null || musicStyle != style)) {

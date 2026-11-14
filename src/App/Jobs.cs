@@ -395,7 +395,9 @@ partial class Shell {
         if (first == null || !File.Exists(first)) return;
         if (rom != null && spec.CopyAs != null && File.Exists(rom)) {
             try {
-                File.Copy(rom, Path.Combine(g.Dir, spec.CopyAs), true);
+                string dest = Path.Combine(g.Dir, spec.CopyAs);
+                Directory.CreateDirectory(Path.GetDirectoryName(dest));   // CopyAs can be in a folder ("data\pd.ntsc-final.z64")
+                File.Copy(rom, dest, true);
                 Log("Copied your game in as " + spec.CopyAs + ".", Ui.Muted);
                 Engine.Start(first, null, g.Dir, false);
                 return;

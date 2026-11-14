@@ -19,6 +19,7 @@ namespace RecompLauncher {
 partial class Shell {
     StackPanel ovList, ovHints; string ovPage = "main";
     readonly List<Button> ovQuick = new List<Button>(), ovPower = new List<Button>();
+    TextBlock ovMouseText;
     TextBlock ovVolText, ovOutText; Border ovVolBar; int ovPowerStep = -1;
     [DllImport("powrprof.dll")] static extern bool SetSuspendState(bool hibernate, bool force, bool wakeOff);
 
@@ -46,6 +47,7 @@ partial class Shell {
         volRow.Children.Add(track);
         OvRow("", "Sound", ovQuick, out ovOutText);
         OvRow("", "Bluetooth devices", ovQuick, out t);
+        OvRow("\uE962", "Controller as mouse: Off", ovQuick, out ovMouseText);   // PadMouse.cs
         OvRow("", "Back", ovQuick, out t);
         // Power
         OvRow("", "Sleep", ovPower, out t);
@@ -68,6 +70,7 @@ partial class Shell {
     }
     void PowerLabel(int i, string text) { ((TextBlock)((StackPanel)ovPower[i].Content).Children[1]).Text = text; }
     void UpdateQuick() {
+        if (ovMouseText != null) ovMouseText.Text = "Controller as mouse: " + (mouseMode || HelperInFront() ? "On" : "Off");
         int v = Audio.Level; bool m = Audio.Muted;
         ovVolText.Text = v < 0 ? "Volume: no output" : m ? "Volume: muted" : "Volume  " + v + "%";
         ovVolBar.Width = v < 0 || m ? 0 : 1.2 * v;
@@ -115,6 +118,7 @@ partial class Shell {
                 if (inTray) ComeBack(null); else { W.Show(); W.Activate(); BringToFront(new System.Windows.Interop.WindowInteropHelper(W).Handle); }
                 OpenBluetooth();
             }
+            else if (ovIdx == 3) ToggleMouseMode();
             else { Sound.Play(Sfx.Back); ShowOvPage("main"); }
             return;
         }

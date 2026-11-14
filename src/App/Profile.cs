@@ -154,6 +154,8 @@ partial class Shell {
     // the choices, made again each time the window opens (pictures may have been added to the folder)
     void FillProfile() {
         profRows.Children.Clear(); profStops.Clear(); profActions.Clear();
+        // the name: with a controller, A types it on the on-screen keyboard
+        profStops.Add(profName); profActions[profName] = () => OpenOsk("Your name", profName.Text, null, t => { profName.Text = (t ?? "").Trim(); Profiles.Save(); }, null);
 
         profRows.Children.Add(Heading("FRAME", true));
         var frames = new WrapPanel();

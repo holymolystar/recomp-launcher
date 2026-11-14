@@ -93,7 +93,7 @@ static class AvatarArt {
     static readonly Dictionary<string, Brush> brushes = new Dictionary<string, Brush>();
     static Brush B(string hex) {
         Brush b;
-        if (!brushes.TryGetValue(hex, out b)) { b = new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex)); b.Freeze(); brushes[hex] = b; }
+        lock (brushes) if (!brushes.TryGetValue(hex, out b)) { b = new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex)); b.Freeze(); brushes[hex] = b; }
         return b;
     }
     static Brush B(Color c) { var b = new SolidColorBrush(c); b.Freeze(); return b; }
@@ -107,7 +107,7 @@ static class AvatarArt {
     static readonly Dictionary<string, Geometry> geoms = new Dictionary<string, Geometry>();
     static Geometry G(string path) {
         Geometry g;
-        if (!geoms.TryGetValue(path, out g)) { g = Geometry.Parse(path); g.Freeze(); geoms[path] = g; }
+        lock (geoms) if (!geoms.TryGetValue(path, out g)) { g = Geometry.Parse(path); g.Freeze(); geoms[path] = g; }
         return g;
     }
     static Pen P(Brush b, double w) { var p = new Pen(b, w) { StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round, LineJoin = PenLineJoin.Round }; p.Freeze(); return p; }

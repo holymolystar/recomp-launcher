@@ -170,7 +170,8 @@ class Rig3D {
     // ---------- building ----------
     static readonly Dictionary<string, Material> mats = new Dictionary<string, Material>();
     static Color C(string hex) { return (Color)ColorConverter.ConvertFromString(hex); }
-    static Material Mat(string hex, double gloss) {
+    static Material Mat(string hex, double gloss) { lock (mats) return MatLocked(hex, gloss); }
+    static Material MatLocked(string hex, double gloss) {
         string k = hex + "@" + gloss;
         Material m;
         if (mats.TryGetValue(k, out m)) return m;

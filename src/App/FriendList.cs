@@ -1,7 +1,6 @@
-// Friends, the launcher's own: every profile has a friend code (RL-XXXX-XXXX); friends add each other by code and see
-// what the others are playing. It all goes through a small server of your own (server\friends in the repository,
-// set up on Cloudflare's free plan; the address is in Settings > Friends, or in friends-server.txt beside the
-// launcher, which the installer carries to friends who install your build).
+﻿// Friends, the launcher's own: every profile has a friend code (RL-XXXX-XXXX); friends add each other by code and see
+// what the others are playing. It all goes through one small server, built in below (server\friends in the
+// repository: a Cloudflare Worker on the free plan).
 // While the launcher runs it says once a minute that you're here, and what you're playing (Settings > Friends:
 // Show what I'm playing). Guest has no code. The Friends tile opens the list: requests first, then friends playing,
 // online, offline. A accepts a request; Y declines it or (pressed twice) removes a friend; X adds a friend by code.
@@ -21,14 +20,8 @@ namespace RecompLauncher {
 class NetFriend { public string Id, Code, Name, Look, Playing; public bool Online; public DateTime Since, Seen; }
 
 static class FriendsNet {
-    // the server: Settings, else friends-server.txt beside the launcher (put there by the installer)
-    public static string Server {
-        get {
-            string s = Settings.Get("FriendsServer");
-            if (string.IsNullOrEmpty(s)) try { string f = Path.Combine(Paths.Root, "friends-server.txt"); if (File.Exists(f)) s = File.ReadAllText(f).Trim(); } catch { }
-            return string.IsNullOrEmpty(s) ? null : s.TrimEnd('/');
-        }
-    }
+    // the friends server: one for everyone, built in
+    public const string Server = "https://recomp-friends.tommy-schoenm.workers.dev";
     public static bool Ready { get { return Server != null && !Profiles.IsGuest; } }
     static string Key(string what) { return "Friend" + what + ":" + Profiles.Current.Id; }
     public static string MyCode { get { return Profiles.IsGuest ? null : NullIfEmpty(Settings.Get(Key("Code"))); } }
@@ -134,7 +127,7 @@ partial class Shell {
     void FillFriendList() {
         var rows = new List<ListRow>();
         if (!FriendsNet.Ready) {
-            frPage.Sub.Text = Profiles.IsGuest ? "Guest has no friend code: pick your own profile to see your friends." : "Friends go through a small server of your own (free, about five minutes to set up).";
+            frPage.Sub.Text = Profiles.IsGuest ? "Guest has no friend code: pick your own profile to see your friends." : "This launcher has no friends server.";
             frPage.Extra.IsEnabled = false;
             if (!Profiles.IsGuest)
                 rows.Add(new ListRow { Glyph = "", C1 = "#5fae3a", C2 = "#a8d86b", Title = "Set up friends", Text = "Settings > Friends: the server's address. The steps are in server\\friends\\README.md.", Do = () => { CloseListPage(); if (!running) OpenSettings("Friends"); } });

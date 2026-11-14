@@ -124,11 +124,14 @@ partial class Shell {
     }
     void ToggleOverlay() { if (OverlayOpen) ResumeGame(); else OpenOverlay(); }
     bool ovBrowser;   // the menu is over the browser inside the launcher, not a game
+    bool ovHelper;    // the menu is over a port's setup window, before a game runs
     void OvLabel(int i, string text) { ((TextBlock)((StackPanel)ovButtons[i].Content).Children[1]).Text = text; }
     void OpenOverlay() {
         var g = playing;
         ovBrowser = BrowserViewOpen && padActive;
-        if (g == null && !ovBrowser) return;
+        // over a port's setup window (no game running yet): its menu, to come back to the launcher or switch the mouse
+        ovHelper = g == null && !ovBrowser && HelperInFront();
+        if (g == null && !ovBrowser && !ovHelper) return;
         BuildOverlay();
         ovTitle.Text = ovBrowser ? "Browser" : g.Name;
         ovIcon.Source = ovBrowser ? BrowserGlyph() : (ImageSource)g.Icon;
@@ -138,10 +141,10 @@ partial class Shell {
         OvLabel(0, ovBrowser ? "Back to the browser" : "Resume");
         OvLabel(1, ovBrowser ? "Close the browser" : "Go to the launcher");
         OvLabel(2, "Close the game");
-        ovButtons[2].Visibility = ovBrowser ? Visibility.Collapsed : Visibility.Visible;
+        ovButtons[2].Visibility = ovBrowser || ovHelper ? Visibility.Collapsed : Visibility.Visible;
         ovNote.Text = "";
         // on the game's screen (the browser: the launcher's)
-        ovGameWindow = ovBrowser ? new WindowInteropHelper(W).Handle : Engine.Processes(g).Select(p => { try { return p.MainWindowHandle; } catch { return IntPtr.Zero; } }).FirstOrDefault(h => h != IntPtr.Zero);
+        ovGameWindow = ovBrowser ? new WindowInteropHelper(W).Handle : ovHelper ? GetForegroundWindow() : Engine.Processes(g).Select(p => { try { return p.MainWindowHandle; } catch { return IntPtr.Zero; } }).FirstOrDefault(h => h != IntPtr.Zero);
         var screen = ovGameWindow != IntPtr.Zero ? System.Windows.Forms.Screen.FromHandle(ovGameWindow) : System.Windows.Forms.Screen.PrimaryScreen;
         double scale = 1;
         var src = PresentationSource.FromVisual(W);
@@ -149,7 +152,7 @@ partial class Shell {
         ov.Left = screen.Bounds.Left / scale; ov.Top = screen.Bounds.Top / scale; ov.Width = screen.Bounds.Width / scale; ov.Height = screen.Bounds.Height / scale;
         // exclusive full screen: the game in front has the screen to itself; minimise it so the menu can show
         // (its screen is worked out above, before: a minimised window has none)
-        ovExclusive = !ovBrowser && ExclusiveFullScreen();
+        ovExclusive = !ovBrowser && !ovHelper && ExclusiveFullScreen();
         if (ovExclusive) {
             var fg = GetForegroundWindow();
             if (ovGameWindow == IntPtr.Zero) ovGameWindow = fg;
@@ -169,7 +172,7 @@ partial class Shell {
     void OverlayTick() {
         var g = playing;
         if (ovBrowser) ovSub.Text = bvTitle != null ? bvTitle.Text : "";
-        else if (g == null) return;
+        else if (g == null) { ovSub.Text = ovHelper ? "A setup window: the controller works as a mouse there" : ""; return; }
         else {
             var played = DateTime.Now - playingSince;
             ovSub.Text = "Playing for " + Playtime.Format(played.TotalSeconds) + "  •  " + Playtime.Format(Playtime.Total(g.Id) + played.TotalSeconds) + " in all";

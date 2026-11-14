@@ -136,6 +136,7 @@ class Game {
     // a game from Epic or GOG (Stores.cs): the store, its id there, and what the store needs to start it
     public string Store, StoreId, StoreNs, StoreItem, StoreExe, StoreArgs, StoreUninstall, StoreArt, StoreHero;
     public string Platform;
+    public string Helpers;     // the port's own setup or launcher programs (process names, ";", * at the end for a prefix): the controller is a mouse there (PadMouse.cs)
     public string Ready;       // files that show the game has what it needs from you ("a;b", wildcards; NeedsFiles.cs)    // the console it was first made for (games.json; Folders.cs)
     public Action App;         // the launcher's own page shown as a tile on Home (Apps.cs): starting it opens the page
     public bool FromLibrary;   // found in a store library (Steam.cs, Stores.cs), not listed in games.json
@@ -181,7 +182,7 @@ static class Catalog {
                 DefaultDir = Json.Str(d, "DefaultDir"), Series = Json.Str(d, "Series") ?? "nintendo",
                 SettingsLabel = Json.Str(d, "SettingsLabel"), CheckFile = Json.Str(d, "CheckFile"), Saves = Json.Str(d, "Saves"),
                 OwnGuide = Json.Bool(d, "OwnGuide"), Pre = Json.Bool(d, "Pre"), NoSha = Json.Bool(d, "NoSha"), Console = Json.Bool(d, "Console"),
-                Setup = Json.Str(d, "Setup"), Platform = Json.Str(d, "Platform"), Ready = Json.Str(d, "Ready"), Steam = Json.Str(d, "Steam"), Languages = Json.Strings(d, "Languages")
+                Setup = Json.Str(d, "Setup"), Platform = Json.Str(d, "Platform"), Helpers = Json.Str(d, "Helpers"), Ready = Json.Str(d, "Ready"), Steam = Json.Str(d, "Steam"), Languages = Json.Strings(d, "Languages")
             };
             if (g.SettingsLabel == null) g.SettingsLabel = g.Name;
             if (g.CheckFile == null) g.CheckFile = g.Exe;

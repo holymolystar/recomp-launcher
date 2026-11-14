@@ -207,6 +207,7 @@ partial class Shell {
         AddPageButton("\uED1A", "Hide", () => { if (sel != null) HideGame(sel); });
         AddPageButton("\uE9F9", "Achievements", () => { if (sel != null) OpenAchievements(sel); });
         AddPageButton("\uE7FC", "In-game menu", () => { if (sel != null) ToggleGuide(sel); });
+        AddPageButton("\uE9D9", "Test versions", () => { if (sel != null) ToggleTestVersions(sel); });
         right.Children.Add(gpButtonRow);
         gamePage.Children.Add(right);
         homeLayer.Children.Add(gamePage);
@@ -287,6 +288,9 @@ partial class Shell {
         // which button opens the launcher's menu in this game (some games use the Xbox button themselves)
         bool menuOn = g.Inst != null && Settings.Get("PadMenu") != "off";
         SetPageButton(11, "\uE7FC", "In-game menu: " + (GuideLeftTo(g) ? "View + Menu" : "Xbox button"), menuOn, menuOn);
+        // test versions (pre-releases): for a game from GitHub or its own site, and not one that only has those
+        bool canTest = g.Repo != null && !g.Pre && !g.ByStore && g.App == null;
+        SetPageButton(12, "\uE9D9", "Test versions: " + (Engine.TestVersions(g) ? "On" : "Off"), canTest && !running, canTest);
         if (g.ByStore) {
             SetPageButton(0, missing ? "\uE896" : "\uE768", missing ? "Install with " + (g.Store == "epic" ? "Epic" : g.StoreName) : "Start", playOk, true);
             SetPageButton(1, "", "", false, false);

@@ -94,6 +94,14 @@ partial class Shell {
         return layer;
     }
 
+    // ---------- test versions (pre-releases) of one game: offered as updates while this is on ----------
+    void ToggleTestVersions(Game g) {
+        bool on = !Engine.TestVersions(g);
+        Settings.Set("TestVersions:" + g.Id, on ? "on" : ""); Settings.Save();
+        SetStep(on ? g.Name + ": test versions on. A newer test version shows as an update; they can have bugs." : g.Name + ": test versions off. The next full release shows as an update.", Ui.Teal);
+        UpdateGamePage();
+        CheckAll(true);   // look again now
+    }
     // ---------- collections ----------
     Grid colLayer; StackPanel colRows; TextBlock colGame; Game colFor;
     readonly List<FrameworkElement> colStops = new List<FrameworkElement>();
@@ -205,6 +213,7 @@ partial class Shell {
         oskValue = start ?? ""; oskBefore = oskValue;
         oskLive = live; oskDone = done; oskCancel = cancel;
         oskIdx = 10; OskShow(); MarkOsk();   // on Q
+        Panel.SetZIndex(oskLayer, 9500);   // over everything, the creator and the plaza too
         ShowCard("OskLayer", "OskCard");
     }
     Border OskKey(string label, double width) {

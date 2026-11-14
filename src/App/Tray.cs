@@ -7,6 +7,7 @@
 // the in-game menu, when that's on), and comes back by itself when the game closes. The icon opens it (double click)
 // or quits it (right click menu); it also shows notes like "an update is out" (Notify).
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Diagnostics;
 using System.Reflection;
@@ -36,6 +37,33 @@ partial class Shell {
     DispatcherTimer gameWatch;
     [DllImport("kernel32.dll")] static extern bool SetProcessWorkingSetSize(IntPtr process, IntPtr min, IntPtr max);
 
+    // ---------- a game's window, on the launcher's screen ----------
+    // a game that opens on another screen is moved to the one the launcher is on (on a PC with two screens, and
+    // above all while streaming: the TV shows the main screen only); a window that fills its screen fills this one
+    [StructLayout(LayoutKind.Sequential)] struct WinRect { public int L, T, R, B; }
+    [DllImport("user32.dll")] static extern bool GetWindowRect(IntPtr h, out WinRect r);
+    [DllImport("user32.dll")] static extern bool SetWindowPos(IntPtr h, IntPtr after, int x, int y, int w, int hh, uint flags);
+    readonly HashSet<IntPtr> windowsPlaced = new HashSet<IntPtr>();
+    void BringGameWindowsHere(Game g) {
+        if (g == null || Settings.Get("GameScreen") == "off") return;
+        System.Windows.Forms.Screen here;
+        try { here = System.Windows.Forms.Screen.FromHandle(new System.Windows.Interop.WindowInteropHelper(W).Handle); } catch { return; }
+        foreach (var p in Engine.Processes(g)) {
+            IntPtr h; try { h = p.MainWindowHandle; } catch { continue; }
+            if (h == IntPtr.Zero || windowsPlaced.Contains(h)) continue;
+            windowsPlaced.Add(h);
+            try {
+                var there = System.Windows.Forms.Screen.FromHandle(h);
+                if (there.DeviceName == here.DeviceName) continue;
+                WinRect r; if (!GetWindowRect(h, out r)) continue;
+                int w = r.R - r.L, hh = r.B - r.T;
+                var hb = here.Bounds; var tb = there.Bounds;
+                if (w >= tb.Width - 4 && hh >= tb.Height - 4) SetWindowPos(h, IntPtr.Zero, hb.X, hb.Y, hb.Width, hb.Height, 0x0004 | 0x0010);   // fills its screen: fill this one
+                else SetWindowPos(h, IntPtr.Zero, hb.X + (r.L - tb.X) * hb.Width / Math.Max(1, tb.Width), hb.Y + (r.T - tb.Y) * hb.Height / Math.Max(1, tb.Height), w, hh, 0x0004 | 0x0010);
+                SetStep(g.Name + " opened on your other screen: moved it here.", Ui.Teal);
+            } catch { }
+        }
+    }
     // a game was started: follow it until it closes
     void WatchGame(Game g) {
         playing = g; playingSince = DateTime.Now; playingSeen = false; playingBefore = Playtime.Total(g.Id);
@@ -48,6 +76,7 @@ partial class Shell {
             gameWatch.Tick += (s, e) => {
                 if (playing == null) { gameWatch.Stop(); return; }
                 bool runs = Engine.IsRunning(playing);
+                if (runs && (DateTime.Now - playingSince).TotalSeconds < 120) BringGameWindowsHere(playing);   // in its first two minutes
                 if (runs) playingSeen = true;
                 if ((playingSeen && !runs) || (!playingSeen && (DateTime.Now - playingSince).TotalSeconds > (playing.ByStore ? 240 : 90))) GameClosed();
             };
@@ -57,6 +86,7 @@ partial class Shell {
     void GameClosed() {
         var g = playing;
         playing = null;
+        mouseMode = false;   // the in-game menu's Controller as mouse ends with the game
         RefreshPlayingTile(g);
         SendPresence();
         // a play-time milestone, once the time is counted (Mail.cs)
@@ -100,6 +130,22 @@ partial class Shell {
         try { SetProcessWorkingSetSize(Process.GetCurrentProcess().Handle, new IntPtr(-1), new IntPtr(-1)); } catch { }
     }
     // the game closed (or the icon was used): the launcher is back as it was, where it was
+    // another start of the launcher (Moonlight on a TV, a shortcut) asks this one to come to the front, full screen
+    void ListenForOtherStarts() {
+        if (Program.InstanceKey == null) return;
+        var ev = new System.Threading.EventWaitHandle(false, System.Threading.EventResetMode.AutoReset, Program.InstanceKey + "-show");
+        new System.Threading.Thread(() => {
+            while (true) {
+                ev.WaitOne();
+                W.Dispatcher.BeginInvoke(new Action(() => {
+                    ComeBack(null);
+                    SetFullscreen(true);
+                    W.Activate(); W.Focus();
+                    SetStep("Here, on the big screen.", Ui.Teal);
+                }));
+            }
+        }) { IsBackground = true, Name = "Other starts" }.Start();
+    }
     void ComeBack(Game from) {
         if (tray != null) tray.Visible = false;
         inTray = false;

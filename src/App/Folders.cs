@@ -16,7 +16,7 @@ namespace RecompLauncher {
 partial class Shell {
     // newest first, the handhelds after the home consoles of each maker
     static readonly string[] PlatformOrder = { "Switch 2", "Switch", "Wii U", "Wii", "GameCube", "N64", "SNES", "NES", "3DS", "NDS", "GBA", "GBC", "Game Boy",
-        "PS5", "PS4", "PS3", "PS2", "PS1", "Xbox 360", "Xbox", "PC" };
+        "PS5", "PS4", "PS3", "PS2", "PS1", "PSP", "Xbox 360", "Xbox", "PC" };
     public static string PlatformOf(Game g) { return g.App != null ? null : !string.IsNullOrEmpty(g.Platform) ? g.Platform : g.ByStore ? "PC" : null; }
     static int PlatformRank(string p) { int i = Array.IndexOf(PlatformOrder, p); return i < 0 ? 98 : i; }
     // the folder's own colours (our own picks, one pair per console)
@@ -34,7 +34,7 @@ partial class Shell {
             case "GBA": return new[] { "#4b3fa8", "#8a7fe0" };
             case "GBC": return new[] { "#d8a020", "#7fc04a" };
             case "Game Boy": return new[] { "#7f8a3a", "#c3cc7a" };
-            case "PS5": case "PS4": case "PS3": case "PS2": case "PS1": return new[] { "#1f3f8f", "#4f7fd6" };
+            case "PS5": case "PS4": case "PS3": case "PS2": case "PS1": case "PSP": return new[] { "#1f3f8f", "#4f7fd6" };
             case "Xbox 360": case "Xbox": return new[] { "#2f8f2f", "#7fcf5f" };
             default: return new[] { "#3a4a5a", "#7a8a9a" };
         }

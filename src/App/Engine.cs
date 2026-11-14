@@ -155,10 +155,10 @@ static class Engine {
 
     // ---------- releases ----------
     static readonly Regex Sha = new Regex("^sha256:([0-9a-f]{64})$");
-    static object Get(string url, ref string token) {
+    static object Get(string url, ref string token, int timeoutMs = 20000) {
         for (int attempt = 0; ; attempt++) {
             var req = (HttpWebRequest)WebRequest.Create(url);
-            req.UserAgent = "Recomp-Launcher"; req.Accept = "application/json"; req.Timeout = 20000; req.ReadWriteTimeout = 20000;
+            req.UserAgent = "Recomp-Launcher"; req.Accept = "application/json"; req.Timeout = timeoutMs; req.ReadWriteTimeout = timeoutMs;
             req.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
             if (!string.IsNullOrEmpty(token)) req.Headers["Authorization"] = "Bearer " + token;
             try {
@@ -190,18 +190,26 @@ static class Engine {
         }
         return null;
     }
+    public static bool TestVersions(Game g) { return Settings.Get("TestVersions:" + g.Id) == "on"; }
     public static Release FetchLatest(Game g, string token) {
         if (g.ByStore) return Stores.Note(g);   // the store keeps it up to date
         ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
         if (g.Repo != null) {
+            // test versions (pre-releases) too: a project that only makes those, or the game page's Test versions switch
+            bool pre = g.Pre || TestVersions(g);
             // one request for the recent releases: the newest is the one to install, the ones before it carry the
             // notes of versions a player may have skipped
-            var all = ((IEnumerable)Get("https://api.github.com/repos/" + g.Repo + "/releases?per_page=30", ref token)).Cast<Dictionary<string, object>>()
-                .Where(x => !Json.Bool(x, "draft") && (g.Pre || !Json.Bool(x, "prerelease")))
+            // GitHub ("owner/name"), or a Gitea / Forgejo site of the project's own ("https://host/owner/name"), whose
+            // release list reads the same; the GitHub token only ever goes to GitHub
+            string listUrl = "https://api.github.com/repos/" + g.Repo + "/releases?per_page=30";
+            var own = Regex.Match(g.Repo, @"^(https?://[^/]+)/([^/]+/[^/]+?)/?$");
+            if (own.Success) { listUrl = own.Groups[1].Value + "/api/v1/repos/" + own.Groups[2].Value + "/releases?limit=30"; token = null; }
+            var all = ((IEnumerable)Get(listUrl, ref token, own.Success ? 60000 : 20000)).Cast<Dictionary<string, object>>()
+                .Where(x => !Json.Bool(x, "draft") && (pre || !Json.Bool(x, "prerelease")))
                 .OrderByDescending(x => Json.Str(x, "published_at")).ToList();
             // projects that only publish pre-releases: the newest release that has the download
-            var rel = g.Pre ? all.FirstOrDefault(x => PickAsset(x, g) != null) : all.FirstOrDefault();
-            if (rel == null) throw new Exception(g.Pre ? "no release with a Windows download" : "this project has no releases");
+            var rel = pre ? all.FirstOrDefault(x => PickAsset(x, g) != null) : all.FirstOrDefault();
+            if (rel == null) throw new Exception(pre ? "no release with a Windows download" : "this project has no releases");
             var r = new Release { Tag = Json.Str(rel, "tag_name"), Notes = Json.Str(rel, "body"), Date = Json.Str(rel, "published_at") };
             foreach (var o in all.SkipWhile(x => x != rel).Skip(1).Take(25))
                 r.Older.Add(new Release { Tag = Json.Str(o, "tag_name"), Notes = Json.Str(o, "body"), Date = Json.Str(o, "published_at") });
@@ -210,6 +218,18 @@ static class Engine {
                 r.Url = Json.Str(asset, "browser_download_url"); r.Size = Json.Num(asset, "size");
                 var m = Sha.Match(Json.Str(asset, "digest") ?? "");
                 if (m.Success) r.Sha = m.Groups[1].Value;
+                else {
+                    // no digest from the site: a "<name>.sha256" file beside the download, when the project publishes one
+                    var shaFile = ((rel.ContainsKey("assets") ? rel["assets"] as IEnumerable : null) ?? new object[0]).Cast<Dictionary<string, object>>()
+                        .FirstOrDefault(a => string.Equals(Json.Str(a, "name"), Json.Str(asset, "name") + ".sha256", StringComparison.OrdinalIgnoreCase));
+                    if (shaFile != null) try {
+                        using (var wc = new WebClient()) {
+                            wc.Headers.Add("User-Agent", "Recomp-Launcher");
+                            var h = Regex.Match(wc.DownloadString(Json.Str(shaFile, "browser_download_url")), "[0-9a-fA-F]{64}");
+                            if (h.Success) r.Sha = h.Value.ToLowerInvariant();
+                        }
+                    } catch { }
+                }
             } else r.Problem = "No Windows download in this release";
             return r;
         }

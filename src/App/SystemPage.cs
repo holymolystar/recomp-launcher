@@ -38,6 +38,7 @@ partial class Shell {
         rows.Add(R("", "#3fb8a0", "Sound", outName.Length > 0 ? "Playing on " + outName : "Volume and output", "", () => OpenWindowsSettings("sound")));
         var scr = System.Windows.Forms.Screen.AllScreens;
         rows.Add(R("", "#7b3fa0", "Display", scr.Length + (scr.Length == 1 ? " screen" : " screens") + ", " + string.Join(" and ", scr.Select(x => x.Bounds.Width + " x " + x.Bounds.Height).ToArray()), "", () => OpenWindowsSettings("display")));
+        rows.Add(R("", "#7b3fa0", "Streaming to a TV", Sunshine.Installed ? (Sunshine.Running ? "Sunshine is on: play on your TV with Moonlight" : "Sunshine is installed, not running") : "Play on your TV (Apple TV and others) with Moonlight", "", () => { CloseListPage(); OpenStreaming(); }));
         rows.Add(R("", "#f4a312", "Storage", StorageLine(), "", () => { CloseListPage(); OpenStorage(); }));
         rows.Add(R("", "#e8453c", "Date and time", DateTime.Now.ToString("dddd d MMMM, HH:mm"), "", () => OpenWindowsSettings("dateandtime")));
         rows.Add(R("", "#5fae3a", "Power and sleep", "When the screen turns off and the PC sleeps", "", () => OpenWindowsSettings("powersleep")));

@@ -368,11 +368,8 @@ partial class Shell {
         rows.Children.Add(tokenCheck);
 
         rows = SetSection("Friends", "\uE716", "Friend codes, and what your friends are playing.");
-        rows.Children.Add(new TextBlock { TextWrapping = TextWrapping.Wrap, FontSize = 11.5, Foreground = Ui.Brush(Ui.Muted), Margin = new Thickness(0, 0, 0, 8),
-            Text = "Friends go through a small server of your own, free on Cloudflare (the steps are in server\\friends\\README.md). Paste its address here. Friends who install your build get the same address." });
-        friendsServerBox = new TextBox { Height = 38, FontSize = 13, Padding = new Thickness(10, 0, 10, 0), VerticalContentAlignment = VerticalAlignment.Center,
-            Background = Ui.Brush("#0A0E11"), Foreground = Ui.Brush(Ui.Text), BorderBrush = Ui.Brush("#26333C"), CaretBrush = Ui.Brush(Ui.Text) };
-        rows.Children.Add(friendsServerBox);
+        friendsStatus = new TextBlock { FontSize = 13, FontFamily = Ui.Semi, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 8), Text = "Add friends by their code in Friends on Home, and see what they're playing." };
+        rows.Children.Add(friendsStatus);
         rows.Children.Add(ChoiceRow("FriendsShare", "Show what I'm playing", "Off: friends only see that you're online.", 0, new[] { "on", "off" }, new[] { "On", "Off" }));
         friendsCodeText = new TextBlock { FontSize = 13, FontFamily = Ui.Semi, Margin = new Thickness(0, 8, 0, 0), TextWrapping = TextWrapping.Wrap };
         rows.Children.Add(friendsCodeText);
@@ -549,8 +546,7 @@ partial class Shell {
         SetToggle(optMusic, MusicOnSaved, true); PickMusicVolume(MusicVolumeSaved);
         tokenBox.Password = Settings.Get("GitHubToken");
         steamKeyBox.Password = Settings.Get("SteamApiKey");
-        friendsServerBox.Text = FriendsNet.Server ?? "";
-        friendsCodeText.Text = FriendsNet.MyCode != null ? "Your friend code: " + FriendsNet.MyCode : FriendsNet.Server != null ? "Your friend code is made the first time you open Friends." : "";
+        friendsCodeText.Text = FriendsNet.MyCode != null ? "Your friend code: " + FriendsNet.MyCode : "Your friend code is made the first time you open Friends.";
         discordBox.Text = Settings.Get("DiscordAppId");
         weatherBox.Text = Settings.Get("WeatherCity");
         FillRemoteInfo();
@@ -590,16 +586,6 @@ partial class Shell {
         bool newTown = Settings.Get("WeatherCity") != weatherBox.Text.Trim();
         Settings.Set("WeatherCity", weatherBox.Text.Trim());
         W.Dispatcher.BeginInvoke(new Action(() => FetchWeather()));   // with the unit saved below too
-        {
-            // the friends server: kept in settings and beside the launcher (friends-server.txt), so an installer carries it
-            string fs = friendsServerBox.Text.Trim().TrimEnd('/');
-            if (fs.Length > 0 && !fs.StartsWith("http")) fs = "https://" + fs;
-            if (fs != (FriendsNet.Server ?? "")) {
-                Settings.Set("FriendsServer", fs);
-                try { string f = Path.Combine(Paths.Root, "friends-server.txt"); if (fs.Length > 0) File.WriteAllText(f, fs); else if (File.Exists(f)) File.Delete(f); } catch { }
-                W.Dispatcher.BeginInvoke(new Action(SendPresence));
-            }
-        }
         Settings.Set("DiscordAppId", new string(discordBox.Text.Where(char.IsDigit).ToArray()));
         W.Dispatcher.BeginInvoke(new Action(ApplyRemote));   // after the choices below are saved too
         if (Settings.Get("SteamApiKey") != steamKeyBox.Password.Trim()) { Settings.Set("SteamApiKey", steamKeyBox.Password.Trim()); frLast = null; frAt = DateTime.MinValue; }
@@ -672,7 +658,7 @@ partial class Shell {
         s.Add(N<Button>("BtnSetCancel")); s.Add(N<Button>("BtnSetSave"));
         return s;
     }
-    Button tokenSite; TextBox friendsServerBox; TextBlock friendsCodeText;
+    Button tokenSite; TextBlock friendsCodeText, friendsStatus;
 
     // ---------- the sections (LB / RB on a controller) ----------
     class SetSec { public string Name, Desc; public StackPanel Panel; public Border Tab; }

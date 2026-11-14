@@ -119,6 +119,7 @@ partial class Shell {
     void Started() {
         StartHomeMusic();   // Home's music (HomeMusic.cs)
         StartFriendsBeat();   // tells your friends you're here (FriendList.cs)
+        ListenForOtherStarts();   // a second start brings this one forward (Tray.cs)
         W.Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(ShowWhatsNewIfUpdated));   // after a launcher update (SystemPage.cs)
         StartSaverWatch();   // the screensaver (Extras.cs)
         if (Settings.Get("Monitor") != "auto" && Settings.Get("Monitor").Length > 0) MoveToMonitor();   // Settings > Display > Monitor

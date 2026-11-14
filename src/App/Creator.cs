@@ -89,7 +89,8 @@ partial class Shell {
         var titles = new StackPanel();
         titles.Children.Add(new TextBlock { Text = "CHARACTER CREATOR", FontSize = 10.5, FontWeight = FontWeights.Bold, Foreground = Ui.Brush(Ui.Teal) });
         var nameRow = new StackPanel { Orientation = Orientation.Horizontal };
-        crName = new TextBlock { FontSize = 24, FontFamily = Ui.Semi };
+        crName = new TextBlock { FontSize = 24, FontFamily = Ui.Semi, Cursor = Cursors.Hand, ToolTip = "Change the name" };
+        crName.MouseLeftButtonUp += (s, e) => CrRename();
         crMsg = new TextBlock { FontSize = 13, Foreground = Ui.Brush(Ui.Gold), VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(18, 0, 0, 4) };
         nameRow.Children.Add(crName); nameRow.Children.Add(crMsg);
         titles.Children.Add(nameRow);
@@ -152,7 +153,7 @@ partial class Shell {
 
         // button hints
         var hints = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 30, 4) };
-        foreach (var h in new[] { new[] { "LB", "Tab" }, new[] { "RB", "Tab" }, new[] { "A", "Pick" }, new[] { "X", "Random" }, new[] { "Y", "Undo" }, new[] { "≡", "Save" }, new[] { "B", "Back" } }) hints.Children.Add(Hint(h[0], h[1]));
+        foreach (var h in new[] { new[] { "LB", "Tab" }, new[] { "RB", "Tab" }, new[] { "A", "Pick" }, new[] { "X", "Random" }, new[] { "Y", "Undo" }, new[] { "⧉", "Name" }, new[] { "≡", "Save" }, new[] { "B", "Back" } }) hints.Children.Add(Hint(h[0], h[1]));
         Grid.SetRow(hints, 2); Grid.SetColumnSpan(hints, 3);
         crLayer.Children.Add(hints);
 
@@ -358,21 +359,35 @@ partial class Shell {
         if (!crInTabs && crIdx < crStops.Count) crStops[crIdx].BringIntoView();
     }
     // each part's picture: your character wearing that choice
-    readonly Queue<object[]> crThumbQueue = new Queue<object[]>(); DispatcherTimer crThumbStep;
-    void RenderCrThumbs() {
-        crThumbQueue.Clear(); foreach (var t in crThumbs) crThumbQueue.Enqueue(t);
-        if (crThumbStep == null) { crThumbStep = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(15) }; crThumbStep.Tick += (s, e) => RenderCrThumbStep(); }
-        crThumbStep.Start();
+    // the part pictures are drawn on a thread of their own (a 3D picture takes a moment): the creator never waits,
+    // and pictures for a character that has changed since are dropped
+    static System.Windows.Threading.Dispatcher thumbWorker; int crThumbGen;
+    static System.Windows.Threading.Dispatcher ThumbWorker() {
+        if (thumbWorker != null) return thumbWorker;
+        var ready = new System.Threading.ManualResetEvent(false);
+        var t = new System.Threading.Thread(() => { thumbWorker = System.Windows.Threading.Dispatcher.CurrentDispatcher; ready.Set(); System.Windows.Threading.Dispatcher.Run(); });
+        t.SetApartmentState(System.Threading.ApartmentState.STA); t.IsBackground = true; t.Name = "Character pictures"; t.Priority = System.Threading.ThreadPriority.BelowNormal;
+        t.Start(); ready.WaitOne();
+        return thumbWorker;
     }
-    void RenderCrThumbStep() {
-        if (crThumbQueue.Count == 0 || !CreatorOpen) { crThumbStep.Stop(); return; }
-        for (int n = 0; n < 2 && crThumbQueue.Count > 0; n++) {
-            var t = crThumbQueue.Dequeue();
+    void RenderCrThumbs() {
+        int gen = ++crThumbGen;
+        string def = crDef.ToString();
+        var ui = W.Dispatcher;
+        foreach (var t in crThumbs) {
             var img = (Image)t[0]; var it = (AvatarItem)t[1]; int i = (int)t[2];
-            var d = crDef.Clone(); d.Set(it.Key, i);
-            var st = new AvatarState { Mood = it.Key == "mood" ? i : 0, Pose = it.Key == "pose" ? i : -1, Backdrop = it.Thumb == 2 || it.Key == "pose" };
-            img.Source = it.Thumb == 1 ? AvatarArt.Render(d, st, AvatarArt.Crop.Full, 126, 168)
-                : AvatarArt.Render(d, st, it.Thumb == 2 ? AvatarArt.Crop.Portrait : it.Thumb == 3 ? AvatarArt.Crop.Features : AvatarArt.Crop.Head, 126, 126);
+            ThumbWorker().BeginInvoke(DispatcherPriority.Background, new Action(() => {
+                if (gen != crThumbGen) return;   // the character changed again: these are out of date
+                ImageSource pic = null;
+                try {
+                    var d = AvatarDef.Parse(def); d.Set(it.Key, i);
+                    var st = new AvatarState { Mood = it.Key == "mood" ? i : 0, Pose = it.Key == "pose" ? i : -1, Backdrop = it.Thumb == 2 || it.Key == "pose" };
+                    pic = it.Thumb == 1 ? AvatarArt.Render(d, st, AvatarArt.Crop.Full, 126, 168)
+                        : AvatarArt.Render(d, st, it.Thumb == 2 ? AvatarArt.Crop.Portrait : it.Thumb == 3 ? AvatarArt.Crop.Features : AvatarArt.Crop.Head, 126, 126);
+                    if (pic != null && pic.CanFreeze && !pic.IsFrozen) pic.Freeze();
+                } catch { }
+                if (pic != null) ui.BeginInvoke(new Action(() => { if (gen == crThumbGen) img.Source = pic; }));
+            }));
         }
     }
 
@@ -419,6 +434,14 @@ partial class Shell {
         if (pop) Sound.Play(Sfx.Move);
         CrChanged(false);
     }
+    // the character's (and its profile's) name, typed on the on-screen keyboard; a click on the name does the same
+    void CrRename() {
+        OpenOsk("Name", Profiles.Get("PlayerName"), null, t => {
+            t = (t ?? "").Trim(); if (t.Length > 24) t = t.Substring(0, 24);
+            Profiles.Set("PlayerName", t); Profiles.Save();
+            crName.Text = Profiles.DisplayName(Profiles.Current); ApplyAvatar();
+        }, null);
+    }
     void CrUndo() {
         if (crUndoStack.Count == 0) { Sound.Play(Sfx.Bump); return; }
         crDef = AvatarDef.Parse(crUndoStack[crUndoStack.Count - 1]);
@@ -440,6 +463,7 @@ partial class Shell {
     void CreatorPad(int bit) {
         if (bit == Pad.LB || bit == Pad.RB) { Sound.Play(Sfx.Move); SelectCrTab(crTab + (bit == Pad.LB ? -1 : 1)); return; }
         if (bit == Pad.X) { CrRandom(); return; }
+        if (bit == Pad.Back) { CrRename(); return; }   // the name, on the on-screen keyboard
         if (bit == Pad.Y) { CrUndo(); return; }
         if (bit == Pad.LT || bit == Pad.RT) { crView.Turn(bit == Pad.RT ? 45 : -45); return; }   // turn the character round
         if (bit == Pad.Start) { CloseCreator(true); return; }
