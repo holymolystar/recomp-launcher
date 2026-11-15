@@ -12,9 +12,9 @@ using System.Windows;
 namespace RecompLauncher {
 
 class Args {
-    public string Snapshot, Select, Search, PadScript, View, Theme;
+    public string Snapshot, Select, Search, PadScript, View, Theme, Online;
     public int SnapshotDelay = 3000;
-    public bool Full, OpenNotes, OpenSettings, DrawnIcons;
+    public bool Full, OpenNotes, OpenSettings, DrawnIcons, Mouse;
     public static Args Parse(string[] a) {
         var r = new Args();
         for (int i = 0; i < a.Length; i++) {
@@ -29,6 +29,8 @@ class Args {
                 case "view": r.View = next(); break;
                 case "theme": r.Theme = next(); break;
                 case "full": r.Full = true; break;
+                case "mouse": r.Mouse = true; break;
+                case "online": r.Online = next(); break;   // test: open a game's Online play page   // test: Mouse mode for this run, without saving it
                 case "startup": r.Full = true; break;   // started with Windows: full screen on Home
                 case "opennotes": r.OpenNotes = true; break;
                 case "opensettings": r.OpenSettings = true; break;

@@ -208,6 +208,7 @@ partial class Shell {
         AddPageButton("\uE9F9", "Achievements", () => { if (sel != null) OpenAchievements(sel); });
         AddPageButton("\uE7FC", "In-game menu", () => { if (sel != null) ToggleGuide(sel); });
         AddPageButton("\uE9D9", "Test versions", () => { if (sel != null) ToggleTestVersions(sel); });
+        AddPageButton("", "Online play", () => { if (sel != null) OpenOnline(sel); });   // Tailscale.cs
         right.Children.Add(gpButtonRow);
         gamePage.Children.Add(right);
         homeLayer.Children.Add(gamePage);
@@ -291,6 +292,7 @@ partial class Shell {
         // test versions (pre-releases): for a game from GitHub or its own site, and not one that only has those
         bool canTest = g.Repo != null && !g.Pre && !g.ByStore && g.App == null;
         SetPageButton(12, "\uE9D9", "Test versions: " + (Engine.TestVersions(g) ? "On" : "Off"), canTest && !running, canTest);
+        SetPageButton(13, "", "Online play", g.Online == "tailscale", g.Online == "tailscale");
         if (g.ByStore) {
             SetPageButton(0, missing ? "\uE896" : "\uE768", missing ? "Install with " + (g.Store == "epic" ? "Epic" : g.StoreName) : "Start", playOk, true);
             SetPageButton(1, "", "", false, false);

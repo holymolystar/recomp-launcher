@@ -145,7 +145,8 @@ partial class Shell {
         var first = Catalog.Find(args.Select ?? Settings.Get("LastGame")) ?? Games[0];
         SetTab("notes");
         SetView(View.Home, false);
-        if (args.Select == null && args.Snapshot == null && Settings.Get("LastPage") == "all") {
+        // (a game that isn't installed is only in All games: -Select opens there for it)
+        if ((args.Select == null && args.Snapshot == null && Settings.Get("LastPage") == "all") || (args.Select != null && first.Inst == null)) {
             homePage = "all"; filter = Settings.Get("LastFilter").Length > 0 ? Settings.Get("LastFilter") : "all";
             ShowHomePage();
         }
@@ -164,6 +165,7 @@ partial class Shell {
         if (args.OpenSettings) OpenSettings();
         if (args.OpenNotes) OpenNotes("notes");
         if (args.PadScript != null) PlayPadScript(args.PadScript);
+        if (args.Online != null && Catalog.Find(args.Online) != null) W.Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(() => OpenOnline(Catalog.Find(args.Online))));
         // the start-up screen's animation, a moment after the set-up above has let go of the window (Boot.cs)
         if (bootLayer != null) { var bt = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) }; bt.Tick += (s2, e2) => { bt.Stop(); StartBoot(); }; bt.Start(); }
         if (args.Snapshot == null) ApplyRemote();
@@ -1019,7 +1021,7 @@ partial class Shell {
         if (padUsed) { padUsed = false; HideRing(); SetHints(); }
         if (OskOpen) { if (OskKeyDown(k)) e.Handled = true; return; }
         if (ListPageOpen) {
-            int lb = k == Key.Up ? Pad.Up : k == Key.Down ? Pad.Down : k == Key.Enter || k == Key.Space ? Pad.A : k == Key.Escape || k == Key.Back ? Pad.B : 0;
+            int lb = k == Key.Up ? Pad.Up : k == Key.Down ? Pad.Down : k == Key.PageUp ? Pad.LB : k == Key.PageDown ? Pad.RB : k == Key.Enter || k == Key.Space ? Pad.A : k == Key.Escape || k == Key.Back ? Pad.B : 0;
             if (lb != 0) { ListPagePad(lb); e.Handled = true; }
             return;
         }

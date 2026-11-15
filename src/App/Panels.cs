@@ -289,6 +289,8 @@ partial class Shell {
         foreach (var t in new[] { optStartup, optAuto }) rows.Children.Add(t.Root);   // full screen is under Display
         rows.Children.Add(ChoiceRow("AskWho", "Ask who's playing", "With more than one profile. Each game: before a game starts, so it always starts with the right player's saves. At start: once, when the launcher opens. Never: it stays the profile used last (LB on Home switches).", 0,
             new[] { "game", "start", "never" }, new[] { "Each game", "At start", "Never" }));
+        rows.Children.Add(ChoiceRow("InputMode", "Controls", "Controller: made for a controller, with its buttons named along the bottom. Mouse: the same screens, but the bar along the bottom is always there as buttons to click, the item under the pointer is the picked one, and the mouse wheel moves along Home's row. A controller keeps working either way.", 0,
+            new[] { "pad", "mouse" }, new[] { "Controller", "Mouse" }));
         // the weather: a town, and the unit
         var wrow = new Grid { Margin = new Thickness(0, 8, 0, 8) };
         wrow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); wrow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(220) });

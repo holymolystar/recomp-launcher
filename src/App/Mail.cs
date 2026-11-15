@@ -1,7 +1,7 @@
-// Mail: a console-style inbox of what happened while you weren't looking. A new release for one of your games, an
+﻿// Mail: a console-style inbox of what happened while you weren't looking. A new release for one of your games, an
 // install that finished, a play-time milestone (1, 5, 10, 25, 50, 100, 250 hours), a launcher update. Kept in
 // mail.json (newest 100). Home shows an envelope with the number unread; Mail is also a tile at the end of the row.
-// A on a letter opens its game; X marks them all read.
+// A reads a letter (its game, or deleting it, from there), Y deletes it, X marks them all read, LB / RB a page.
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -48,37 +48,65 @@ static class MailBox {
     public static int Unread { get { Load(); return all.Count(l => !l.Read); } }
     public static void MarkRead(Letter l) { if (l.Read) return; l.Read = true; Save(); }
     public static void MarkAllRead() { Load(); foreach (var l in all) l.Read = true; Save(); }
+    public static void Delete(Letter l) { Load(); if (all.Remove(l)) Save(); }
 }
 
 partial class Shell {
-    ListPage mailPage; Border homeMail; TextBlock homeMailCount;
-    void OpenMail() {
+    ListPage mailPage, letterPage; Border homeMail; TextBlock homeMailCount;
+    Letter letterOpen; bool letterLeaving;
+    void OpenMail() { OpenMail(-1); }
+    void OpenMail(int idx) {
         if (mailPage == null) {
             mailPage = MakeListPage("Mail", "MAIL", "Your mail", 760, "Mark all read");
             mailPage.Fill = FillMail;
             mailPage.OnExtra = () => { MailBox.MarkAllRead(); FillMail(); };
         }
         OpenListPage(mailPage);
+        if (idx >= 0 && mailPage.Rows.Count > 0) { mailPage.Idx = Math.Min(idx, mailPage.Rows.Count - 1); MarkRows(mailPage); SetHints(); }
     }
     void FillMail() {
         var rows = new List<ListRow>();
         foreach (var l in MailBox.All.Take(60)) {
             var letter = l; var g = l.Game != null ? Catalog.Find(l.Game) : null;
-            string glyph = l.Kind == "update" ? "" : l.Kind == "install" ? "" : l.Kind == "milestone" ? "" : l.Kind == "system" ? "" : "";
+            string glyph = l.Kind == "update" ? "" : l.Kind == "install" ? "" : l.Kind == "milestone" ? "" : l.Kind == "system" ? "" : "";
             string c1 = l.Kind == "milestone" ? "#f4a312" : l.Kind == "update" ? "#2f8fe0" : l.Kind == "install" ? "#3fb8a0" : "#5b6670";
             rows.Add(new ListRow { Glyph = glyph, C1 = c1, C2 = c1, Pic = g != null && g.IconIsArt ? (ImageSource)g.Icon : null,
                 Title = (l.Read ? "" : "●  ") + l.Title, Text = l.Text, Right = Playtime.When(l.When), Bold = !l.Read,
-                Do = () => {
-                    MailBox.MarkRead(letter);
-                    if (g != null) { CloseListPage(); ShowGame(g); if (view == View.Home) OpenGamePage(); }
-                    else FillMail();
-                } });
+                Do = () => OpenLetter(letter),
+                Alt = () => { int at = mailPage.Idx; MailBox.Delete(letter); FillMail(); mailPage.Idx = Math.Min(at, Math.Max(0, mailPage.Rows.Count - 1)); MarkRows(mailPage); SetHints(); },
+                AltLabel = "Delete" });
         }
         int n = MailBox.Unread;
         mailPage.Sub.Text = n == 0 ? "All read." : n + (n == 1 ? " new letter" : " new letters");
         mailPage.Extra.IsEnabled = n > 0;
         FillRows(mailPage, rows, "No mail yet. New releases for your games, finished installs and play-time milestones arrive here.");
     }
+    // one letter, to read: its whole text, and what you can do with it
+    void OpenLetter(Letter l) {
+        int back = mailPage.Idx;
+        MailBox.MarkRead(l);
+        if (letterPage == null) {
+            letterPage = MakeListPage("Letter", "LETTER", "", 640, null);
+            letterPage.BackLabel = "Back";
+            letterPage.OnClose = () => { if (!letterLeaving) W.Dispatcher.BeginInvoke(new Action(() => OpenMail(letterBack))); };
+        }
+        letterOpen = l; letterBack = back; letterLeaving = false;
+        var g = l.Game != null ? Catalog.Find(l.Game) : null;
+        letterPage.Fill = () => {
+            letterPage.Title.Text = l.Title;
+            letterPage.Sub.Text = l.When.ToString("dddd d MMMM yyyy, HH:mm") + "\n\n" + (l.Text ?? "");
+            letterPage.Sub.FontSize = 14; letterPage.Sub.Foreground = Ui.Brush(Ui.Text);
+            var rows = new List<ListRow>();
+            if (g != null) rows.Add(new ListRow { Glyph = "", C1 = "#2f8fe0", C2 = "#2f8fe0", Pic = g.IconIsArt ? (ImageSource)g.Icon : null, Title = "Go to " + g.Name, Text = "Its game page: play, update or see what's new.",
+                Do = () => { letterLeaving = true; CloseListPage(); ShowGame(g); if (view == View.Home) OpenGamePage(); } });
+            rows.Add(new ListRow { Glyph = "", C1 = "#c0453c", C2 = "#c0453c", Title = "Delete this letter",
+                Do = () => { MailBox.Delete(l); CloseListPage(); } });
+            rows.Add(new ListRow { Glyph = "", C1 = "#5b6670", C2 = "#5b6670", Title = "Back to Mail", Do = () => CloseListPage() });
+            FillRows(letterPage, rows, "");
+        };
+        OpenListPage(letterPage);
+    }
+    int letterBack;
     // the envelope at the top of Home, with the number unread
     FrameworkElement BuildHomeMail() {
         homeMailCount = new TextBlock { FontSize = 11, FontFamily = Ui.Semi, Foreground = Brushes.White, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
@@ -87,7 +115,7 @@ partial class Shell {
         var g = new Grid();
         g.Children.Add(new TextBlock { Text = "", FontFamily = Ui.Mdl, FontSize = 19, Foreground = Ui.Brush(Ui.Text), VerticalAlignment = VerticalAlignment.Center });
         g.Children.Add(dot);
-        homeMail = new Border { Child = g, Margin = new Thickness(0, 2, 22, 0), Cursor = Cursors.Hand, Background = Brushes.Transparent, VerticalAlignment = VerticalAlignment.Center, ToolTip = "Mail" };
+        homeMail = new Border { Child = g, Margin = new Thickness(0, 2, 12, 0), Padding = new Thickness(9, 5, 9, 5), CornerRadius = new CornerRadius(18), BorderThickness = new Thickness(2), BorderBrush = Brushes.Transparent, Cursor = Cursors.Hand, Background = Brushes.Transparent, VerticalAlignment = VerticalAlignment.Center, ToolTip = "Mail" };
         homeMail.MouseLeftButtonUp += (s, e) => OpenMail();
         MailBox.Changed += () => W.Dispatcher.BeginInvoke(new Action(UpdateHomeMail));
         UpdateHomeMail();

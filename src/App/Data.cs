@@ -128,6 +128,7 @@ enum State { Missing, Checking, Current, Update, Problem, Offline, Unknown, Inst
 class Game {
     public string Id, Name, Short, Source, Exe, Proc, SettingsKey, Launch, Repo, Asset, NotAsset, Accent, Accent2;
     public string Backup, Keep, Replace, FirstRun, SetupArg, Rebuild, Needs, DefaultDir, Series, SettingsLabel, CheckFile, Saves;
+    public string Online;      // "tailscale": plays online over Tailscale (the game page's Online play, Tailscale.cs)
     public bool Pre, NoSha, Console;
     public bool OwnGuide;                         // the game uses the Xbox / PS / Home button itself (the in-game menu then opens with View + Menu only)
     public string Steam;                          // a Steam game: its app id (Steam.cs)
@@ -178,7 +179,7 @@ static class Catalog {
                 Repo = Json.Str(d, "Repo"), Asset = Json.Str(d, "Asset"), NotAsset = Json.Str(d, "NotAsset"),
                 Accent = (Json.Str(d, "Accent") ?? "#3fb8a0").ToLowerInvariant(), Accent2 = (Json.Str(d, "Accent2") ?? "#d9b45a").ToLowerInvariant(),   // lower case: never recoloured by a theme
                 Backup = Json.Str(d, "Backup"), Keep = Json.Str(d, "Keep"), Replace = Json.Str(d, "Replace"), FirstRun = Json.Str(d, "FirstRun"),
-                SetupArg = Json.Str(d, "SetupArg"), Rebuild = Json.Str(d, "Rebuild"), Needs = Json.Str(d, "Needs") ?? "",
+                SetupArg = Json.Str(d, "SetupArg"), Rebuild = Json.Str(d, "Rebuild"), Online = Json.Str(d, "Online"), Needs = Json.Str(d, "Needs") ?? "",
                 DefaultDir = Json.Str(d, "DefaultDir"), Series = Json.Str(d, "Series") ?? "nintendo",
                 SettingsLabel = Json.Str(d, "SettingsLabel"), CheckFile = Json.Str(d, "CheckFile"), Saves = Json.Str(d, "Saves"),
                 OwnGuide = Json.Bool(d, "OwnGuide"), Pre = Json.Bool(d, "Pre"), NoSha = Json.Bool(d, "NoSha"), Console = Json.Bool(d, "Console"),

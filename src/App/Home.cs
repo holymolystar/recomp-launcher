@@ -45,7 +45,7 @@ partial class Shell {
         // top right: updates waiting, clock, Wi-Fi, battery (laptops)
         var right = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 10, 112, 0) };
         homeUpdates = new TextBlock { FontSize = 12.5, FontFamily = Ui.Semi, Foreground = Ui.Brush("#0A0E11"), VerticalAlignment = VerticalAlignment.Center };
-        homeUpdatesPill = new Border { CornerRadius = new CornerRadius(12), Padding = new Thickness(11, 3, 11, 4), Background = Ui.Brush(Ui.Gold), Margin = new Thickness(0, 0, 20, 0),
+        homeUpdatesPill = new Border { CornerRadius = new CornerRadius(12), Padding = new Thickness(11, 3, 11, 4), Background = Ui.Brush(Ui.Gold), Margin = new Thickness(0, 0, 20, 0), BorderThickness = new Thickness(2), BorderBrush = Brushes.Transparent,
             Child = homeUpdates, Cursor = Cursors.Hand, Visibility = Visibility.Collapsed, VerticalAlignment = VerticalAlignment.Center, ToolTip = "Show the games with updates" };
         homeUpdatesPill.MouseLeftButtonUp += (s, e) => OpenHomeAll("updates");
         homeClock = new TextBlock { FontSize = 19, Foreground = Ui.Brush(Ui.Text), VerticalAlignment = VerticalAlignment.Center };
@@ -71,6 +71,8 @@ partial class Shell {
         homeScroll = new ScrollViewer { HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, Focusable = false, Content = homeTiles };
         Grid.SetRow(homeScroll, 2);
         homeLayer.Children.Add(homeScroll);
+        // the mouse wheel moves along the row, a game at a time
+        homeScroll.PreviewMouseWheel += (s, e) => { e.Handled = true; if (homePage == "home") { homeZone = "tiles"; MarkHomeProfile(); StepGame(e.Delta < 0 ? 1 : -1); } };
 
         // the round buttons, each icon in its own colour
         var row = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center };
@@ -444,11 +446,22 @@ partial class Shell {
             else return false;
             return true;
         }
-        // above the games: the profile picture (A opens the profile)
+        // above the games: the top bar: your picture, Mail, the updates waiting (left / right move, A opens)
         if (homeZone == "profile") {
+            var stops = TopStops();
+            if (homeTopIdx >= stops.Count) homeTopIdx = stops.Count - 1;
             if (dir == "down" || dir == "back") { Sound.Play(dir == "back" ? Sfx.Back : Sfx.Move); homeZone = "tiles"; MarkHomeProfile(); }
-            else if (dir == "ok") { Sound.Play(Sfx.Select); homeZone = "tiles"; MarkHomeProfile(); OpenProfile(); }
-            else if (dir == "up" || dir == "left" || dir == "right") Sound.Play(Sfx.Bump);
+            else if (dir == "ok") {
+                Sound.Play(Sfx.Select); string what = stops[homeTopIdx];
+                homeZone = "tiles"; MarkHomeProfile();
+                if (what == "mail") OpenMail(); else if (what == "updates") OpenHomeAll("updates"); else OpenProfile();
+            }
+            else if (dir == "left" || dir == "right") {
+                int was = homeTopIdx;
+                homeTopIdx = Math.Max(0, Math.Min(stops.Count - 1, homeTopIdx + (dir == "left" ? -1 : 1)));
+                Sound.Play(homeTopIdx != was ? Sfx.Move : Sfx.Bump); MarkHomeProfile();
+            }
+            else if (dir == "up") Sound.Play(Sfx.Bump);
             else return false;
             return true;
         }
@@ -456,7 +469,7 @@ partial class Shell {
             if (dir == "left") StepGame(-1);
             else if (dir == "right") StepGame(1);
             else if (dir == "down") { Sound.Play(Sfx.Move); homeZone = "buttons"; homeIdx = Math.Min(homeIdx, homeButtons.Count - 1); MarkHomeButtons(); }
-            else if (dir == "up") { Sound.Play(Sfx.Move); homeZone = "profile"; MarkHomeProfile(); }
+            else if (dir == "up") { Sound.Play(Sfx.Move); homeZone = "profile"; homeTopIdx = 0; MarkHomeProfile(); }
             else if (dir == "ok") { if (sel != null) PrimaryAction(sel); }
             else if (dir == "back" && homeFolder != null) CloseConsoleFolder();   // out of a console's folder (Folders.cs)
             else return false;
@@ -474,13 +487,28 @@ partial class Shell {
         }
         return true;
     }
-    // the profile picture lit up while the controller is on it
+    // the top bar's stops, left to right: your picture, Mail, and the updates pill while it shows
+    int homeTopIdx;
+    List<string> TopStops() {
+        var l = new List<string> { "profile" };
+        if (homeMail != null) l.Add("mail");
+        if (homeUpdatesPill != null && homeUpdatesPill.Visibility == Visibility.Visible) l.Add("updates");
+        return l;
+    }
+    string TopStop { get { var l = TopStops(); return homeZone == "profile" ? l[Math.Max(0, Math.Min(homeTopIdx, l.Count - 1))] : null; } }
+    // the picked one lit up while the controller is on the top bar
     void MarkHomeProfile() {
         if (homeAvatar == null) return;
-        bool on = homeZone == "profile";
-        homeAvatar.Effect = on ? new System.Windows.Media.Effects.DropShadowEffect { BlurRadius = 22, ShadowDepth = 0, Opacity = 1, Color = (Color)ColorConverter.ConvertFromString("#3FB8A0") } : null;
-        var st = new ScaleTransform(on ? 1.18 : 1, on ? 1.18 : 1); homeAvatar.RenderTransformOrigin = new Point(0.5, 0.5); homeAvatar.RenderTransform = st;
-        homeName.Foreground = Ui.Brush(on ? Ui.Teal : Ui.Text);
+        string at = TopStop;
+        Func<bool, Effect> glow = on => on ? new DropShadowEffect { BlurRadius = 22, ShadowDepth = 0, Opacity = 1, Color = (Color)ColorConverter.ConvertFromString("#3FB8A0") } : null;
+        Action<FrameworkElement, bool, double> lift = (el, on, k) => { if (el == null) return; el.Effect = glow(on); el.RenderTransformOrigin = new Point(0.5, 0.5); el.RenderTransform = new ScaleTransform(on ? k : 1, on ? k : 1); };
+        lift(homeAvatar, at == "profile", 1.18);
+        homeName.Foreground = Ui.Brush(at == "profile" ? Ui.Teal : Ui.Text);
+        lift(homeMail, at == "mail", 1.15);
+        lift(homeUpdatesPill, at == "updates", 1.1);
+        // a ring round Mail and the updates pill, as clear as the tiles' frame
+        if (homeMail != null) homeMail.BorderBrush = at == "mail" ? Ui.Brush(Ui.Teal) : Brushes.Transparent;
+        if (homeUpdatesPill != null) homeUpdatesPill.BorderBrush = at == "updates" ? Ui.Brush("#ffffff") : Brushes.Transparent;
         SetHints();
     }
     bool HomeKey(Key k) {

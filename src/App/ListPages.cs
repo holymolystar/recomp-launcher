@@ -1,6 +1,8 @@
 ﻿// A page that is a list (Mail, System, Storage, the launcher's update notes): a card with a title and rows of
 // picture, name, a line of text and something on the right. Controller: up / down move, A does the row's thing,
-// X the page's extra button, B closes. Keyboard: arrows, Enter, Escape.
+// LB / RB a page up or down, X the page's extra button, Y the row's second thing, B closes. Keyboard: arrows,
+// Page Up / Down, Enter, Escape. Mouse: click a row (right-click for its second thing); in Mouse mode the row
+// under the pointer is the picked one.
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,9 +21,9 @@ class ListRow {
     public Action Alt; public string AltLabel;   // a second thing the row does: Y, or a right-click
 }
 class ListPage {
-    public string Id; public Grid Layer; public StackPanel List; public TextBlock Sub; public Button Extra;
+    public string Id; public Grid Layer; public StackPanel List; public TextBlock Title, Sub; public Button Extra; public ScrollViewer Scroll;
     public readonly List<Border> Rows = new List<Border>(); public List<ListRow> Items = new List<ListRow>();
-    public int Idx; public Action Fill, OnExtra, OnClose; public string ExtraLabel;
+    public int Idx; public Action Fill, OnExtra, OnClose; public string ExtraLabel, BackLabel;
 }
 
 partial class Shell {
@@ -32,11 +34,13 @@ partial class Shell {
         Border card; StackPanel body;
         p.Layer = Card(id, width, VerticalAlignment.Center, out card, out body);
         body.Children.Add(new TextBlock { Text = kicker, FontSize = 10.5, FontWeight = FontWeights.Bold, Foreground = Ui.Brush(Ui.Teal) });
-        body.Children.Add(new TextBlock { Text = title, FontSize = 22, FontFamily = Ui.Semi, Margin = new Thickness(0, 2, 0, 2) });
+        p.Title = new TextBlock { Text = title, FontSize = 22, FontFamily = Ui.Semi, Margin = new Thickness(0, 2, 0, 2), TextWrapping = TextWrapping.Wrap };
+        body.Children.Add(p.Title);
         p.Sub = new TextBlock { FontSize = 12, Foreground = Ui.Brush(Ui.Muted), Margin = new Thickness(0, 0, 0, 12), TextWrapping = TextWrapping.Wrap };
         body.Children.Add(p.Sub);
         p.List = new StackPanel();
-        body.Children.Add(new ScrollViewer { MaxHeight = 390, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = p.List, Focusable = false });
+        p.Scroll = new ScrollViewer { MaxHeight = 390, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = p.List, Focusable = false };
+        body.Children.Add(p.Scroll);
         var bar = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 12, 0, 0) };
         if (extra != null) {
             p.Extra = MakeButton(extra, 40); p.Extra.Margin = new Thickness(0, 0, 10, 0);
@@ -92,15 +96,17 @@ partial class Shell {
                 Cursor = it.Do != null ? System.Windows.Input.Cursors.Hand : null, Background = Brushes.Transparent };
             b.MouseLeftButtonUp += (s, e) => { p.Idx = idx; MarkRows(p); if (it.Do != null) { Sound.Play(Sfx.Select); it.Do(); } };
             b.MouseRightButtonUp += (s, e) => { p.Idx = idx; MarkRows(p); if (it.Alt != null) { Sound.Play(Sfx.Select); it.Alt(); } e.Handled = true; };
+            b.MouseEnter += (s, e) => { if (MouseMode && p.Idx != idx) { p.Idx = idx; MarkRows(p, false); SetHints(); } };
             p.Rows.Add(b); p.List.Children.Add(b);
         }
         if (items.Count == 0) p.List.Children.Add(new TextBlock { Text = empty, FontSize = 13.5, Foreground = Ui.Brush(Ui.Muted), TextWrapping = TextWrapping.Wrap, Margin = new Thickness(4, 4, 4, 10) });
         MarkRows(p);
         if (ListPageOpen && lpOpen == p) SetHints();   // the rows may have come after the page opened
     }
-    void MarkRows(ListPage p) {
-        for (int i = 0; i < p.Rows.Count; i++) p.Rows[i].Background = Ui.Brush(i == p.Idx && padUsed ? "#1C252C" : "#00000000");
-        if (padUsed && p.Idx < p.Rows.Count) p.Rows[p.Idx].BringIntoView();
+    void MarkRows(ListPage p, bool scroll = true) {
+        bool show = padUsed || MouseMode;
+        for (int i = 0; i < p.Rows.Count; i++) p.Rows[i].Background = Ui.Brush(i == p.Idx && show ? "#1C252C" : "#00000000");
+        if (scroll && show && p.Idx < p.Rows.Count) p.Rows[p.Idx].BringIntoView();
     }
     void ListPagePad(int bit) {
         var p = lpOpen;
@@ -109,11 +115,19 @@ partial class Shell {
         if (bit == Pad.A) { if (p.Idx < p.Items.Count && p.Items[p.Idx].Do != null) { Sound.Play(Sfx.Select); p.Items[p.Idx].Do(); } return; }
         if (bit == Pad.Y) { if (p.Idx < p.Items.Count && p.Items[p.Idx].Alt != null) { Sound.Play(Sfx.Select); p.Items[p.Idx].Alt(); } return; }
         int was = p.Idx;
+        if (p.Rows.Count == 0) { if (bit == Pad.Up || bit == Pad.Down || bit == Pad.LB || bit == Pad.RB) Sound.Play(Sfx.Bump); return; }
         if (bit == Pad.Up) p.Idx = Math.Max(0, p.Idx - 1);
         else if (bit == Pad.Down) p.Idx = Math.Min(p.Rows.Count - 1, p.Idx + 1);
+        else if (bit == Pad.LB) p.Idx = Math.Max(0, p.Idx - PageRows(p));
+        else if (bit == Pad.RB) p.Idx = Math.Min(p.Rows.Count - 1, p.Idx + PageRows(p));
         else return;
         Sound.Play(p.Idx != was ? Sfx.Move : Sfx.Bump);
         MarkRows(p);
+    }
+    // how many rows fit in the list at once (for LB / RB)
+    static int PageRows(ListPage p) {
+        double h = p.Rows.Count > 0 && p.Rows[0].ActualHeight > 0 ? p.Rows[0].ActualHeight + 4 : 68;
+        return Math.Max(1, (int)((p.Scroll != null && p.Scroll.ActualHeight > 0 ? p.Scroll.ActualHeight : 400) / h) - 1);
     }
     void ListPageHints(List<string[]> spec) {
         var p = lpOpen;
@@ -121,7 +135,8 @@ partial class Shell {
         if (p.Idx < p.Items.Count && p.Items[p.Idx].Do != null) spec.Add(new[] { "A", "OK" });
         if (p.Idx < p.Items.Count && p.Items[p.Idx].Alt != null) spec.Add(new[] { "Y", p.Items[p.Idx].AltLabel ?? "More" });
         if (p.Extra != null && p.Extra.IsEnabled) spec.Add(new[] { "X", p.ExtraLabel });
-        spec.Add(new[] { "B", "Close" });
+        if (!MouseMode && p.Scroll != null && p.Scroll.ExtentHeight > p.Scroll.ViewportHeight + 1) { spec.Add(new[] { "LB", "Page up" }); spec.Add(new[] { "RB", "Page down" }); }
+        spec.Add(new[] { "B", p.BackLabel ?? "Close" });
     }
 }
 }

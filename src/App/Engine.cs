@@ -282,14 +282,15 @@ static class Engine {
         return Process.Start(psi);
     }
 
-    // What Play starts: after an update that needs it, the game's builder (Rebuild) once; else the first Launch
+    // What Play starts: the game's builder (Rebuild) after an update that needs it (once), or while a newer release
+    // is out than the one installed (Hookshot's builder updates itself and rebuilds the game); else the first Launch
     // choice that exists (relative to the game folder, or full paths with %VARIABLES% and wildcards); else Exe
     public static string PlayFile(Game g, out string args, bool consume) {
         args = null;
         var mk = Marker(g);
         bool needsSetup = mk != null && Json.Bool(mk, "needsSetup");
-        if (g.Rebuild != null && needsSetup && File.Exists(Path.Combine(g.Dir, g.Rebuild))) {
-            if (consume) { mk["needsSetup"] = false; SaveMarker(g, mk); }
+        if (g.Rebuild != null && File.Exists(Path.Combine(g.Dir, g.Rebuild)) && (needsSetup || Versions.IsNewer(g.Latest, g.Inst))) {
+            if (consume && needsSetup) { mk["needsSetup"] = false; SaveMarker(g, mk); }
             return Path.Combine(g.Dir, g.Rebuild);
         }
         if (g.Launch != null) {

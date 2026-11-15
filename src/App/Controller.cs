@@ -349,7 +349,7 @@ partial class Shell {
     string hintsShown = "";
     void SetHints() {
         var spec = new List<string[]>();
-        if (!CreatorOpen && (padUsed || view == View.Home)) {
+        if (!CreatorOpen && (padUsed || view == View.Home || MouseMode)) {
             if (N<Grid>("UninstLayer").Visibility == Visibility.Visible) { spec.Add(new[] { "A", "Uninstall" }); spec.Add(new[] { "B", "Cancel" }); }
             else if (FbVisible()) { spec.Add(new[] { "A", "Open" }); spec.Add(new[] { "B", "Back" }); if (fbDir != null && FbFolders()) spec.Add(new[] { "X", "Use this folder" }); spec.Add(new[] { "Y", "Close" }); }
             else if (N<Grid>("RomLayer").Visibility == Visibility.Visible) {
@@ -396,7 +396,7 @@ partial class Shell {
                 if (homePage == "game") spec.Add(new[] { "A", "OK" });
                 else {
                     spec.Add(new[] { "Y", "Game page" });
-                    spec.Add(new[] { "A", homeZone == "profile" ? "Profile" : homeZone == "buttons" && !homeAll ? "OK" : install ? "Install" : "Start" });
+                    spec.Add(new[] { "A", homeZone == "profile" ? (TopStop == "mail" ? "Mail" : TopStop == "updates" ? "Updates" : "Profile") : homeZone == "buttons" && !homeAll ? "OK" : install ? "Install" : "Start" });
                 }
                 if (homePage != "home" || homeZone == "buttons" || homeZone == "profile" || homeFolder != null) spec.Add(new[] { "B", "Back" });
             }
@@ -415,20 +415,52 @@ partial class Shell {
         if (key == hintsShown) return;
         hintsShown = key;
         var host = N<StackPanel>("PadHints"); host.Children.Clear();
-        foreach (var s in spec) host.Children.Add(Hint(s[0], s[1]));
+        foreach (var s in spec) {
+            if (MouseMode && s[0] == "↕") continue;   // "scroll": the mouse wheel does that
+            if (MouseMode && s[0] == "↔") { host.Children.Add(Hint("←", s[1], Pad.Left)); host.Children.Add(Hint("→", s[1], Pad.Right)); continue; }
+            host.Children.Add(Hint(s[0], s[1], HintBit(s[0])));
+        }
     }
-    static UIElement Hint(string key, string label) {
-        // named and coloured as on the controller in use (Settings > Controller)
-        string color = PadStyle.Colour(key);
-        key = PadStyle.Label(key);
-        bool round = key.Length == 1;
-        var badge = new Border { Width = round ? 24 : 32, Height = 24, CornerRadius = new CornerRadius(12), Background = Ui.Brush("#1C252C"),
-            BorderBrush = Ui.Brush(color), BorderThickness = new Thickness(1.5), VerticalAlignment = VerticalAlignment.Center,
-            Child = new TextBlock { Text = key, FontSize = 11, FontWeight = FontWeights.Bold, Foreground = Ui.Brush(color), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center } };
-        var sp = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(14, 0, 0, 0) };
-        sp.Children.Add(badge);
-        sp.Children.Add(new TextBlock { Text = label, FontSize = 12, Foreground = Ui.Brush("#A9B6BE"), Margin = new Thickness(7, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center });
-        return sp;
+    // Settings > General > Controls: made for a mouse (the hints are buttons to click, always shown)
+    bool MouseMode { get { return args.Mouse || Settings.Get("InputMode") == "mouse"; } }
+    static int HintBit(string key) {
+        switch (key) {
+            case "A": return Pad.A; case "B": return Pad.B; case "X": return Pad.X; case "Y": return Pad.Y;
+            case "LB": return Pad.LB; case "RB": return Pad.RB; case "LS": return Pad.LS; case "RS": return Pad.RS;
+            case "≡": return Pad.Start; case "⧉": return Pad.Back;
+        }
+        return 0;
+    }
+    // a hint: the button named and coloured as on the controller in use (Settings > Controller); clicking it does
+    // what the button does. In Mouse mode it's a plain button with the words.
+    // (the in-game menu, the on-screen keyboard and the character creator keep the controller look: Hint(key, label))
+    UIElement Hint(string key, string label) { return Hint(key, label, 0, true); }
+    UIElement Hint(string key, string label, int bit, bool padLook = false) {
+        bool mouse = MouseMode && !padLook;
+        var sp = new StackPanel { Orientation = Orientation.Horizontal };
+        var host = new Border { Child = sp, Margin = new Thickness(mouse ? 8 : 14, 0, 0, 0), CornerRadius = new CornerRadius(14), Background = Brushes.Transparent, VerticalAlignment = VerticalAlignment.Center };
+        if (mouse) {
+            host.Background = Ui.Brush("#1C252C"); host.Padding = new Thickness(14, 5, 14, 6); host.BorderThickness = new Thickness(1); host.BorderBrush = Ui.Brush("#33424D");
+            bool arrow = key == "←" || key == "→";
+            if (key == "→") sp.Children.Add(new TextBlock { Text = label + "  ", FontSize = 12.5, Foreground = Ui.Brush(Ui.Text), VerticalAlignment = VerticalAlignment.Center });
+            if (arrow) sp.Children.Add(new TextBlock { Text = key == "←" ? "" : "", FontFamily = Ui.Mdl, FontSize = 11, Foreground = Ui.Brush(Ui.Text), VerticalAlignment = VerticalAlignment.Center });
+            if (key != "→") sp.Children.Add(new TextBlock { Text = (arrow ? "  " : "") + label, FontSize = 12.5, Foreground = Ui.Brush(Ui.Text), VerticalAlignment = VerticalAlignment.Center });
+        } else {
+            string color = PadStyle.Colour(key);
+            string name = PadStyle.Label(key);
+            bool round = name.Length == 1;
+            sp.Children.Add(new Border { Width = round ? 24 : 32, Height = 24, CornerRadius = new CornerRadius(12), Background = Ui.Brush("#1C252C"),
+                BorderBrush = Ui.Brush(color), BorderThickness = new Thickness(1.5), VerticalAlignment = VerticalAlignment.Center,
+                Child = new TextBlock { Text = name, FontSize = 11, FontWeight = FontWeights.Bold, Foreground = Ui.Brush(color), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center } });
+            sp.Children.Add(new TextBlock { Text = label, FontSize = 12, Foreground = Ui.Brush("#A9B6BE"), Margin = new Thickness(7, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center });
+        }
+        if (bit != 0) {
+            host.Cursor = System.Windows.Input.Cursors.Hand;
+            host.MouseEnter += (s, e) => host.BorderBrush = Ui.Brush(Ui.Teal);
+            host.MouseLeave += (s, e) => host.BorderBrush = Ui.Brush("#33424D");
+            host.MouseLeftButtonUp += (s, e) => { e.Handled = true; W.Dispatcher.BeginInvoke(new Action(() => { PadPress(bit); SetHints(); })); };
+        }
+        return host;
     }
 }
 }

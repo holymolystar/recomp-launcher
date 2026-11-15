@@ -422,6 +422,7 @@ partial class Shell {
     void StartGame(Game g) {
         string args;
         string file = Engine.PlayFile(g, out args, true);
+        if (g.Online == "tailscale") Tailscale.EnsureUp();   // online play: Tailscale on first (Tailscale.cs)
         if (!File.Exists(file)) { SetStep(g.Name + ": " + Path.GetFileName(file) + " isn't there. Install it again, or check its folder in Settings.", Ui.Red); return; }
         // play time watches the folder the game runs from
         string playDir = Paths.Under(file, g.Dir) ? g.Dir : Path.GetDirectoryName(file);
