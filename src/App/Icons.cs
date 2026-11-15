@@ -44,7 +44,7 @@ static class Icons {
             if (!File.Exists(p)) continue;
             try {
                 var img = new BitmapImage();
-                img.BeginInit(); img.UriSource = new Uri(p); img.CacheOption = BitmapCacheOption.OnLoad; img.DecodePixelWidth = 320; img.EndInit(); img.Freeze();
+                img.BeginInit(); img.UriSource = new Uri(p); img.CacheOption = BitmapCacheOption.OnLoad; img.DecodePixelWidth = (int)(320 * Icons.Quality); img.EndInit(); img.Freeze();
                 var dv = new DrawingVisual();
                 using (var dc = dv.RenderOpen()) {
                     var rect = new Rect(0, 0, 256, 256);
@@ -58,16 +58,21 @@ static class Icons {
         return null;
     }
     static ImageSource Render(DrawingVisual dv) {
-        var bmp = new RenderTargetBitmap(256, 256, 96, 96, PixelFormats.Pbgra32);
+        var bmp = Icons.Canvas256();
         bmp.Render(dv); bmp.Freeze(); return bmp;
     }
     // icon for a game: (image, whether it is a whole card face)
     // -DrawnIcons (for screenshots to publish): every game gets its drawn tile, no pictures or program icons
     public static bool DrawnOnly;
+    // Settings > Display > Picture quality: how sharp the tiles' pictures are drawn (2 for big screens, 0.5 to save memory)
+    public static double Quality { get { string q = Settings.Get("ArtQuality"); return q == "high" ? 2 : q == "low" ? 0.5 : 1; } }
+    public static RenderTargetBitmap Canvas256() { double q = Quality; return new RenderTargetBitmap((int)(256 * q), (int)(256 * q), 96 * q, 96 * q, PixelFormats.Pbgra32); }
     public static void Load(Game g) {
+        if (g.App != null) return;   // the launcher's own pages keep their face (Apps.cs)
         if (DrawnOnly) { g.Icon = Drawn(g); g.IconIsArt = true; return; }
         var c = Custom(g);
         if (c != null) { g.Icon = c; g.IconIsArt = true; return; }
+        if (g.ByStore) { var s = Stores.Art(g); if (s != null) { g.Icon = s; g.IconIsArt = true; return; } if (g.Store != null) { g.Icon = Drawn(g); g.IconIsArt = true; return; } }
         var e = ExeIcon(Engine.ResolveExe(g), 256);
         if (e != null) { g.Icon = e; g.IconIsArt = false; return; }
         g.Icon = Drawn(g); g.IconIsArt = true;

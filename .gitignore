@@ -8,6 +8,7 @@ logs/
 backups/
 dumps/
 avatars/
+profiles/
 # Your own game artwork (the launcher draws its own tiles when there's none; game art is copyrighted)
 icons/
 
@@ -16,3 +17,18 @@ installer/stage/
 installer/Output/
 
 *.tmp
+
+# The macOS launcher's build output
+mac/.build/
+mac/build/
+cache/
+
+# Your own launcher data: mail, the board's diary, and your friends server's address (the installer carries the
+# address; the repository doesn't)
+mail.json
+board.json
+friends-server.txt
+# Copies the build puts beside the launcher (the originals are in src/lib/webview2)
+/Microsoft.Web.WebView2.Core.dll
+/Microsoft.Web.WebView2.Wpf.dll
+/WebView2Loader.dll

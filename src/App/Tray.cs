@@ -1,0 +1,166 @@
+﻿// While a game runs: the launcher follows it (by its process name, games.json Proc, every 3 seconds; a game that never
+// shows up, under another name or because it failed to start, counts as closed after 90 seconds), so the in-game menu
+// (Overlay.cs) knows what's playing, and the launcher can come back when it closes.
+//
+// "Wait in the tray" (Settings > General > When a game starts): the launcher hides to an icon by the clock while the
+// game runs, with its timers stopped and its memory given back to Windows (only the controller is still read, for
+// the in-game menu, when that's on), and comes back by itself when the game closes. The icon opens it (double click)
+// or quits it (right click menu); it also shows notes like "an update is out" (Notify).
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Diagnostics;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Windows;
+using System.Windows.Threading;
+using Forms = System.Windows.Forms;
+
+namespace RecompLauncher {
+
+partial class Shell {
+    Forms.NotifyIcon tray;
+    bool inTray;
+    Game playing; DateTime playingSince; bool playingSeen; double playingBefore;
+    // the running game's tile says SUSPENDED and comes first on Home while the launcher is in front
+    void RefreshPlayingTile(Game g) {
+        try { if (g != null && g.Ui != null) UpdateHomeTile(g); if (view == View.Home && homeTiles != null) { ApplySort(true); ApplyFilter(); } } catch { }
+    }
+    // back to the running game, in front
+    void ResumePlaying(Game g) {
+        var h = Engine.Processes(g).Select(p => { try { return p.MainWindowHandle; } catch { return IntPtr.Zero; } }).FirstOrDefault(x => x != IntPtr.Zero);
+        if (h == IntPtr.Zero) { SetStep(g.Name + " is still starting or has no window yet.", Ui.Gold); return; }
+        Sound.Play(Sfx.Select);
+        if (IsIconic(h)) ShowWindow(h, 9);
+        BringToFront(h);
+    }
+    DispatcherTimer gameWatch;
+    [DllImport("kernel32.dll")] static extern bool SetProcessWorkingSetSize(IntPtr process, IntPtr min, IntPtr max);
+
+    // ---------- a game's window, on the launcher's screen ----------
+    // a game that opens on another screen is moved to the one the launcher is on (on a PC with two screens, and
+    // above all while streaming: the TV shows the main screen only); a window that fills its screen fills this one
+    [StructLayout(LayoutKind.Sequential)] struct WinRect { public int L, T, R, B; }
+    [DllImport("user32.dll")] static extern bool GetWindowRect(IntPtr h, out WinRect r);
+    [DllImport("user32.dll")] static extern bool SetWindowPos(IntPtr h, IntPtr after, int x, int y, int w, int hh, uint flags);
+    readonly HashSet<IntPtr> windowsPlaced = new HashSet<IntPtr>();
+    void BringGameWindowsHere(Game g) {
+        if (g == null || Settings.Get("GameScreen") == "off") return;
+        System.Windows.Forms.Screen here;
+        try { here = System.Windows.Forms.Screen.FromHandle(new System.Windows.Interop.WindowInteropHelper(W).Handle); } catch { return; }
+        foreach (var p in Engine.Processes(g)) {
+            IntPtr h; try { h = p.MainWindowHandle; } catch { continue; }
+            if (h == IntPtr.Zero || windowsPlaced.Contains(h)) continue;
+            windowsPlaced.Add(h);
+            try {
+                var there = System.Windows.Forms.Screen.FromHandle(h);
+                if (there.DeviceName == here.DeviceName) continue;
+                WinRect r; if (!GetWindowRect(h, out r)) continue;
+                int w = r.R - r.L, hh = r.B - r.T;
+                var hb = here.Bounds; var tb = there.Bounds;
+                if (w >= tb.Width - 4 && hh >= tb.Height - 4) SetWindowPos(h, IntPtr.Zero, hb.X, hb.Y, hb.Width, hb.Height, 0x0004 | 0x0010);   // fills its screen: fill this one
+                else SetWindowPos(h, IntPtr.Zero, hb.X + (r.L - tb.X) * hb.Width / Math.Max(1, tb.Width), hb.Y + (r.T - tb.Y) * hb.Height / Math.Max(1, tb.Height), w, hh, 0x0004 | 0x0010);
+                SetStep(g.Name + " opened on your other screen: moved it here.", Ui.Teal);
+            } catch { }
+        }
+    }
+    // a game was started: follow it until it closes
+    void WatchGame(Game g) {
+        playing = g; playingSince = DateTime.Now; playingSeen = false; playingBefore = Playtime.Total(g.Id);
+        RefreshPlayingTile(g);
+        SendPresence();   // friends see what you're playing (FriendList.cs)
+        DiscordStatus.Playing(g, playingSince);
+        StartBreakWatch();   // the break reminder, when it's on (Extras.cs)
+        if (gameWatch == null) {
+            gameWatch = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromSeconds(3) };
+            gameWatch.Tick += (s, e) => {
+                if (playing == null) { gameWatch.Stop(); return; }
+                bool runs = Engine.IsRunning(playing);
+                if (runs && (DateTime.Now - playingSince).TotalSeconds < 120) BringGameWindowsHere(playing);   // in its first two minutes
+                if (runs) playingSeen = true;
+                if ((playingSeen && !runs) || (!playingSeen && (DateTime.Now - playingSince).TotalSeconds > (playing.ByStore ? 240 : 90))) GameClosed();
+            };
+        }
+        gameWatch.Start();
+    }
+    void GameClosed() {
+        var g = playing;
+        playing = null;
+        mouseMode = false;   // the in-game menu's Controller as mouse ends with the game
+        RefreshPlayingTile(g);
+        SendPresence();
+        // a play-time milestone, once the time is counted (Mail.cs)
+        if (g != null) { double before = playingBefore; var t = new DispatcherTimer { Interval = TimeSpan.FromSeconds(6) }; t.Tick += (s, e) => { t.Stop(); MailMilestone(g, before); }; t.Start(); }
+        gameWatch.Stop();
+        DiscordStatus.Clear();
+        // the diary: who played what, for how long (Board.cs)
+        if (g != null && (DateTime.Now - playingSince).TotalSeconds >= 60) Board.Add("play", Profiles.Current.Id, g.Id, null, (DateTime.Now - playingSince).TotalSeconds);
+        CloseOverlay(false);
+        if (inTray) ComeBack(g);
+        else if (g != null) { UpdateViews(); }
+    }
+
+    void EnsureTray() {
+        if (tray != null) return;
+        tray = new Forms.NotifyIcon();
+        try { tray.Icon = System.Drawing.Icon.ExtractAssociatedIcon(Assembly.GetExecutingAssembly().Location); } catch { tray.Icon = System.Drawing.SystemIcons.Application; }
+        var menu = new Forms.ContextMenuStrip();
+        menu.Items.Add("Open Recomp Launcher", null, (s, e) => W.Dispatcher.BeginInvoke(new Action(() => ComeBack(null))));
+        menu.Items.Add("Quit", null, (s, e) => W.Dispatcher.BeginInvoke(new Action(() => { tray.Visible = false; W.Close(); })));
+        tray.ContextMenuStrip = menu;
+        tray.DoubleClick += (s, e) => W.Dispatcher.BeginInvoke(new Action(() => ComeBack(null)));
+        tray.BalloonTipClicked += (s, e) => W.Dispatcher.BeginInvoke(new Action(() => ComeBack(null)));
+        W.Closed += (s, e) => { try { tray.Visible = false; tray.Dispose(); } catch { } };
+    }
+
+    void WaitInTray(Game g) {
+        EnsureTray();
+        string tip = "Recomp Launcher: back when " + g.Name + " closes";
+        tray.Text = tip.Length > 63 ? tip.Substring(0, 60) + "..." : tip;
+        tray.Visible = true;
+        inTray = true;
+        W.Topmost = false;
+        W.Hide();
+        // as light as it gets while waiting: nothing ticks or animates, memory goes back to Windows; the controller
+        // is still read for the in-game menu (a few microseconds 60 times a second), unless that's off
+        if (Settings.Get("PadMenu") == "off") padTimer.Stop();
+        if (homeClockTimer != null) homeClockTimer.Stop();
+        StopDrift();
+        GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();
+        try { SetProcessWorkingSetSize(Process.GetCurrentProcess().Handle, new IntPtr(-1), new IntPtr(-1)); } catch { }
+    }
+    // the game closed (or the icon was used): the launcher is back as it was, where it was
+    // another start of the launcher (Moonlight on a TV, a shortcut) asks this one to come to the front, full screen
+    void ListenForOtherStarts() {
+        if (Program.InstanceKey == null) return;
+        var ev = new System.Threading.EventWaitHandle(false, System.Threading.EventResetMode.AutoReset, Program.InstanceKey + "-show");
+        new System.Threading.Thread(() => {
+            while (true) {
+                ev.WaitOne();
+                W.Dispatcher.BeginInvoke(new Action(() => {
+                    ComeBack(null);
+                    SetFullscreen(true);
+                    W.Activate(); W.Focus();
+                    SetStep("Here, on the big screen.", Ui.Teal);
+                }));
+            }
+        }) { IsBackground = true, Name = "Other starts" }.Start();
+    }
+    void ComeBack(Game from) {
+        if (tray != null) tray.Visible = false;
+        inTray = false;
+        W.Show();
+        if (W.WindowState == WindowState.Minimized) W.WindowState = WindowState.Normal;
+        W.Activate();
+        if (isFull) W.Topmost = true;
+        padTimer.Start();
+        if (view == View.Home && homeClockTimer != null) { homeClockTimer.Start(); TickHomeClock(); }
+        if (from != null) { SetStep("Welcome back from " + from.Name + ".", Ui.Teal); UpdateViews(); }
+    }
+    // a short note by the clock while the launcher waits in the tray (an update found, an install done)
+    void Notify(string title, string text) {
+        if (!inTray || tray == null) return;
+        try { tray.ShowBalloonTip(6000, title, text, Forms.ToolTipIcon.Info); } catch { }
+    }
+}
+}

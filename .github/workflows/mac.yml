@@ -1,0 +1,23 @@
+# Builds the macOS launcher on a Mac runner; the zipped app is attached to the run as "Recomp-Launcher-mac".
+name: macOS launcher
+
+on:
+  push:
+    paths: ['mac/**', '.github/workflows/mac.yml']
+  pull_request:
+    paths: ['mac/**', '.github/workflows/mac.yml']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the game list
+        run: python3 -c "import json; d = json.load(open('mac/games-mac.json')); print(len(d['Games']), 'games')"
+      - name: Build the app
+        run: bash mac/build.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Recomp-Launcher-mac
+          path: mac/build/*.zip

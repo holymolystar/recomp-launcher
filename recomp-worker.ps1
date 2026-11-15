@@ -1,4 +1,4 @@
-# Installs or updates one recomp release in the background for Recomp Launcher.exe (Super Mario Odyssey, Wind Waker
+﻿# Installs or updates one recomp release in the background for Recomp Launcher.exe (Super Mario Odyssey, Wind Waker
 # HD, Ratchet & Clank: Tools of Destruction, and the TotK setup download). Every event goes to $Log as one JSON line,
 # in the same format as the TotK Updater's worker.
 #   -Mode install  unpack the release into an empty or new game folder
@@ -94,8 +94,11 @@ try {
         Emit @{ type = 'text'; text = 'SHA-256 matches the release' }
     } else {
         if ($total -gt 0 -and $done -ne $total) { throw "The download is incomplete ($done of $total bytes)." }
-        try { Add-Type -AssemblyName System.IO.Compression.FileSystem; ([IO.Compression.ZipFile]::OpenRead($zip)).Dispose() }
-        catch { throw "The download isn't a readable zip: $($_.Exception.Message)" }
+        $gz = New-Object byte[] 2; $gf = [IO.File]::OpenRead($zip); [void]$gf.Read($gz, 0, 2); $gf.Close()
+        if (-not ($gz[0] -eq 0x1F -and $gz[1] -eq 0x8B)) {
+            try { Add-Type -AssemblyName System.IO.Compression.FileSystem; ([IO.Compression.ZipFile]::OpenRead($zip)).Dispose() }
+            catch { throw "The download isn't a readable zip: $($_.Exception.Message)" }
+        }
         Emit @{ type = 'text'; text = "This project publishes no SHA-256: the download is complete and a readable zip (SHA-256 $hash)" }
     }
 
@@ -108,7 +111,13 @@ try {
     $sig = New-Object byte[] 2
     $zf = [IO.File]::OpenRead($zip); [void]$zf.Read($sig, 0, 2); $zf.Close()
     if ($sig[0] -eq 0x50 -and $sig[1] -eq 0x4B) { $isZip = $true }
-    if ($isZip) {
+    if ($sig[0] -eq 0x1F -and $sig[1] -eq 0x8B) {
+        # a .tar.gz release: Windows' own tar unpacks it
+        $tar = Join-Path $env:SystemRoot 'System32	ar.exe'
+        & $tar -xzf $zip -C $x
+        if ($LASTEXITCODE -ne 0) { throw "The download couldn't be unpacked (tar exit code $LASTEXITCODE)." }
+        Remove-Item $zip -Force
+    } elseif ($isZip) {
         Add-Type -AssemblyName System.IO.Compression.FileSystem
         [IO.Compression.ZipFile]::ExtractToDirectory($zip, $x)
         Remove-Item $zip -Force
@@ -121,6 +130,11 @@ try {
         $hit = Get-ChildItem $x -Directory | Where-Object { Test-Path (Join-Path $_.FullName $Exe) } | Select-Object -First 1
         if (-not $hit) { throw "The download does not contain $Exe." }
         $release = $hit.FullName
+    }
+    # an exe named after its version ("game_1.8.exe" for "game_*.exe"): from here on, the one in this release
+    if ($Exe -match '[*?]') {
+        $one = Get-ChildItem $release -Filter $Exe -File | Select-Object -First 1
+        if ($one) { $Exe = $one.Name }
     }
 
     # 5. Put it in place

@@ -1,10 +1,10 @@
-# Builds installer\Output\RecompLauncher-Setup-<version>.exe with Inno Setup 6.
+﻿# Builds installer\Output\RecompLauncher-Setup-<version>.exe with Inno Setup 6.
 # Copies only what the launcher needs into installer\stage first (an allow list, so your settings.json with its
 # GitHub token, cache, play time, ROM paths, logs, backups and dumps never end up in the installer).
 # Usage:  powershell -ExecutionPolicy Bypass -File installer\build-installer.ps1 [-Version 1.2.0] [-UpdaterDir <path>]
 param(
     [string]$Version = (Get-Date -Format 'yyyy.M.d'),
-    [string]$UpdaterDir = 'C:\Recomp TOTK Updater'   # where update-worker.ps1 (TotK updates) is copied from
+    [string]$UpdaterDir = 'C:\Games\TOTK Updater'   # where update-worker.ps1 (TotK updates) is copied from
 )
 $ErrorActionPreference = 'Stop'
 $here  = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -23,12 +23,16 @@ if (-not $iscc) { throw 'Inno Setup 6 is not installed. Install it with:  winget
 if (Test-Path $stage) { Remove-Item $stage -Recurse -Force }
 New-Item -ItemType Directory $stage | Out-Null
 $files = 'Recomp Launcher.exe', 'games.json', 'logo.png',
-         'recomp-worker.ps1', 'nsp-worker.ps1', 'playtime-worker.ps1', 'uninstall-worker.ps1'
+         'recomp-worker.ps1', 'nsp-worker.ps1', 'playtime-worker.ps1', 'uninstall-worker.ps1',
+         'Microsoft.Web.WebView2.Core.dll', 'Microsoft.Web.WebView2.Wpf.dll', 'WebView2Loader.dll'   # the browser (Microsoft's WebView2)
 foreach ($f in $files) {
     $p = Join-Path $root $f
     if (-not (Test-Path $p)) { throw "Missing: $p" }
     Copy-Item $p $stage
 }
+# the friends server's address, when one is set: friends who install this build are connected to it
+$fs = Join-Path $root 'friends-server.txt'
+if (Test-Path $fs) { Copy-Item $fs $stage }
 # icons\ (your own game artwork) is not shipped: the launcher draws its own tiles, and players can add pictures there
 foreach ($d in 'tools') {
     Copy-Item (Join-Path $root $d) (Join-Path $stage $d) -Recurse

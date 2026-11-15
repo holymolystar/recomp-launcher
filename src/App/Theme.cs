@@ -28,6 +28,8 @@ static class Theme {
         new ThemeDef("sakura", "Sakura", "Plum night with pink and sky blue", "#140A11", "#FFEFF5", "#FF8FB8", "#8FD3FF"),
         new ThemeDef("daylight", "Daylight", "Light grey and white, cyan and red: a console home screen", "#EBEBEB", "#2D2D2D", "#0AB4DC", "#F0453A"),
         new ThemeDef("graphite", "Graphite", "Dark grey with cyan and red: a console home screen at night", "#2D2D2D", "#F2F2F2", "#1CC6EE", "#F0453A"),
+        new ThemeDef("white", "Basic White", "Plain white and black, nothing else: easy to read", "#FAFAFA", "#141414", "#00A2E0", "#141414"),
+        new ThemeDef("black", "Basic Black", "Plain black and white, nothing else: easy to read", "#101010", "#F5F5F5", "#00C3F0", "#F5F5F5"),
         new ThemeDef("abyss", "Abyss", "Pure black for OLED screens, ice blue", "#000000", "#F5F5F5", "#6EC1FF", "#E6E6E6"),
     };
     public static ThemeDef Current = All[0];

@@ -12,9 +12,9 @@ using System.Windows;
 namespace RecompLauncher {
 
 class Args {
-    public string Snapshot, Select, Search, PadScript, View, Theme;
+    public string Snapshot, Select, Search, PadScript, View, Theme, Online;
     public int SnapshotDelay = 3000;
-    public bool Full, OpenNotes, OpenSettings, DrawnIcons;
+    public bool Full, OpenNotes, OpenSettings, DrawnIcons, Mouse;
     public static Args Parse(string[] a) {
         var r = new Args();
         for (int i = 0; i < a.Length; i++) {
@@ -29,6 +29,9 @@ class Args {
                 case "view": r.View = next(); break;
                 case "theme": r.Theme = next(); break;
                 case "full": r.Full = true; break;
+                case "mouse": r.Mouse = true; break;
+                case "online": r.Online = next(); break;   // test: open a game's Online play page   // test: Mouse mode for this run, without saving it
+                case "startup": r.Full = true; break;   // started with Windows: full screen on Home
                 case "opennotes": r.OpenNotes = true; break;
                 case "opensettings": r.OpenSettings = true; break;
                 case "drawnicons": r.DrawnIcons = true; break;
@@ -39,6 +42,7 @@ class Args {
 }
 
 static class Program {
+    public static string InstanceKey;
     [STAThread]
     static int Main(string[] argv) {
         var args = Args.Parse(argv);
@@ -46,6 +50,15 @@ static class Program {
         Paths.Root = root;
         Paths.Logs = Path.Combine(root, "logs");
         Paths.Backups = Path.Combine(root, "backups");
+        // one launcher at a time (per folder): starting it again, as a TV's Moonlight does, brings the open one to
+        // the front in full screen instead
+        uint h = 2166136261; foreach (char ch in root.ToLowerInvariant()) { h ^= ch; h *= 16777619; }
+        InstanceKey = "RecompLauncher-" + h.ToString("x8");
+        bool first; var only = new System.Threading.Mutex(true, InstanceKey, out first);
+        if (!first && args.Snapshot == null) {
+            try { using (var ev = System.Threading.EventWaitHandle.OpenExisting(InstanceKey + "-show")) ev.Set(); } catch { }
+            return 0;
+        }
         ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
         ServicePointManager.DefaultConnectionLimit = 8;
         IconX.SetCurrentProcessExplicitAppUserModelID("RecompLauncher.App");
@@ -59,16 +72,22 @@ static class Program {
             Directory.CreateDirectory(Paths.Logs);
             Catalog.Load(Path.Combine(root, "games.json"));
             Settings.Load(Path.Combine(root, "settings.json"));
+            if (Settings.Get("Render") == "cpu") System.Windows.Media.RenderOptions.ProcessRenderMode = System.Windows.Interop.RenderMode.SoftwareOnly;   // Settings > Display > Rendering
+            SteamGames.AddInstalled();   // your Steam library (Settings > General > Steam games)
+            Stores.AddLibraries();       // Epic Games and GOG (Settings > General > Other stores)
             Theme.Use(Settings.Get("Theme"));
+            Profiles.Load();
+            int vol; if (int.TryParse(Settings.Get("SoundVolume"), out vol)) Sound.Volume = vol;
             if (args.View != null) Settings.Set("ViewMode", args.View);
             if (args.Theme != null) Theme.Use(args.Theme);
             Icons.DrawnOnly = args.DrawnIcons;
             ReleaseCache.Load(Path.Combine(root, "cache.json"));
-            Playtime.Path = Path.Combine(root, "playtime.json");
+            if (Playtime.Path == null) Playtime.Path = Path.Combine(root, "playtime.json");   // Profiles.Load picks the profile's
             Roms.Path = Path.Combine(root, "roms.json");
             var shell = new Shell(args);
             app.Startup += (s, e) => { };
             shell.Run();
+            GC.KeepAlive(only);
             return 0;
         } catch (Exception e) {
             try { File.AppendAllText(Path.Combine(Paths.Logs, "launcher-errors.txt"), DateTime.Now.ToString("o") + "  " + e + Environment.NewLine); } catch { }
