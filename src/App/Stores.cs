@@ -71,6 +71,7 @@ static class Stores {
     }
     // the wide picture for the game page's background: Steam's library hero, Epic's wide box art, GOG's Galaxy background
     public static ImageSource Hero(Game g) {
+        if (Icons.DrawnOnly) return null;   // -DrawnIcons (pictures for the README): no store artwork either
         string file = null;
         if (g.Steam != null) {
             try {

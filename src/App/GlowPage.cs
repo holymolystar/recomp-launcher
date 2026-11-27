@@ -99,7 +99,7 @@ partial class Shell {
             b.Root.Effect = StyleId == "console" ? null : new DropShadowEffect { BlurRadius = 24, ShadowDepth = 0, Opacity = 0.6, Color = Ui.Col(Ui.Teal) };
             return;
         }
-        if (i == 1 && enabled) { b.Root.Background = Ui.Brush(Ui.Gold); return; }   // an update waiting: gold, as everywhere
+        if (i == 1 && enabled) { b.Root.Background = Ui.Brush(Ui.Gold); b.Text.Text = "Update"; return; }   // the size is on the game's details   // an update waiting: gold, as everywhere
         b.Root.Background = GlassFill(0x22);
         b.Text.Foreground = Ui.Brush(Ui.Text);
         if (i == 0) b.Root.Effect = null;

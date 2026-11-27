@@ -861,6 +861,7 @@ partial class Shell {
     }
     void TickGlowMusic() {
         if (glowSong == null || view != View.Home || !W.IsVisible) return;
+        if (args.Snapshot != null) { glowSong.Text = "Music"; return; }   // pictures for the README show nobody's music
         string song, artist, app; bool paused;
         bool on = Music.NowPlaying(out song, out artist, out app, out paused);
         glowSong.Text = !on ? "Music" : song != null ? (artist != null ? artist + "  –  " + song : song) : app;
