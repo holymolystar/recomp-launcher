@@ -32,3 +32,14 @@ friends-server.txt
 /Microsoft.Web.WebView2.Core.dll
 /Microsoft.Web.WebView2.Wpf.dll
 /WebView2Loader.dll
+
+# DolphinTool, downloaded by the launcher when a disc needs converting (DiscTool.cs)
+tools/dolphin/
+# the TV app: your IPTV logins (encrypted), what you watched (TvData.cs)
+tv.json
+tv-prefs.json
+tv-player.json
+tv-safe.json
+subtitles/
+tvavatars/
+tools/mpv/

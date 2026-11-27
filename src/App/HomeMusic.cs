@@ -18,6 +18,7 @@ partial class Shell {
     string musicOutput; DateTime outputCheckedAt = DateTime.MinValue;
     string MusicStyle() {
         string v = Settings.Get("HomeMusic");
+        if (StyleId != "console") return StyleId;   // Channels and Cinema have their own tune (Styles.cs)
         if (v == "calm" || v == "bright") return v;
         return Theme.Current.Light ? "bright" : "calm";
     }
@@ -36,7 +37,7 @@ partial class Shell {
             if (cur != null && musicOutput != null && cur != musicOutput) { music.Close(); music = null; musicStyle = null; }
             if (cur != null) musicOutput = cur;
         }
-        bool want = MusicOn && MusicVolume > 0 && W.IsVisible && W.IsActive && !inTray && playing == null && !BrowserViewOpen && !SaverOn;
+        bool want = MusicOn && MusicVolume > 0 && W.IsVisible && W.IsActive && !inTray && playing == null && !BrowserViewOpen && !TvOpen && !SaverOn;
         double target = want ? 0.5 * Math.Pow(MusicVolume / 100.0, 1.6) : 0;
         if (want && (music == null || musicStyle != style)) {
             string file = MusicFile(style);
@@ -139,6 +140,8 @@ partial class Shell {
     const int MRate = 32000;
     static double Freq(int midi) { return 440 * Math.Pow(2, (midi - 69) / 12.0); }
     static byte[] Tune(string style) {
+        if (style == "channels") return MixToWav(TuneChannels());
+        if (style == "cinema") return MixToWav(TuneCinema());
         bool bright = style == "bright";
         double bpm = bright ? 108 : 84, beat = 60 / bpm;
         // four chords, each two bars (8 beats), played twice; the second time the tune rises a little
@@ -173,6 +176,10 @@ partial class Shell {
             int st = tune[b];
             if (st >= 0) Tone(mix, t0, beat * 2.2, Freq(key + scale[st] - (bright ? 0 : 5)), 0.075, 0.008, 1.0, 0.35, 0.004);
         }
+        return MixToWav(mix);
+    }
+    static byte[] MixToWav(double[] mix) {
+        int n = mix.Length;
         // a soft room: two short echoes
         var outp = new double[n];
         for (int i = 0; i < n; i++) {

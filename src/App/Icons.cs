@@ -44,8 +44,13 @@ static class Icons {
             if (!File.Exists(p)) continue;
             try {
                 var img = new BitmapImage();
-                img.BeginInit(); img.UriSource = new Uri(p); img.CacheOption = BitmapCacheOption.OnLoad; img.DecodePixelWidth = (int)(320 * Icons.Quality); img.EndInit(); img.Freeze();
+                // pixel art drawn in the launcher (PixelArt.cs, beside it "<id>.pixel"): kept sharp, not smoothed
+                bool pixel = File.Exists(Path.Combine(Paths.Root, "icons", g.Id + ".pixel"));
+                img.BeginInit(); img.UriSource = new Uri(p); img.CacheOption = BitmapCacheOption.OnLoad; img.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
+                if (!pixel) img.DecodePixelWidth = (int)(320 * Icons.Quality);
+                img.EndInit(); img.Freeze();
                 var dv = new DrawingVisual();
+                if (pixel) RenderOptions.SetBitmapScalingMode(dv, BitmapScalingMode.NearestNeighbor);
                 using (var dc = dv.RenderOpen()) {
                     var rect = new Rect(0, 0, 256, 256);
                     dc.PushClip(new RectangleGeometry(rect, 56, 56));

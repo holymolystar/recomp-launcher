@@ -21,11 +21,11 @@ class HomeTileUi { public Grid Root; public Border Sel, Face, Shade, Badge, Star
 class HomeButton { public Border Circle; public TextBlock Glyph, Label; public string Text; public Action Do; }
 
 partial class Shell {
-    Grid homeLayer; StackPanel homeTiles; ScrollViewer homeScroll; TextBlock homeClock, homeUpdates, homeBattery; Border homeUpdatesPill;
+    Grid homeLayer; Panel homeTiles; ScrollViewer homeScroll; TextBlock homeClock, homeUpdates, homeBattery; Border homeUpdatesPill;
     readonly List<HomeButton> homeButtons = new List<HomeButton>();
     string homeZone = "tiles"; int homeIdx;
     DispatcherTimer homeClockTimer;
-    const double HomeTileSize = 244, AllTileSize = 168;
+    const double AllTileSize = 168;   // Home's own tiles: HomeTileW and HomeTileH, by the launcher style (Styles.cs)
     // the All games page
     bool homeAll { get { return homePage == "all"; } }
     Grid homeAllPage; WrapPanel homeAllTiles; ScrollViewer homeAllScroll; StackPanel homeButtonRow, homeFilterPills, homeStorePills; TextBlock homeAllName, homeAllState, homeAllCount;
@@ -67,7 +67,7 @@ partial class Shell {
         TickHomeClock();
 
         // the row of games
-        homeTiles = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(60, 0, 60, 0) };
+        homeTiles = MakeHomeRowPanel();   // a row, or a grid of channels (Styles.cs)
         homeScroll = new ScrollViewer { HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, Focusable = false, Content = homeTiles };
         Grid.SetRow(homeScroll, 2);
         homeLayer.Children.Add(homeScroll);
@@ -78,15 +78,7 @@ partial class Shell {
         var row = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center };
         homeButtonRow = row;
         Grid.SetRow(row, 4);
-        AddHomeButton(row, "\uE946", "Game page", "#2f8fe0", () => OpenGamePage());
-        AddHomeButton(row, "", "Check for updates", "#f4a312", () => {
-            int n = Listed().Count(g => g.State == State.Update);
-            if (n > 0 && !running) TryAction("Updating", () => StartQueue(Listed().Where(g => g.State == State.Update).ToList()));
-            else if (!running && !checking) CheckAll(true);
-        });
-        AddHomeButton(row, "", "Discover", "#2f8fe0", () => OpenHomeAll(null));
-        AddHomeButton(row, "", "Settings", "#7d8a93", () => { if (!running) OpenSettings(); });
-        AddHomeButton(row, "", "Power", "#7d8a93", () => { OpenPower(); if (padUsed) powerHeldSince = DateTime.Now; });   // close the launcher, sleep, restart, shut down (PowerCard.cs)
+        AddHomeActions(row);   // the same buttons in every style (Styles.cs)
         homeLayer.Children.Add(row);
 
         // the bottom bar: a line across, a console glyph on the left (the button hints sit on the right)
@@ -99,6 +91,7 @@ partial class Shell {
         Grid.SetRow(homePadIcon, 6);
         homeLayer.Children.Add(homePadIcon);
 
+        ApplyHomeStyle();   // the launcher style's background and big picture (Styles.cs)
         BuildHomeAll();
         BuildGamePage();
         homeLayer.Visibility = Visibility.Collapsed;
@@ -165,13 +158,15 @@ partial class Shell {
 
     void BuildHomeTile(Game g) {
         var u = (GameUi)g.Ui;
-        u.Home = MakeHomeTile(g, HomeTileSize, true);
+        u.Home = MakeHomeTile(g, HomeTileW, HomeTileH, StyleId == "console", StyleRadius);
         u.HomeAll = MakeHomeTile(g, AllTileSize, false);
         u.HomeSmall = MakeHomeTile(g, SmallTileSize, false);
         u.HomeSmall.Root.Margin = new Thickness(0, 0, 12, 14);
         u.HomeRow = MakeHomeRow(g);
     }
-    HomeTileUi MakeHomeTile(Game g, double size, bool named) {
+    HomeTileUi MakeHomeTile(Game g, double size, bool named) { return MakeHomeTile(g, size, size, named, TileRadius(size)); }
+    HomeTileUi MakeHomeTile(Game g, double width, double height, bool named, double radius) {
+        double size = Math.Min(width, height);
         var h = new HomeTileUi();
         // the name sits above the picked tile and may run past its right edge
         h.Name = new TextBlock { Text = g.Name, FontSize = 17, Foreground = Ui.Brush(Ui.Teal), Opacity = 0, IsHitTestVisible = false };
@@ -179,15 +174,15 @@ partial class Shell {
         if (!named) h.Name.Visibility = Visibility.Collapsed;   // the All games page names the picked game in its header
         Canvas.SetLeft(h.Name, 4); Canvas.SetTop(h.Name, 2);
         nameHost.Children.Add(h.Name);
-        var box = new Grid { Width = size, Height = size };
+        var box = new Grid { Width = width, Height = height };
         // the frame: a coloured line with a thin gap of background between it and the tile
-        h.Sel = new Border { CornerRadius = new CornerRadius(5), BorderThickness = new Thickness(5), BorderBrush = Ui.Brush(Ui.Teal), Margin = new Thickness(-9), Opacity = 0, IsHitTestVisible = false };
+        h.Sel = new Border { CornerRadius = new CornerRadius(radius + 3), BorderThickness = new Thickness(5), BorderBrush = Ui.Brush(Ui.Teal), Margin = new Thickness(-9), Opacity = 0, IsHitTestVisible = false };
         h.Icon = new Image { Source = (ImageSource)g.Icon, Margin = new Thickness(g.IconIsArt ? 0 : size * 0.24), Stretch = Stretch.UniformToFill };
         RenderOptions.SetBitmapScalingMode(h.Icon, BitmapScalingMode.HighQuality);
-        h.Face = new Border { CornerRadius = new CornerRadius(2), ClipToBounds = true, Background = Ui.Gradient(g.Accent, g.Accent2), Child = h.Icon };
-        var faceShadow = new Border { CornerRadius = new CornerRadius(2), Background = Brushes.Black, IsHitTestVisible = false,
+        h.Face = new Border { CornerRadius = new CornerRadius(radius), ClipToBounds = true, Background = Ui.Gradient(g.Accent, g.Accent2), Child = h.Icon };
+        var faceShadow = new Border { CornerRadius = new CornerRadius(radius), Background = Brushes.Black, IsHitTestVisible = false,
             Effect = new DropShadowEffect { BlurRadius = 10, ShadowDepth = 2, Opacity = Theme.Current.Light ? 0.2 : 0.4, Color = Colors.Black } };
-        h.Shade = new Border { CornerRadius = new CornerRadius(2), Background = Ui.Brush("#090C0F"), Opacity = 0, IsHitTestVisible = false };
+        h.Shade = new Border { CornerRadius = new CornerRadius(radius), Background = Ui.Brush("#090C0F"), Opacity = 0, IsHitTestVisible = false };
         h.BadgeText = new TextBlock { FontSize = 10.5, FontWeight = FontWeights.Bold, Foreground = Ui.Brush("#0A0E11") };
         h.Badge = new Border { CornerRadius = new CornerRadius(3), Padding = new Thickness(7, 2, 7, 3), Margin = new Thickness(8), HorizontalAlignment = HorizontalAlignment.Left,
             VerticalAlignment = VerticalAlignment.Top, Background = Ui.Brush(Ui.Gold), Child = h.BadgeText, Visibility = Visibility.Collapsed, IsHitTestVisible = false };
@@ -199,20 +194,25 @@ partial class Shell {
         fade.GradientStops.Add(new GradientStop(Color.FromArgb(0, 0, 0, 0), 0));
         fade.GradientStops.Add(new GradientStop(Color.FromArgb(0xB8, 0, 0, 0), 0.55));
         fade.GradientStops.Add(new GradientStop(Color.FromArgb(0xD0, 0, 0, 0), 1));
-        var caption = new Border { VerticalAlignment = VerticalAlignment.Bottom, CornerRadius = new CornerRadius(0, 0, 2, 2), Background = fade,
+        var caption = new Border { VerticalAlignment = VerticalAlignment.Bottom, CornerRadius = new CornerRadius(0, 0, radius, radius), Background = fade,
             Padding = new Thickness(size * 0.05, fs * 1.6, size * 0.05, size * 0.045), Child = capText, IsHitTestVisible = false };
+        StyleTile(h, box, faceShadow, caption, width, height, radius);   // the launcher style's touches (Styles.cs)
         // a favourite has a star in its top right corner
         h.Star = new Border { Width = size * 0.16, Height = size * 0.16, CornerRadius = new CornerRadius(size * 0.08), Margin = new Thickness(size * 0.04), HorizontalAlignment = HorizontalAlignment.Right,
             VerticalAlignment = VerticalAlignment.Top, Background = Ui.Brush("#f2c230"), IsHitTestVisible = false, Visibility = Visibility.Collapsed,
             Child = new TextBlock { Text = "\u2605", FontSize = size * 0.095, Foreground = Ui.Brush("#0A0E11"), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 0, size * 0.005) } };
         box.Children.Add(h.Sel); box.Children.Add(faceShadow); box.Children.Add(h.Face); box.Children.Add(caption); box.Children.Add(h.Shade); box.Children.Add(h.Badge); box.Children.Add(h.Star);
+        GlowOverlay(h, box, radius);   // Glow: the same gloss and rim on every icon (Styles.cs)
         var stack = new StackPanel();
         stack.Children.Add(nameHost); stack.Children.Add(box);
-        h.Root = new Grid { Margin = named ? new Thickness(0, 0, 9, 14) : new Thickness(0, 0, 16, 18), Cursor = Cursors.Hand, Background = Brushes.Transparent, Tag = g };
+        h.Root = new Grid { Width = StyleId != "console" && width != height ? width : double.NaN, HorizontalAlignment = HorizontalAlignment.Left,
+            Margin = StyleId == "channels" && width != height ? new Thickness(0, 0, ChanGap, ChanGap) : StyleId == "cinema" && width != height ? new Thickness(0, 0, 22, 0)
+                : StyleId == "glow" && width == HomeTileW ? new Thickness(0, 0, GlowGap, GlowGap) : named ? new Thickness(0, 0, 9, 14) : new Thickness(0, 0, 16, 18), Cursor = Cursors.Hand, Background = Brushes.Transparent, Tag = g };
         h.Root.Children.Add(stack);
         h.Root.MouseLeftButtonUp += (s, e) => {
-            padUsed = false;
+            padUsed = false; glowOnJump = false;
             homeZone = "tiles"; MarkHomeButtons();
+            if (StyleId == "channels" && homePage == "home" && width != height) { ShowGame(g); ChanOpenOrPlay(g); return; }   // a click opens the channel (Styles.cs)
             if (g == sel) PrimaryAction(g); else { Sound.Play(Sfx.Move); ShowGame(g); }
         };
         h.Root.MouseRightButtonUp += (s, e) => { ShowGame(g); OpenGamePage(); e.Handled = true; };
@@ -224,9 +224,15 @@ partial class Shell {
     static double ShadeFor(Game g) { return g.Inst == null ? (Theme.Current.Light ? 0.35 : 0.45) : 0; }
     // empty slots after the last game, as on a console
     void AddHomeSlots() {
-        for (int i = 0; i < 3; i++)
-            homeTiles.Children.Add(new Border { Width = HomeTileSize, Height = HomeTileSize, Margin = new Thickness(0, 36, 9, 14), CornerRadius = new CornerRadius(2),
-                Background = Ui.Brush(Slot), Opacity = 0.75, IsHitTestVisible = false });
+        // empty slots after the games: three on the console row; on the channels grid, up to a full page of twelve
+        // (or to the end of the column); none on the cinema shelf
+        if (StyleId == "glow") { AddGlowJump(); return; }   // Glow: Jump back in first, no empty slots (Styles.cs)
+        int c = homeTiles.Children.Count;
+        int n = StyleId == "cinema" || StyleId == "glow" ? 0 : StyleId == "channels" ? (c < 12 ? 12 - c : (3 - c % 3) % 3) : 3;
+        for (int i = 0; i < n; i++)
+            homeTiles.Children.Add(new Border { Width = HomeTileW, Height = HomeTileH, Margin = StyleId == "channels" ? new Thickness(0, 0, 14, 14) : new Thickness(0, 36, 9, 14), CornerRadius = new CornerRadius(StyleRadius),
+                Background = Ui.Brush(Slot), Opacity = StyleId == "channels" ? 0.55 : 0.75, IsHitTestVisible = false,
+                BorderBrush = StyleId == "channels" ? Ui.Brush(Theme.Current.Light ? "#d8dce1" : "#2a323a") : null, BorderThickness = new Thickness(StyleId == "channels" ? 2 : 0) });
     }
 
     void UpdateHomeTile(Game g) {
@@ -259,6 +265,7 @@ partial class Shell {
         }
         if (homePage == "game") UpdateGamePage();
         if (g != previewFor) TilePreview(view == View.Home && homePage == "home" ? g : null);   // its slow zoom and trailer (HomeFx.cs)
+        StyleMarkHome(g);
         ScrollHome();
     }
     void MarkHomeTile(Game o, HomeTileUi h, bool on) {
@@ -274,6 +281,7 @@ partial class Shell {
                 h.Sel.BeginAnimation(UIElement.OpacityProperty, Anim(0, 120));
                 h.Shade.BeginAnimation(UIElement.OpacityProperty, Anim(ShadeFor(o), 200));
             }
+            if (h == ((GameUi)o.Ui).Home) StyleMarkTile(h, on);
         }
     }
     // keeps the picked tile in view, with room for part of the next one on each side
@@ -282,12 +290,14 @@ partial class Shell {
         W.Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() => {
             if (homeAll) { var el = AllElement(sel); if (homeAllTiles.IsAncestorOf(el)) el.BringIntoView(new Rect(-10, -60, el.ActualWidth + 30, el.ActualHeight + 100)); return; }
             if (homePage != "home") return;
+            if (StyleId == "glow") { GlowScroll(); return; }   // Glow's grid scrolls down (Styles.cs)
             var h = ((GameUi)sel.Ui).Home; if (h == null || !homeTiles.IsAncestorOf(h.Root)) return;
             double x = h.Root.TransformToAncestor(homeTiles).Transform(new Point(0, 0)).X + homeTiles.Margin.Left;
             // measured from where the row is heading, not where it is mid-glide
-            double vw = homeScroll.ViewportWidth, cur = homeScrollTo ?? homeScroll.HorizontalOffset, pad = HomeTileSize * 0.45, target = cur;
+            double vw = homeScroll.ViewportWidth, cur = homeScrollTo ?? homeScroll.HorizontalOffset, pad = HomeTileW * 0.45, target = cur;
             if (x - pad < cur) target = x - pad;
-            else if (x + HomeTileSize + pad > cur + vw) target = x + HomeTileSize + pad - vw;
+            else if (x + HomeTileW + pad > cur + vw) target = x + HomeTileW + pad - vw;
+            var page = ChanScrollTarget(); if (page != null) target = page.Value;   // Channels: a page at a time (Styles.cs)
             target = Math.Max(0, Math.Min(target, homeScroll.ScrollableWidth));
             if (Math.Abs(target - homeScroll.HorizontalOffset) < 1) { homeScrollTo = null; return; }
             homeScrollTo = target;
@@ -320,6 +330,7 @@ partial class Shell {
     void UpdateHomeChrome() {
         if (homeLayer == null) return;
         MailUpdates();   // a letter for each new release (Mail.cs)
+        MailWatch();     // once a day: how watched projects are coming along (Mail.cs)
         int n = Listed().Count(g => g.State == State.Update);
         homeUpdatesPill.Visibility = n > 0 ? Visibility.Visible : Visibility.Collapsed;
         homeUpdates.Text = n == 1 ? "1 update" : n + " updates";
@@ -454,7 +465,7 @@ partial class Shell {
             else if (dir == "ok") {
                 Sound.Play(Sfx.Select); string what = stops[homeTopIdx];
                 homeZone = "tiles"; MarkHomeProfile();
-                if (what == "mail") OpenMail(); else if (what == "updates") OpenHomeAll("updates"); else OpenProfile();
+                if (what == "mail") OpenMail(); else if (what == "updates") OpenHomeAll("updates"); else if (what == "music") OpenMusicPage(); else if (what == "friends") OpenFriendList(); else OpenProfile();
             }
             else if (dir == "left" || dir == "right") {
                 int was = homeTopIdx;
@@ -465,6 +476,8 @@ partial class Shell {
             else return false;
             return true;
         }
+        if (GlowMove(dir)) return true;       // Glow's grid and tab bar (Styles.cs)
+        if (ChannelsMove(dir)) return true;   // the channels grid (Styles.cs)
         if (homeZone == "tiles") {
             if (dir == "left") StepGame(-1);
             else if (dir == "right") StepGame(1);
@@ -491,8 +504,10 @@ partial class Shell {
     int homeTopIdx;
     List<string> TopStops() {
         var l = new List<string> { "profile" };
-        if (homeMail != null) l.Add("mail");
-        if (homeUpdatesPill != null && homeUpdatesPill.Visibility == Visibility.Visible) l.Add("updates");
+        if (glowFriends != null && glowFriends.IsVisible) l.Add("friends");   // Glow: friends online (Styles.cs)
+        if (glowMusic != null && glowMusic.IsVisible) l.Add("music");   // Glow: the music on Home (Styles.cs)
+        if (homeMail != null && homeMail.IsVisible) l.Add("mail");
+        if (homeUpdatesPill != null && homeUpdatesPill.IsVisible) l.Add("updates");
         return l;
     }
     string TopStop { get { var l = TopStops(); return homeZone == "profile" ? l[Math.Max(0, Math.Min(homeTopIdx, l.Count - 1))] : null; } }
@@ -506,6 +521,8 @@ partial class Shell {
         homeName.Foreground = Ui.Brush(at == "profile" ? Ui.Teal : Ui.Text);
         lift(homeMail, at == "mail", 1.15);
         lift(homeUpdatesPill, at == "updates", 1.1);
+        if (glowFriends != null) { lift(glowFriends, at == "friends", 1.08); glowFriends.BorderBrush = at == "friends" ? Ui.Brush(Ui.Teal) : StyleId == "glow" ? (Brush)Brushes.Transparent : GlassRim(); }
+        if (glowMusic != null) { lift(glowMusic, at == "music", 1.08); glowMusic.BorderBrush = at == "music" ? Ui.Brush(Ui.Teal) : StyleId == "glow" ? (Brush)Brushes.Transparent : GlassRim(); }
         // a ring round Mail and the updates pill, as clear as the tiles' frame
         if (homeMail != null) homeMail.BorderBrush = at == "mail" ? Ui.Brush(Ui.Teal) : Brushes.Transparent;
         if (homeUpdatesPill != null) homeUpdatesPill.BorderBrush = at == "updates" ? Ui.Brush("#ffffff") : Brushes.Transparent;

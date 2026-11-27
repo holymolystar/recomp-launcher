@@ -1,4 +1,4 @@
-// The browser inside the launcher: the Browser card's shortcuts open here, in the launcher's own window, through
+﻿// The browser inside the launcher: the Browser card's shortcuts open here, in the launcher's own window, through
 // Microsoft's WebView2 (the Edge engine Windows already has; src\lib\webview2). A bar on top shows the page, with
 // Back, Forward, an address button and Close. Logins and cookies are kept between visits
 // (%LOCALAPPDATA%\RecompLauncher\browser).
@@ -62,6 +62,7 @@ partial class Shell {
         bvHost = new Border();
         Grid.SetRow(bvHost, 1); bvLayer.Children.Add(bvHost);
         bvLayer.LayoutTransform = N<Grid>("Main").LayoutTransform;
+        Panel.SetZIndex(bvLayer, 850);   // over TV & Movies, which opens services in it
         N<Grid>("Clipped").Children.Add(bvLayer);
     }
     void OpenBrowserView(string url) {

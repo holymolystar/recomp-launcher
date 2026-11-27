@@ -1,0 +1,73 @@
+/* Recomp TV: the TV Guide and reminders (guide.js). Same colours as app.css. */
+#guide { background: transparent; }
+#guide .g-top { position: absolute; left: 0; top: 110px; width: 1920px; height: 370px; }
+/* the see-through box the picture shows in, with grey around it */
+#guide::before { content: ""; position: absolute; left: 0; top: 0; right: 0; bottom: 0; pointer-events: none;
+  background: linear-gradient(var(--bg), var(--bg)) left top / 80px 100% no-repeat,
+              linear-gradient(var(--bg), var(--bg)) left top / 100% 130px no-repeat,
+              linear-gradient(var(--bg), var(--bg)) left 400px / 100% 680px no-repeat,
+              linear-gradient(var(--bg), var(--bg)) 560px 0 / 1360px 100% no-repeat; }
+.g-preview { position: absolute; left: 80px; top: 20px; width: 480px; height: 270px; outline: 3px solid var(--line); background: transparent; }
+.g-preview-msg { position: absolute; left: 0; top: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 22px; color: var(--dim); background: var(--panel); padding: 20px; }
+.g-preview-msg:empty { background: #000; }
+.g-info { position: absolute; left: 610px; top: 14px; width: 1220px; }
+.g-ch { font-size: 24px; color: var(--faint); }
+.g-title { font-size: 46px; font-weight: 800; margin-top: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.g-when { font-size: 26px; color: var(--dim); margin-top: 10px; }
+.g-when .bar { height: 6px; width: 420px; background: var(--hi); border-radius: 3px; margin-top: 10px; overflow: hidden; }
+.g-when .bar i { display: block; height: 100%; background: var(--accent); }
+.g-desc { font-size: 24px; line-height: 1.4; color: #c8c8c8; margin-top: 12px; max-height: 68px; overflow: hidden; }
+.g-act { display: inline-block; font-size: 24px; font-weight: 700; margin-top: 16px; padding: 8px 20px; border-radius: 10px; background: var(--raise); }
+.g-act:empty { display: none; }
+.g-cat { position: absolute; left: 80px; top: 488px; font-size: 24px; color: var(--faint); text-transform: uppercase; letter-spacing: 2px; z-index: 1; }
+.g-ruler { position: absolute; left: 0; top: 486px; width: 1920px; height: 40px; z-index: 1; }
+.g-day { position: absolute; left: 360px; font-size: 24px; color: var(--dim); font-weight: 700; display: none; }
+.g-mark { position: absolute; top: 0; font-size: 24px; color: var(--dim); border-left: 2px solid var(--hi); padding-left: 8px; height: 34px; }
+.g-rows { position: absolute; left: 0; top: 534px; width: 1920px; height: 528px; z-index: 1; }
+.g-row { position: absolute; left: 0; width: 1920px; height: 84px; }
+.g-head { position: absolute; left: 80px; top: 0; width: 340px; height: 80px; display: flex; align-items: center; padding: 0 16px; border-radius: 10px; background: var(--panel); white-space: nowrap; overflow: hidden; }
+.g-row.sel .g-head { background: var(--hi); }
+.g-num { font-size: 22px; color: var(--faint); min-width: 48px; }
+.g-logo { width: 70px; height: 42px; object-fit: contain; margin-right: 14px; flex: none; }
+.g-name { font-size: 26px; flex: 1; overflow: hidden; text-overflow: ellipsis; }
+.g-arch { font-size: 24px; color: var(--accent); margin-left: 8px; }
+.g-cells { position: absolute; left: 440px; top: 0; width: 1440px; height: 80px; overflow: hidden; }
+.g-none { font-size: 24px; color: var(--faint); padding: 24px 20px; }
+.g-prog { position: absolute; top: 0; height: 80px; padding: 10px 16px; border-radius: 10px; background: var(--panel); border: 3px solid transparent; overflow: hidden; white-space: nowrap; }
+.g-prog.on { background: #2b2b2e; }
+.g-prog.past { background: #18181a; color: var(--dim); }
+.g-prog.focus { background: #fff; color: #000; border-color: #fff; }
+.g-pt { font-size: 24px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+.g-ptime { font-size: 19px; color: var(--faint); margin-top: 4px; }
+.g-prog.focus .g-ptime { color: #555; }
+.g-now { position: absolute; top: 526px; width: 3px; height: 536px; background: var(--accent); z-index: 2; }
+.g-keys { position: absolute; left: 80px; bottom: 6px; font-size: 20px; color: var(--faint); z-index: 1; }
+.k.green { background: var(--ok); min-width: 30px; height: 26px; vertical-align: middle; }
+#reminder { position: absolute; right: 60px; top: 130px; width: 560px; z-index: 9; padding: 28px 34px; border-radius: 16px; background: rgba(26,26,28,.96); box-shadow: 0 20px 50px rgba(0,0,0,.7); border-left: 6px solid var(--accent); }
+.rm-t { font-size: 22px; color: var(--faint); text-transform: uppercase; letter-spacing: 2px; }
+.rm-n { font-size: 32px; font-weight: 800; margin-top: 8px; }
+.rm-k { font-size: 21px; color: var(--dim); margin-top: 14px; }
+
+/* the cast on a film's page, a small menu, a question with a text box */
+.d-cast { margin-top: 20px; }
+.d-cast-t { font-size: 22px; color: var(--faint); margin-right: 14px; }
+.chip.small { font-size: 22px; padding: 8px 20px; margin: 0 10px 8px 0; }
+.d-dir { font-size: 22px; color: var(--faint); margin-top: 6px; }
+#menu { position: absolute; left: 50%; top: 50%; transform: translateY(-50%); width: 760px; margin-left: -380px; max-height: 1020px; overflow: hidden; z-index: 10; padding: 40px; border-radius: 22px; background: var(--panel); box-shadow: 0 30px 80px #000; }
+.menu-t { font-size: 34px; font-weight: 800; margin-bottom: 20px; }
+.menu-i { font-size: 28px; padding: 16px 24px; border-radius: 12px; }
+.menu-i.focus { background: #fff; color: #000; }
+#ask { position: absolute; left: 50%; top: 360px; width: 900px; margin-left: -450px; z-index: 11; padding: 44px; border-radius: 22px; background: var(--panel); box-shadow: 0 30px 80px #000; }
+#ask-t { font-size: 32px; font-weight: 700; margin-bottom: 20px; }
+.hlang { font-size: 24px; color: var(--dim); padding: 10px 22px; border-radius: 40px; background: var(--raise); border: 3px solid transparent; white-space: nowrap; }
+.hlang.focus { background: #fff; color: #000; }
+#header > .hlang + .hprofile { margin-left: 20px; }
+.menu-s { font-size: 22px; color: var(--dim); line-height: 1.4; margin: -6px 0 18px; }
+.menu-i.on { color: var(--ok); font-weight: 700; }
+.menu-i.focus.on { color: #0a7a3c; }
+.menu-c { float: right; color: var(--faint); font-size: 22px; font-weight: 400; margin-top: 4px; }
+#header .tab { white-space: nowrap; padding: 10px 20px; font-size: 28px; }
+#header > * + * { margin-left: 30px; }
+#header .brand.small span { white-space: nowrap; }
+.menu-more { font-size: 20px; color: var(--faint); height: 28px; padding-left: 24px; }
+.menu-i { padding: 13px 24px; }

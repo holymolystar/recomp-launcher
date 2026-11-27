@@ -89,8 +89,8 @@ $app = Join-Path $src 'App'
 $fw  = Split-Path -Parent $csc
 $wpf = Join-Path $fw 'WPF'
 $refs = @('System.dll', 'System.Core.dll', 'System.Xml.dll', 'System.Xaml.dll', 'System.Drawing.dll', 'System.Windows.Forms.dll',
-          'System.Web.Extensions.dll', 'Microsoft.CSharp.dll',
-          (Join-Path $wpf 'WindowsBase.dll'), (Join-Path $wpf 'PresentationCore.dll'), (Join-Path $wpf 'PresentationFramework.dll')) |
+          'System.Web.Extensions.dll', 'Microsoft.CSharp.dll', 'System.Security.dll', 'Microsoft.VisualBasic.dll',
+          (Join-Path $wpf 'WindowsBase.dll'), (Join-Path $wpf 'WindowsFormsIntegration.dll'), (Join-Path $wpf 'PresentationCore.dll'), (Join-Path $wpf 'PresentationFramework.dll')) |
         ForEach-Object { "/r:$_" }
 $res = Get-ChildItem $app -Filter *.xaml | ForEach-Object { "/resource:$($_.FullName),$($_.Name)" }
 # Windows' own interfaces (Bluetooth pairing, Bluetooth.cs): their descriptions ship with every Windows 10 and 11

@@ -108,6 +108,8 @@ partial class Shell {
         menuKeyWas = menuKey;
         // the browser inside the launcher: the controller is its mouse and keys (BrowserView.cs)
         if (BrowserViewOpen && padActive && !OverlayOpen && !OskOpen) { padPrev = 0; BrowserPad(st, b); return; }
+        // the flip book: the stick moves the pen smoothly, every tick (FlipBook.cs)
+        if (FlipOpen && padActive && !OverlayOpen && !OskOpen && !ListPageOpen) { padPrev = b; FlipTick(st, b); return; }
         // the controller browser: while its Edge window is in front, the controller is its mouse and keys (Browser.cs)
         if (browserMode && !OverlayOpen && !padActive && EdgeInFront()) { padPrev = 0; BrowserPad(st, b); return; }
         // a port's own setup or launcher window in front (or the in-game menu's Controller as mouse): the controller is
@@ -132,7 +134,8 @@ partial class Shell {
             else if ((b & bit) != 0) { DateTime t; if (padHeld.TryGetValue(bit, out t) && now >= t) { pressed |= bit; padHeld[bit] = now.AddMilliseconds(padRepeat); } }
         }
         padPrev = b;
-        if (padDiagram != null && padDiagram.IsVisible) padDiagram.Show(b);
+        if (padDiagram != null && padDiagram.IsVisible) padDiagram.ShowState(st);   // live: every button, the sticks and triggers as they are
+        PadTestShow(st, b);   // Settings > Controller: the live test (PadTest.cs)
         ControllersShow(b);   // the Controllers page's test (ControllersCard.cs)
         // right stick: scroll
         if (Math.Abs((int)st.RY) > press) ScrollBy(-st.RY / 32768.0 * 24);
@@ -173,6 +176,11 @@ partial class Shell {
             var name = q.Dequeue();
             var f = typeof(Pad).GetField(name);
             if (name == "Guide") { padUsed = true; ToggleOverlay(); return; }
+            if (name == "Creator") { OpenCreator(); return; }          // test: the character creator
+            if (name == "Pixel") { OpenPixelArt(sel); return; }        // test: Pixel art on the picked game
+            if (name == "Flip") { FlOpen(null); return; }              // test: a new flip book
+            if (name == "FlipDemo") { FlDemo(); return; }              // test: draws a ball rolling over six frames and saves it
+            if (name == "Friends") { OpenFriendList(); return; }       // test: the friends list
             if (f != null) { padUsed = true; PadPress((int)f.GetValue(null)); }
         };
         t.Start();
@@ -234,6 +242,8 @@ partial class Shell {
         if (BoardOpen) { BoardPad(bit); SetHints(); return; }
         if (AlbumOpen) { AlbumPad(bit); SetHints(); return; }
         if (ListPageOpen) { ListPagePad(bit); SetHints(); return; }   // Mail, System, Storage (ListPages.cs)
+        if (TvOpen) { TvPad(bit); SetHints(); return; }   // TV & Movies (TvApp.cs)
+        if (ChanPrevOpen && view == View.Home) { ChanPrevPad(bit); SetHints(); return; }   // a channel's page (Styles.cs)
         if (NewsOpen) { NewsPad(bit); SetHints(); return; }
         if (PlazaOpen) { PlazaPad(bit); SetHints(); return; }
         if (BtOpen) { BtPad(bit); SetHints(); return; }
@@ -244,6 +254,7 @@ partial class Shell {
             SetHints(); return;
         }
         if (CreatorOpen) { CreatorPad(bit); return; }
+        if (PixelOpen) { PixelPad(bit); return; }   // Pixel art (PixelArt.cs)
         // overlays first
         if (N<Grid>("UninstLayer").Visibility == Visibility.Visible) {
             if (bit == Pad.A) Press(N<Button>("BtnUninstGo"));
@@ -277,6 +288,7 @@ partial class Shell {
             var el = setStops[setIdx];
             int dx = bit == Pad.Left ? -1 : bit == Pad.Right ? 1 : 0, dy = bit == Pad.Up ? -1 : bit == Pad.Down ? 1 : 0;
             if (dx != 0 || dy != 0) { int nx = Nearest(setStops, setIdx, dx, dy, N<Border>("SettingsCard")); SelectSetStop(nx < 0 ? setIdx : nx); }
+            else if (bit == Pad.A && (el is TextBox || el is PasswordBox)) SettingsType(el);   // a box to type in: the on-screen keyboard
             else if (bit == Pad.A) { var t = el.Tag as Toggle; if (t != null) SetToggle(t, !t.On, false); else Press(el as Button); }
             else if (bit == Pad.Start) SaveSettingsPanel();
             else if (bit == Pad.B) CloseSettings();
@@ -348,8 +360,9 @@ partial class Shell {
     // ---------- button hints at the bottom, while a controller is used ----------
     string hintsShown = "";
     void SetHints() {
+        TvAirspace();
         var spec = new List<string[]>();
-        if (!CreatorOpen && (padUsed || view == View.Home || MouseMode)) {
+        if (!CreatorOpen && !PixelOpen && !FlipOpen && (padUsed || view == View.Home || MouseMode)) {
             if (N<Grid>("UninstLayer").Visibility == Visibility.Visible) { spec.Add(new[] { "A", "Uninstall" }); spec.Add(new[] { "B", "Cancel" }); }
             else if (FbVisible()) { spec.Add(new[] { "A", "Open" }); spec.Add(new[] { "B", "Back" }); if (fbDir != null && FbFolders()) spec.Add(new[] { "X", "Use this folder" }); spec.Add(new[] { "Y", "Close" }); }
             else if (N<Grid>("RomLayer").Visibility == Visibility.Visible) {
@@ -369,6 +382,8 @@ partial class Shell {
             else if (ColOpen) { spec.Add(new[] { "A", "Select" }); spec.Add(new[] { "B", "Done" }); }
             else if (FriendsOpen) { spec.Add(new[] { "B", "Done" }); }
             else if (ListPageOpen) ListPageHints(spec);
+            else if (TvOpen) TvHints(spec);
+            else if (ChanPrevOpen && view == View.Home) ChanPrevHints(spec);
             else if (NewsOpen) { spec.Add(new[] { "A", "Read" }); spec.Add(new[] { "B", "Close" }); }
             else if (AlbumOpen) { spec.Add(new[] { "LB", "Game" }); spec.Add(new[] { "A", "View" }); spec.Add(new[] { "B", "Back" }); }
             else if (BoardOpen) { spec.Add(new[] { "↔", "Day" }); spec.Add(new[] { "X", "Write a note" }); spec.Add(new[] { "B", "Close" }); }

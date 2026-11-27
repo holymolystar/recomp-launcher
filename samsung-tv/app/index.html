@@ -1,0 +1,148 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1920, height=1080, user-scalable=no">
+<title>Recomp TV</title>
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/pages.css">
+<link rel="stylesheet" href="css/guide.css">
+<link rel="stylesheet" href="css/effects.css">
+<!-- Samsung's TV APIs (the player, the remote's keys). Only there on the TV itself. -->
+<script src="$WEBAPIS/webapis/webapis.js"></script>
+</head>
+<body>
+<div id="stage">
+  <!-- the picture: on the TV it plays on a layer under this page (AVPlay), elsewhere in a <video> -->
+  <div id="video-box"></div>
+
+  <!-- first run, and Settings > Change login -->
+  <section id="setup" class="screen">
+    <div class="setup-card">
+      <div class="brand"><img src="icon.png" alt=""><span>Recomp <b>TV</b></span></div>
+      <h1>Sign in to your TV provider</h1>
+      <p class="hint" id="setup-hint"></p>
+      <div class="seg" id="setup-type">
+        <div class="seg-item focusable" data-type="xtream">Login</div>
+        <div class="seg-item focusable" data-type="m3u">Playlist link (M3U)</div>
+      </div>
+      <div id="setup-xtream">
+        <label>Server<input id="f-server" class="focusable" type="url" placeholder="http://example-tv.com:8080" autocomplete="off" spellcheck="false"></label>
+        <label>Username<input id="f-user" class="focusable" type="text" autocomplete="off" spellcheck="false"></label>
+        <label>Password<input id="f-pass" class="focusable" type="password" autocomplete="off"></label>
+      </div>
+      <div id="setup-m3u" hidden>
+        <label>Playlist link<input id="f-url" class="focusable" type="url" placeholder="http://example-tv.com/get.php?username=...&amp;type=m3u_plus" autocomplete="off" spellcheck="false"></label>
+      </div>
+      <div class="row-buttons">
+        <div class="btn primary focusable" id="setup-go">Connect</div>
+        <div class="btn focusable" id="setup-cancel" hidden>Cancel</div>
+      </div>
+      <p class="msg" id="setup-msg"></p>
+    </div>
+  </section>
+
+  <!-- getting the lists -->
+  <section id="loading" class="screen">
+    <div class="brand loading-brand"><img src="icon.png" alt=""><span>Recomp <b>TV</b></span></div>
+    <div class="spinner"></div>
+    <p id="loading-text">Getting your channels…</p>
+  </section>
+
+  <!-- Who's watching? -->
+  <section id="profiles" class="screen">
+    <h1 class="prof-title">Who's watching?</h1>
+    <div id="prof-grid"></div>
+    <p id="prof-hint"></p>
+    <div id="prof-edit" hidden><div id="prof-edit-t"></div><input id="prof-edit-f" type="text" autocomplete="off" maxlength="20"></div>
+  </section>
+
+  <!-- For You, Movies, Shows, a category, Search: pages of rows (browse.js) -->
+  <section id="browse" class="screen"></section>
+
+  <!-- TV Live -->
+  <section id="live" class="screen">
+    <div class="cols">
+      <div class="col cats"><div class="col-title">Categories</div><div class="vlist" id="cat-list"></div></div>
+      <div class="col chans"><div class="col-title" id="chan-title">Channels</div><div class="vlist" id="chan-list"></div><div class="empty" id="chan-empty" hidden>No channels here yet.</div></div>
+      <div class="col side">
+        <div class="preview" id="preview"><div class="preview-msg" id="preview-msg">Press OK on a channel to watch it here.<br>OK again: full screen.</div></div>
+        <div class="info">
+          <div class="info-name" id="info-name"></div>
+          <div class="epg" id="info-epg"></div>
+        </div>
+        <div class="keys-hint"><span class="k ok">OK</span> watch <span class="k yellow"></span> add to My channels <span class="k green"></span> guide &amp; archive <span class="k">0-9</span> number</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- the TV Guide (guide.js) -->
+  <section id="guide" class="screen"></section>
+
+  <!-- a film's or series' page -->
+  <section id="details" class="screen"></section>
+
+  <!-- watching a film or episode -->
+  <section id="vod" class="screen"></section>
+
+  <!-- Settings -->
+  <section id="settings" class="screen">
+    <div class="settings-body">
+      <div class="setting-card" id="acct-card"></div>
+      <div class="setting-col"><h2 id="settings-title">Settings</h2><div class="setting-list" id="setting-list"></div></div>
+    </div>
+  </section>
+
+  <!-- the header: For You, TV Live, Movies, Shows, Search, and the profile (Settings) -->
+  <header id="header" hidden>
+    <div class="brand small"><img src="icon.png" alt=""><span>Recomp <b>TV</b></span></div>
+    <nav id="htabs"></nav>
+    <div id="hlang" class="hlang"></div>
+    <div id="hprofile" class="hprofile"></div>
+    <div class="clock"></div>
+  </header>
+
+  <!-- full screen live: the channel's banner -->
+  <div id="osd" hidden>
+    <div class="osd-bar">
+      <div class="osd-num" id="osd-num"></div>
+      <img class="osd-logo" id="osd-logo" alt="">
+      <div class="osd-main">
+        <div class="osd-name" id="osd-name"></div>
+        <div class="epg" id="osd-epg"></div>
+      </div>
+      <div class="osd-side"><div class="osd-clock" id="osd-clock"></div><div class="osd-fav" id="osd-fav"></div></div>
+    </div>
+  </div>
+  <div id="osd-status" hidden></div>
+  <div id="digits" hidden></div>
+  <div id="toast" hidden></div>
+  <div id="reminder" hidden></div>
+  <div id="menu" hidden></div>
+  <div id="pin" hidden></div>
+  <div id="ask" hidden><div id="ask-t"></div><input id="ask-f" type="text" autocomplete="off"></div>
+</div>
+<script src="js/keys.js"></script>
+<script src="js/store.js"></script>
+<script src="js/look.js"></script>
+<script src="js/fmt.js"></script>
+<script src="js/api.js"></script>
+<script src="js/tidy.js"></script>
+<script src="js/dutch.js"></script>
+<script src="js/sharp.js"></script>
+<script src="js/best.js"></script>
+<script src="js/meta.js"></script>
+<script src="js/extras.js"></script>
+<script src="js/subs.js"></script>
+<script src="js/player.js"></script>
+<script src="js/vlist.js"></script>
+<script src="js/rows.js"></script>
+<script src="js/browse.js"></script>
+<script src="js/peek.js"></script>
+<script src="js/details.js"></script>
+<script src="js/vod.js"></script>
+<script src="js/live.js"></script>
+<script src="js/guide.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

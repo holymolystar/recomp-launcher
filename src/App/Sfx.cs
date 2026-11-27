@@ -51,6 +51,8 @@ static class Sound {
     static float[] Draw(Sfx s) {
         float[] b;
         if (drawn.TryGetValue(s, out b)) return b;
+        b = Shell.StyleSound(s);   // the launcher style's own set (Styles.cs)
+        if (b != null) { drawn[s] = b; return b; }
         switch (s) {
             case Sfx.Move:      b = Buf(60);  Bell(b, 0, 2093, 0.36, 9, 0.35); break;                                  // C7 tick
             case Sfx.Bump:      b = Buf(110); Bell(b, 0, 220, 0.40, 28, 0.15); Bell(b, 0, 330, 0.12, 20, 0.1); break;    // soft low knock

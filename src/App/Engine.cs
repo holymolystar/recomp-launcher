@@ -30,6 +30,8 @@ static class Versions {
     // release came out after it was installed.
     public static bool IsNewer(Release latest, Installed inst) {
         if (latest == null || inst == null) return false;
+        // a game its builder makes: a newer builder is an update too (it updates itself when it opens without --play)
+        if (ToolNewer(latest, inst)) return true;
         Version a = Parse(latest.Tag), b = Parse(inst.Version);
         if (a != null && b != null) return a > b;
         string tag = inst.Tag ?? inst.Version;
@@ -40,6 +42,14 @@ static class Versions {
         return a != null || b == null;   // a numbered release over an unknown build, or two names that differ
     }
     static string Norm(string s) { return (s ?? "").Trim().TrimStart('v', 'V'); }
+    public static bool ToolNewer(Release latest, Installed inst) {
+        if (latest == null || inst == null || latest.ToolTag == null || inst.ToolVersion == null) return false;
+        Version t = Parse(latest.ToolTag), i = Parse(inst.ToolVersion);
+        if (t == null || i == null) return false;
+        // "1.3" (the file's version, its ".0" dropped) is the same as "v1.3.0"
+        Func<Version, Version> three = v => new Version(v.Major, v.Minor, Math.Max(0, v.Build));
+        return three(t) > three(i);
+    }
     // every release newer than what is installed, newest first (the latest alone when nothing is installed)
     public static List<Release> Missed(Release latest, Installed inst) {
         var r = new List<Release>();
@@ -65,6 +75,13 @@ static class Engine {
     // the game's program; a pattern (SMS Launcher's exe carries its version in its name) means the newest match
     public static string ResolveExe(Game g) {
         string p = Path.Combine(g.Dir, g.Exe);
+        // not in the game's folder, but installed elsewhere: a full path in Launch with the same name (Longshot's own
+        // installer puts it in %LOCALAPPDATA%\Programs)
+        if (!File.Exists(p) && g.Launch != null && g.Exe.IndexOfAny(new[] { '*', '?' }) < 0)
+            foreach (var c in g.Launch.Split(';')) {
+                string q = Paths.Expand(c.Trim());
+                if (Path.IsPathRooted(q) && string.Equals(Path.GetFileName(q), Path.GetFileName(g.Exe), StringComparison.OrdinalIgnoreCase) && File.Exists(q)) return q;
+            }
         if (g.Exe.IndexOfAny(new[] { '*', '?' }) < 0) return p;
         try {
             if (!Directory.Exists(g.Dir)) return p;
@@ -131,7 +148,7 @@ static class Engine {
                 r.Version = tagVer(mkTag) ?? fileVer() ?? "?";
                 r.Sub = Directory.Exists(Path.Combine(g.Dir, "content")) ? "Disc set up" : "Disc not set up yet";
                 return r;
-            case "hookshot": {
+            case "hookshot-old": {
                 // HookshotBuilder.exe installs and updates the builder itself in %LOCALAPPDATA%\HookshotBuilder; the
                 // release it has is in versions\current.txt
                 if (!File.Exists(exe)) return null;
@@ -145,12 +162,70 @@ static class Engine {
             }
             default:
                 if (!File.Exists(exe)) return null;
+                if (g.Builds != null && g.BuildVersion != null) return BuiltVersion(g, exe, r);
                 r.Version = (mkTag != null ? Regex.Replace(mkTag, @"^[^\d]*", "") : null);
                 if (string.IsNullOrEmpty(r.Version)) r.Version = mkTag;   // a named release such as "low-vram"
                 if (string.IsNullOrEmpty(r.Version)) r.Version = FileVersionInfo.GetVersionInfo(exe).ProductVersion;
                 if (string.IsNullOrEmpty(r.Version)) r.Version = "?";
                 return r;
         }
+    }
+
+    // A game its builder makes (games.json "Builds": the game's own release page; Longshot): the version is the
+    // game's, read from what the builder leaves behind. "BuildVersion" lists where, best first: "file|regex" pairs
+    // separated by ";" (wildcards in the file, %VARIABLES%, relative to the game folder). The highest version any of
+    // them holds counts; nothing found means the game hasn't been built yet. The builder's own version is the subtitle.
+    static Installed BuiltVersion(Game g, string exe, Installed r) {
+        string lv = FileVersionInfo.GetVersionInfo(exe).ProductVersion;
+        if (!string.IsNullOrEmpty(lv)) lv = Regex.Replace(Regex.Replace(lv, @"[+-].*$", ""), @"\.0$", "");
+        string tool = Path.GetFileNameWithoutExtension(exe);
+        if (!string.IsNullOrEmpty(lv)) r.ToolVersion = lv;
+        r.Sub = !string.IsNullOrEmpty(lv) ? tool + " v" + lv : "";
+        Version best = null; string bestTag = null; DateTime bestWhen = DateTime.MinValue;
+        foreach (var part in g.BuildVersion.Split(';')) {
+            int bar = part.IndexOf('|'); if (bar < 0) continue;
+            string pat = Paths.Expand(part.Substring(0, bar).Trim()), re = part.Substring(bar + 1);
+            if (!Path.IsPathRooted(pat)) pat = Path.Combine(g.Dir, pat);
+            foreach (var file in GlobAll(pat)) {
+                try {
+                    // the file's text, or its path when the version is in a folder's name ("stable\v3.1.1\longshot.exe")
+                    string text = re.StartsWith("path:") ? file : File.ReadAllText(file);
+                    foreach (Match m in Regex.Matches(text, re.StartsWith("path:") ? re.Substring(5) : re)) {
+                        string tag = m.Groups.Count > 1 ? m.Groups[1].Value : m.Value;
+                        var v = Versions.Parse(tag);
+                        if (v != null && (best == null || v > best)) { best = v; bestTag = tag; bestWhen = File.GetLastWriteTime(file); }
+                    }
+                } catch { }
+            }
+            if (best != null) break;   // the first place that knows wins (the later ones are fallbacks)
+        }
+        if (best == null) { r.Version = "?"; r.Sub = "Not built yet" + (r.Sub != "" ? "  \u2022  " + r.Sub : ""); return r; }
+        r.Version = Regex.Replace(bestTag, "^v", ""); r.Tag = bestTag; r.When = bestWhen;
+        return r;
+    }
+    // every file a path with wildcards matches (Glob gives the first)
+    public static List<string> GlobAll(string p) {
+        var r = new List<string>();
+        try {
+            if (p.IndexOfAny(new[] { '*', '?' }) < 0) { if (File.Exists(p)) r.Add(p); return r; }
+            var parts = p.Split('\\');
+            var dirs = new List<string> { parts[0] + "\\" };
+            for (int i = 1; i < parts.Length; i++) {
+                bool last = i == parts.Length - 1;
+                var next = new List<string>();
+                foreach (var d in dirs) {
+                    if (!Directory.Exists(d)) continue;
+                    if (parts[i].IndexOfAny(new[] { '*', '?' }) < 0) {
+                        string c = Path.Combine(d, parts[i]);
+                        if (last ? File.Exists(c) : Directory.Exists(c)) next.Add(c);
+                    } else next.AddRange(last ? Directory.GetFiles(d, parts[i]) : Directory.GetDirectories(d, parts[i]));
+                }
+                dirs = next;
+                if (dirs.Count == 0) return r;
+            }
+            r.AddRange(dirs.Where(File.Exists));
+        } catch { }
+        return r;
     }
 
     // ---------- releases ----------
@@ -181,11 +256,11 @@ static class Engine {
         return Regex.IsMatch(name, re, RegexOptions.IgnoreCase);
     }
     // the asset for a release: Asset can list several patterns ("HookshotBuilder.exe;HookshotBuilder*.zip"), first wins
-    static Dictionary<string, object> PickAsset(Dictionary<string, object> rel, Game g) {
+    static Dictionary<string, object> PickAsset(Dictionary<string, object> rel, string assetPat, string notAsset) {
         var assets = (rel.ContainsKey("assets") ? rel["assets"] as IEnumerable : null) ?? new object[0];
         var list = assets.Cast<Dictionary<string, object>>().ToList();
-        foreach (var pat in (g.Asset ?? "*").Split(';')) {
-            var hit = list.FirstOrDefault(a => Like(Json.Str(a, "name"), pat.Trim()) && (g.NotAsset == null || !Like(Json.Str(a, "name"), g.NotAsset)));
+        foreach (var pat in (assetPat ?? "*").Split(';')) {
+            var hit = list.FirstOrDefault(a => Like(Json.Str(a, "name"), pat.Trim()) && (notAsset == null || !Like(Json.Str(a, "name"), notAsset)));
             if (hit != null) return hit;
         }
         return null;
@@ -194,45 +269,68 @@ static class Engine {
     public static Release FetchLatest(Game g, string token) {
         if (g.ByStore) return Stores.Note(g);   // the store keeps it up to date
         ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-        if (g.Repo != null) {
+        if (g.Repo != null && g.Builds != null) {
+            var tool = FetchRepo(g, g.Repo, g.Asset, token);
+            Release game;
+            try { game = FetchRepo(g, g.Builds, null, token); } catch { return tool; }   // the game's page unreachable: the builder alone
+            // the game's version, notes and date; the builder's download (Install puts the builder in, which builds the game)
+            game.Url = tool.Url; game.Sha = tool.Sha; game.Size = tool.Size; game.Problem = tool.Problem; game.ToolTag = tool.Tag;
+            return game;
+        }
+        if (g.Repo != null) return FetchRepo(g, g.Repo, g.Asset, token);
+        return FetchSmo();
+    }
+    static Release FetchRepo(Game g, string repo, string assetPat, string token) {
+        {
             // test versions (pre-releases) too: a project that only makes those, or the game page's Test versions switch
             bool pre = g.Pre || TestVersions(g);
             // one request for the recent releases: the newest is the one to install, the ones before it carry the
             // notes of versions a player may have skipped
             // GitHub ("owner/name"), or a Gitea / Forgejo site of the project's own ("https://host/owner/name"), whose
             // release list reads the same; the GitHub token only ever goes to GitHub
-            string listUrl = "https://api.github.com/repos/" + g.Repo + "/releases?per_page=30";
-            var own = Regex.Match(g.Repo, @"^(https?://[^/]+)/([^/]+/[^/]+?)/?$");
+            string listUrl = "https://api.github.com/repos/" + repo + "/releases?per_page=30";
+            var own = Regex.Match(repo, @"^(https?://[^/]+)/([^/]+/[^/]+?)/?$");
             if (own.Success) { listUrl = own.Groups[1].Value + "/api/v1/repos/" + own.Groups[2].Value + "/releases?limit=30"; token = null; }
             var all = ((IEnumerable)Get(listUrl, ref token, own.Success ? 60000 : 20000)).Cast<Dictionary<string, object>>()
                 .Where(x => !Json.Bool(x, "draft") && (pre || !Json.Bool(x, "prerelease")))
                 .OrderByDescending(x => Json.Str(x, "published_at")).ToList();
             // projects that only publish pre-releases: the newest release that has the download
-            var rel = pre ? all.FirstOrDefault(x => PickAsset(x, g) != null) : all.FirstOrDefault();
+            var rel = pre ? all.FirstOrDefault(x => PickAsset(x, assetPat, g.NotAsset) != null) : all.FirstOrDefault();
             if (rel == null) throw new Exception(pre ? "no release with a Windows download" : "this project has no releases");
             var r = new Release { Tag = Json.Str(rel, "tag_name"), Notes = Json.Str(rel, "body"), Date = Json.Str(rel, "published_at") };
             foreach (var o in all.SkipWhile(x => x != rel).Skip(1).Take(25))
                 r.Older.Add(new Release { Tag = Json.Str(o, "tag_name"), Notes = Json.Str(o, "body"), Date = Json.Str(o, "published_at") });
-            var asset = PickAsset(rel, g);
+            var asset = PickAsset(rel, assetPat, g.NotAsset);
             if (asset != null) {
                 r.Url = Json.Str(asset, "browser_download_url"); r.Size = Json.Num(asset, "size");
                 var m = Sha.Match(Json.Str(asset, "digest") ?? "");
                 if (m.Success) r.Sha = m.Groups[1].Value;
                 else {
                     // no digest from the site: a "<name>.sha256" file beside the download, when the project publishes one
-                    var shaFile = ((rel.ContainsKey("assets") ? rel["assets"] as IEnumerable : null) ?? new object[0]).Cast<Dictionary<string, object>>()
-                        .FirstOrDefault(a => string.Equals(Json.Str(a, "name"), Json.Str(asset, "name") + ".sha256", StringComparison.OrdinalIgnoreCase));
-                    if (shaFile != null) try {
+                    // or a list for the whole release ("SHA256SUMS": "<hash>  <name>" a line, as Longshot publishes)
+                    var relAssets = ((rel.ContainsKey("assets") ? rel["assets"] as IEnumerable : null) ?? new object[0]).Cast<Dictionary<string, object>>().ToList();
+                    string an = Json.Str(asset, "name");
+                    var shaFile = relAssets.FirstOrDefault(a => string.Equals(Json.Str(a, "name"), an + ".sha256", StringComparison.OrdinalIgnoreCase));
+                    var sums = shaFile == null ? relAssets.FirstOrDefault(a => Regex.IsMatch(Json.Str(a, "name") ?? "", @"^(SHA256SUMS|sha256sums)(\.txt)?$")) : null;
+                    if (shaFile != null || sums != null) try {
                         using (var wc = new WebClient()) {
                             wc.Headers.Add("User-Agent", "Recomp-Launcher");
-                            var h = Regex.Match(wc.DownloadString(Json.Str(shaFile, "browser_download_url")), "[0-9a-fA-F]{64}");
-                            if (h.Success) r.Sha = h.Value.ToLowerInvariant();
+                            string text = wc.DownloadString(Json.Str(shaFile ?? sums, "browser_download_url"));
+                            Group h = null;
+                            if (shaFile != null) h = Regex.Match(text, "[0-9a-fA-F]{64}");
+                            else foreach (var line in text.Split((char)10)) {
+                                var lm = Regex.Match(line.Trim(), @"^([0-9a-fA-F]{64})\s+\*?(.+)$");
+                                if (lm.Success && string.Equals(lm.Groups[2].Value.Trim(), an, StringComparison.OrdinalIgnoreCase)) { h = lm.Groups[1]; break; }
+                            }
+                            if (h != null && h.Success) r.Sha = h.Value.ToLowerInvariant();
                         }
                     } catch { }
                 }
             } else r.Problem = "No Windows download in this release";
             return r;
         }
+    }
+    static Release FetchSmo() {
         // Super Mario Odyssey: GitLab; the zip is linked from the notes, its SHA-256 written next to it
         string none = null;
         var gl = ((IEnumerable)Get("https://gitlab.com/api/v4/projects/88379810/releases?per_page=20", ref none)).Cast<Dictionary<string, object>>().ToList();
@@ -308,7 +406,9 @@ static class Engine {
         if (g.SetupArg != null && needsSetup) {
             args = g.SetupArg;
             if (consume) { mk["needsSetup"] = false; SaveMarker(g, mk); }
-        }
+        } else if (g.PlayArgs != null && g.PlayIf != null && g.Dir != null && !(g.Builds != null && Versions.IsNewer(g.Latest, g.Inst))
+                   && g.PlayIf.Split(';').Any(c => { string p = Paths.Expand(c.Trim()); if (!Path.IsPathRooted(p)) p = Path.Combine(g.Dir, p); return Glob(p) != null; }))
+            args = g.PlayArgs;
         return file;
     }
     // a path with wildcards in any part ("C:\x\*\hookshot.exe"): the first file that matches

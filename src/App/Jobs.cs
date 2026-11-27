@@ -163,6 +163,19 @@ partial class Shell {
             MessageBox.Show(W, "Close " + string.Join(" and ", busy.Select(g => g.Name)) + " before updating.", "Recomp Launcher", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
+        // a game its own builder updates (Longshot): the builder opens on its update, nothing is downloaded here
+        foreach (var g in list.Where(x => x.Builds != null).ToList()) {
+            list.Remove(g);
+            string args; string f = Engine.PlayFile(g, out args, false);
+            try {
+                Engine.Start(f, null, Path.GetDirectoryName(f), false);
+                bool tool = Versions.ToolNewer(g.Latest, g.Inst);
+                SetStep(tool ? Path.GetFileNameWithoutExtension(f) + " " + g.Latest.ToolTag + " is out: it's open and updates itself (say yes when it asks). Then update your build there if it offers one." :
+                    g.Name + " " + g.Latest.Tag + ": " + Path.GetFileNameWithoutExtension(f) + " is open. Update your build there; your saves stay.", Ui.Teal);
+                Log(g.Name + ": opened " + Path.GetFileName(f) + " to build " + g.Latest.Tag + " (it updates the game itself)", g.Accent);
+            } catch (Exception e) { SetStep("Couldn't open " + Path.GetFileName(f) + ": " + e.Message, Ui.Red); }
+        }
+        if (list.Count == 0) return;
         RunJobs(list.Select(g => new Job { G = g, Kind = "update" }).ToList());
     }
 
@@ -318,6 +331,7 @@ partial class Shell {
                     if (g.Id == "smo") Log("The first start after an update can rebuild the game code (a few minutes).", Ui.Muted);
                     if (g.SetupArg != null) Log("The next Play runs the game's setup once, to rebuild the game for this version.", Ui.Muted);
                     if (g.Rebuild != null) Log("The next Play opens the builder once: build over the same folder with the same game to update it.", Ui.Muted);
+                    if (g.Rom.Handoff == "discs") { g.RomPath = g.RomPath ?? Roms.Get(g.Id); StartFirstRun(g); }   // the new version is built over the old one
                     break;
                 case "install": Log(g.Name + " " + g.Latest.Tag + " is in " + g.Dir + ".", Ui.Teal); StartFirstRun(g); MailInstalled(g); break;
                 case "uninstall": Log(g.Name + " is uninstalled.", Ui.Teal); if (backup != null) Log("Saves and settings kept in " + backup, Ui.Muted); break;
@@ -374,6 +388,7 @@ partial class Shell {
 
     // ---------- first start after an install: the game's own setup, with the chosen game handed over ----------
     void StartFirstRun(Game g) {
+        if (PrepareDisc(g, () => StartFirstRun(g))) return;   // an RVZ to ISO first, or the disc unpacked (DiscTool.cs)
         string rom = g.RomPath; var spec = g.Rom;
         if (rom != null && spec.Handoff == "tod") {
             string setup = Path.Combine(g.Dir, "tod_setup.exe");
@@ -393,6 +408,18 @@ partial class Shell {
         }
         string first = g.FirstRun == g.Exe ? Engine.ResolveExe(g) : g.FirstRun != null ? Path.Combine(g.Dir, g.FirstRun) : null;
         if (first == null || !File.Exists(first)) return;
+        if (rom != null && spec.Handoff == "discs" && File.Exists(rom)) {
+            // two discs (The Force Unleashed): the player picks Disc 1, Disc 2 is the other image beside it
+            string disc2 = OtherDisc(rom);
+            string tag = g.Latest != null ? g.Latest.Tag : null;
+            string a = "-InstallDir " + Engine.Q(g.Dir) + " -Disc1:" + Engine.Q(rom) + (disc2 != null ? " -Disc2:" + Engine.Q(disc2) : "") +
+                       " -AcceptVsLicense" + (tag != null ? " -Branch " + Engine.Q(tag) : "");
+            if (disc2 == null) Log("Disc 2 wasn't found next to " + rom + "; put both disc images in one folder and install again if the build asks for it.", Ui.Gold);
+            Log("Building " + g.Name + " from " + Path.GetFileName(rom) + (disc2 != null ? " and " + Path.GetFileName(disc2) : "") + ". This takes one to two hours the first time; its window shows the progress.", Ui.Muted);
+            SetStep(g.Name + ": building the game from your discs (one to two hours)", Ui.Teal);
+            Engine.Start(first, a, g.Dir, false);
+            return;
+        }
         if (rom != null && spec.CopyAs != null && File.Exists(rom)) {
             try {
                 string dest = Path.Combine(g.Dir, spec.CopyAs);
@@ -416,6 +443,20 @@ partial class Shell {
             SetStep(g.Name + ": paste your game's path into its setup (Ctrl+V)", Ui.Teal);
         } else Log("Starting its setup: choose your game there. " + g.Needs, Ui.Muted);
         Engine.Start(first, null, g.Dir, first.EndsWith(".bat", StringComparison.OrdinalIgnoreCase) && !g.Console);
+    }
+
+    // the second disc image beside the first: the same name with 1 turned into 2, else the only other image there
+    static string OtherDisc(string disc1) {
+        try {
+            string dir = Path.GetDirectoryName(disc1), ext = Path.GetExtension(disc1), name = Path.GetFileNameWithoutExtension(disc1);
+            var others = Directory.GetFiles(dir, "*" + ext).Where(f => !string.Equals(f, disc1, StringComparison.OrdinalIgnoreCase)).ToList();
+            int i = name.LastIndexOf('1');
+            if (i >= 0) {
+                string guess = Path.Combine(dir, name.Substring(0, i) + "2" + name.Substring(i + 1) + ext);
+                if (File.Exists(guess)) return guess;
+            }
+            return others.Count == 1 ? others[0] : null;
+        } catch { return null; }
     }
 
     // ---------- Play ----------

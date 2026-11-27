@@ -12,9 +12,9 @@ using System.Windows;
 namespace RecompLauncher {
 
 class Args {
-    public string Snapshot, Select, Search, PadScript, View, Theme, Online;
+    public string Snapshot, Select, Search, PadScript, View, Theme, Online, Tv, Style;
     public int SnapshotDelay = 3000;
-    public bool Full, OpenNotes, OpenSettings, DrawnIcons, Mouse;
+    public bool Full, OpenNotes, OpenSettings, DrawnIcons, Mouse, Restart;
     public static Args Parse(string[] a) {
         var r = new Args();
         for (int i = 0; i < a.Length; i++) {
@@ -30,7 +30,10 @@ class Args {
                 case "theme": r.Theme = next(); break;
                 case "full": r.Full = true; break;
                 case "mouse": r.Mouse = true; break;
-                case "online": r.Online = next(); break;   // test: open a game's Online play page   // test: Mouse mode for this run, without saving it
+                case "restart": r.Restart = true; break;   // the launcher reopening itself
+                case "online": r.Online = next(); break;
+                case "tv": r.Tv = next(); break;
+                case "style": r.Style = next(); break;   // test: a launcher style for this run   // test: open TV & Movies at a section   // test: open a game's Online play page   // test: Mouse mode for this run, without saving it
                 case "startup": r.Full = true; break;   // started with Windows: full screen on Home
                 case "opennotes": r.OpenNotes = true; break;
                 case "opensettings": r.OpenSettings = true; break;
@@ -55,6 +58,10 @@ static class Program {
         uint h = 2166136261; foreach (char ch in root.ToLowerInvariant()) { h ^= ch; h *= 16777619; }
         InstanceKey = "RecompLauncher-" + h.ToString("x8");
         bool first; var only = new System.Threading.Mutex(true, InstanceKey, out first);
+        // reopening itself (a new theme or style): waits for the old window to close first
+        if (!first && args.Restart) {
+            try { first = only.WaitOne(20000); } catch (System.Threading.AbandonedMutexException) { first = true; }
+        }
         if (!first && args.Snapshot == null) {
             try { using (var ev = System.Threading.EventWaitHandle.OpenExisting(InstanceKey + "-show")) ev.Set(); } catch { }
             return 0;
@@ -65,6 +72,7 @@ static class Program {
         var app = new Application { ShutdownMode = ShutdownMode.OnMainWindowClose };
         app.DispatcherUnhandledException += (s, e) => {
             try { File.AppendAllText(Path.Combine(Paths.Logs, "launcher-errors.txt"), DateTime.Now.ToString("o") + "  " + e.Exception + Environment.NewLine); } catch { }
+            if (args.Snapshot != null) { e.Handled = true; Environment.Exit(3); }
             MessageBox.Show("Something went wrong: " + e.Exception.Message + "\n\nThe details are in logs\\launcher-errors.txt.", "Recomp Launcher", MessageBoxButton.OK, MessageBoxImage.Error);
             e.Handled = true;
         };
@@ -75,6 +83,8 @@ static class Program {
             if (Settings.Get("Render") == "cpu") System.Windows.Media.RenderOptions.ProcessRenderMode = System.Windows.Interop.RenderMode.SoftwareOnly;   // Settings > Display > Rendering
             SteamGames.AddInstalled();   // your Steam library (Settings > General > Steam games)
             Stores.AddLibraries();       // Epic Games and GOG (Settings > General > Other stores)
+            string style = Settings.Get("LauncherStyle"); Theme.Style = System.Linq.Enumerable.Any(LauncherStyles.All, x => x[0] == style) ? style : "glow";   // Glow is the standard
+            if (args.Style != null) Theme.Style = args.Style;
             Theme.Use(Settings.Get("Theme"));
             Profiles.Load();
             int vol; if (int.TryParse(Settings.Get("SoundVolume"), out vol)) Sound.Volume = vol;

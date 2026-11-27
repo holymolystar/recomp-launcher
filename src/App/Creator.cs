@@ -157,6 +157,7 @@ partial class Shell {
         Grid.SetRow(hints, 2); Grid.SetColumnSpan(hints, 3);
         crLayer.Children.Add(hints);
 
+        GlowCreator(stage, tabScroll, right);   // Glow's look (GlowPanels.cs)
         crLayer.LayoutTransform = N<Grid>("Main").LayoutTransform;
         N<Grid>("Clipped").Children.Add(crLayer);
         W.RegisterName("CreatorLayer", crLayer);
@@ -249,6 +250,7 @@ partial class Shell {
             crTabButtons[k].Background = on ? Ui.Brush(Ui.Teal) : Ui.Brush("#00000000");
             foreach (TextBlock tb in ((StackPanel)crTabButtons[k].Child).Children) tb.Foreground = on ? Ui.Brush(Theme.Current.Light ? "#ffffff" : "#0A0E11") : Ui.Brush(Ui.Text);
         }
+        GlowCrTabs();
         crTabButtons[crTab].BringIntoView();
         crTabTitle.Text = tab.Name;
         // the plain face while editing, your mood and backdrop on their own tabs

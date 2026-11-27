@@ -1,0 +1,141 @@
+/* Recomp TV: the launcher's TV & Movies look (black, dark greys, a red-orange accent), sized for a 1920x1080 TV. */
+:root {
+  --bg: #141416; --panel: #1c1c1e; --raise: #2a2a2c; --hi: #3a3a3c; --line: #2f2f31;
+  --text: #ffffff; --dim: #a8a8ad; --faint: #6e6e73; --accent: #ff3d1f; --gold: #f5c518; --ok: #3ccf7a;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; color: var(--text);
+  font-family: "SamsungOne", "Samsung Sans", "Segoe UI", Roboto, Arial, sans-serif; }
+body { background: #000; }
+body.tizen { background: transparent; } /* the TV's picture is under the page: what's see-through shows it */
+#stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; overflow: hidden; }
+#video-box { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; z-index: 0; pointer-events: none; }
+#video-box video { position: absolute; background: #000; object-fit: contain; }
+.screen { position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 1; display: none; }
+.screen.on { display: block; }
+[hidden] { display: none !important; }
+
+/* ---- brand, header ---- */
+.brand { display: flex; align-items: center; font-size: 40px; font-weight: 300; letter-spacing: .5px; }
+.brand img { width: 64px; height: 64px; border-radius: 14px; }
+.brand b { font-weight: 800; color: var(--accent); }
+.brand.small { font-size: 30px; }
+.brand.small img { width: 46px; height: 46px; border-radius: 10px; }
+header.top { position: absolute; left: 0; top: 0; right: 0; height: 110px; display: flex; align-items: center; padding: 0 64px; background: var(--bg); }
+header.top nav { display: flex; flex: 1; }
+.tab { font-size: 30px; padding: 12px 28px; border-radius: 40px; color: var(--dim); border: 3px solid transparent; }
+.tab.current { color: var(--text); font-weight: 700; }
+.tab.focus { background: var(--text); color: #000; }
+.clock { font-size: 32px; color: var(--dim); font-variant-numeric: tabular-nums; }
+
+/* ---- setup ---- */
+#setup { background: radial-gradient(circle at 25% 15%, #3a1a14 0, var(--bg) 55%); }
+.setup-card { position: absolute; left: 50%; top: 50%; width: 1000px; transform: translate(-50%, -50%); }
+.setup-card h1 { font-size: 52px; margin: 50px 0 12px; font-weight: 700; }
+.hint { font-size: 28px; color: var(--dim); margin: 0 0 34px; line-height: 1.4; }
+.seg { display: flex; margin-bottom: 30px; }
+.seg-item { font-size: 28px; padding: 14px 30px; border-radius: 40px; background: var(--raise); color: var(--dim); border: 3px solid transparent; }
+.seg-item.sel { background: var(--hi); color: var(--text); font-weight: 700; }
+label { display: block; font-size: 24px; color: var(--dim); margin-bottom: 20px; }
+input { display: block; width: 100%; margin-top: 8px; font: inherit; font-size: 32px; color: var(--text); background: var(--panel);
+  border: 3px solid var(--line); border-radius: 14px; padding: 16px 22px; outline: none; }
+.focus, input.focus { border-color: var(--text) !important; }
+input.focus { background: var(--raise); }
+.row-buttons { display: flex; margin-top: 34px; }
+.btn { font-size: 30px; font-weight: 700; padding: 18px 48px; border-radius: 14px; background: var(--raise); border: 3px solid transparent; }
+.btn.primary { background: var(--accent); }
+.btn.focus { border-color: var(--text); transform: scale(1.04); }
+.msg { font-size: 28px; margin-top: 28px; min-height: 40px; color: var(--dim); }
+.msg.bad { color: #ff7a66; }
+.msg.good { color: var(--ok); }
+
+/* ---- loading ---- */
+#loading { background: var(--bg); text-align: center; }
+#loading p { position: absolute; top: 590px; width: 100%; font-size: 34px; color: var(--dim); }
+.spinner { position: absolute; left: 50%; top: 440px; width: 110px; height: 110px; margin-left: -55px; border-radius: 50%;
+  border: 9px solid var(--hi); border-top-color: var(--accent); animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---- TV Live ---- */
+.cols { position: absolute; top: 110px; left: 0; right: 0; bottom: 0; display: flex; }
+.col { position: relative; height: 100%; }
+.col.cats { width: 470px; background: var(--bg); padding: 10px 0 0 48px; }
+.col.chans { width: 690px; background: var(--bg); padding: 10px 0 0 24px; }
+.col.side { flex: 1; background: transparent; }
+.col-title { font-size: 24px; color: var(--faint); text-transform: uppercase; letter-spacing: 2px; height: 50px; padding-left: 20px; }
+.vlist { position: absolute; left: 48px; right: 24px; top: 70px; bottom: 30px; overflow: hidden; }
+.col.chans .vlist { left: 24px; }
+.vrow { position: absolute; left: 0; right: 0; display: flex; align-items: center; padding: 0 20px; border-radius: 14px;
+  border: 3px solid transparent; font-size: 30px; white-space: nowrap; overflow: hidden; }
+.vrow .t { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+.vrow .n { color: var(--faint); font-size: 24px; min-width: 64px; font-variant-numeric: tabular-nums; }
+.vrow .c { color: var(--faint); font-size: 24px; }
+.vrow img { width: 84px; height: 50px; object-fit: contain; flex: none; }
+.vrow .nologo { width: 84px; height: 50px; flex: none; border-radius: 8px; background: var(--raise); color: var(--dim); font-size: 22px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; }
+.vrow .star { color: var(--gold); font-size: 26px; }
+.vrow .play { color: var(--accent); font-size: 26px; }
+.vrow.sel { background: var(--panel); }
+.vlist.active .vrow.sel { background: var(--text); color: #000; }
+.vlist.active .vrow.sel .n, .vlist.active .vrow.sel .c { color: #555; }
+.scrollbar { position: absolute; right: 0; width: 6px; border-radius: 3px; background: var(--hi); }
+.empty { position: absolute; top: 120px; left: 48px; font-size: 28px; color: var(--faint); }
+
+/* the picked channel, playing small (the box is see-through: the picture is under it) */
+.preview { position: absolute; left: 0; top: 34px; width: 704px; height: 396px; border-radius: 6px; outline: 3px solid var(--line); background: transparent; }
+.col.side::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none;
+  /* everything around the see-through box: grey, so the page has no holes elsewhere */
+  background: linear-gradient(var(--bg), var(--bg)) top / 100% 34px no-repeat,
+              linear-gradient(var(--bg), var(--bg)) bottom / 100% calc(100% - 430px) no-repeat,
+              linear-gradient(var(--bg), var(--bg)) right / calc(100% - 704px) 100% no-repeat; }
+.preview-msg { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 26px; color: var(--dim); background: var(--panel); line-height: 1.5; padding: 30px; }
+.info { position: absolute; left: 0; top: 460px; width: 704px; }
+.info-name { font-size: 40px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.epg { margin-top: 16px; font-size: 26px; color: var(--dim); }
+.epg .now { color: var(--text); font-size: 30px; font-weight: 600; }
+.epg .when { color: var(--faint); font-variant-numeric: tabular-nums; margin-right: 14px; }
+.epg .bar { height: 6px; background: var(--hi); border-radius: 3px; margin: 14px 0 18px; overflow: hidden; }
+.epg .bar i { display: block; height: 100%; background: var(--accent); }
+.epg .next { margin-top: 6px; }
+.keys-hint { position: absolute; left: 0; bottom: 40px; font-size: 22px; color: var(--faint); }
+.k { display: inline-block; min-width: 40px; padding: 2px 10px; margin: 0 6px 0 22px; border-radius: 8px; background: var(--raise); color: var(--dim); text-align: center; font-weight: 700; }
+.k:first-child { margin-left: 0; }
+.k.yellow { background: var(--gold); min-width: 30px; height: 26px; vertical-align: middle; }
+
+/* ---- full screen ---- */
+#osd { position: absolute; left: 0; right: 0; bottom: 0; height: 300px; z-index: 5;
+  background: linear-gradient(transparent, rgba(0,0,0,.85) 45%); }
+.osd-bar { position: absolute; left: 80px; right: 80px; bottom: 60px; display: flex; align-items: center; }
+.osd-num { font-size: 56px; font-weight: 300; color: var(--dim); min-width: 110px; font-variant-numeric: tabular-nums; }
+.osd-logo { width: 150px; height: 90px; object-fit: contain; }
+.osd-main { flex: 1; min-width: 0; }
+.osd-name { font-size: 52px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.osd-side { text-align: right; }
+.osd-clock { font-size: 40px; font-variant-numeric: tabular-nums; }
+.osd-fav { font-size: 26px; color: var(--gold); margin-top: 8px; }
+#osd-status { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 4; font-size: 32px; padding: 24px 44px; border-radius: 18px; background: rgba(0,0,0,.7); }
+#digits { position: absolute; right: 80px; top: 60px; z-index: 6; font-size: 90px; font-weight: 800; padding: 10px 40px; border-radius: 20px; background: rgba(0,0,0,.7); font-variant-numeric: tabular-nums; }
+#toast { position: absolute; left: 50%; top: 60px; transform: translateX(-50%); z-index: 7; font-size: 30px; padding: 20px 40px; border-radius: 40px; background: var(--text); color: #000; font-weight: 700; }
+
+/* ---- settings ---- */
+#settings { background: var(--bg); }
+.settings-body { position: absolute; top: 150px; left: 112px; right: 112px; display: flex; }
+.setting-card { width: 640px; background: var(--panel); border-radius: 22px; padding: 44px; font-size: 28px; color: var(--dim); line-height: 1.7; }
+.setting-card h2 { color: var(--text); font-size: 38px; margin: 0 0 20px; }
+.setting-card b { color: var(--text); font-weight: 600; }
+.setting-list { flex: 1; }
+.setting { display: flex; align-items: center; justify-content: space-between; font-size: 32px; padding: 26px 34px; margin-bottom: 14px; border-radius: 16px; background: var(--panel); border: 3px solid transparent; }
+.setting .v { color: var(--dim); font-size: 28px; }
+.setting .d { display: block; font-size: 22px; color: var(--faint); margin-top: 6px; }
+.setting.focus { background: var(--text); color: #000; }
+.setting.focus .v, .setting.focus .d { color: #444; }
+
+/* spacing between items (older TVs' browsers have no flex "gap") */
+.brand img { margin-right: 18px; } .brand.small img { margin-right: 14px; }
+header.top > * + * { margin-left: 60px; }
+.tab + .tab { margin-left: 12px; }
+.seg-item + .seg-item { margin-left: 14px; }
+.btn + .btn { margin-left: 20px; }
+.vrow > * + * { margin-left: 18px; }
+.osd-bar > * + * { margin-left: 34px; }
+.setting-list { margin-left: 70px; }

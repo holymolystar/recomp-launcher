@@ -1,0 +1,75 @@
+/* Recomp TV 0.5: the launcher's motion (TvMotion.cs, TvLook.cs), made light enough for a TV.
+   Only transform and opacity ever animate (the TV's graphics chip does those for free); nothing is blurred live:
+   a "blurred" picture is a tiny copy of it (look.js) stretched over the screen, which looks the same.
+   Settings > Calm mode turns all motion off. */
+
+/* ---- pages come in softly ---- */
+@keyframes rtv-in { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: none; } }
+@keyframes rtv-fade { from { opacity: 0; } to { opacity: 1; } }
+.enter { animation: rtv-in .38s ease-out both; }
+.screen.enter-fade { animation: rtv-fade .3s ease-out both; }
+
+/* ---- the colour of the film, glowing behind the page (a tiny copy, stretched) ---- */
+.glow { position: absolute; left: -10%; top: -10%; width: 120%; height: 120%; pointer-events: none; opacity: 0; transition: opacity 1.2s ease-out; }
+.glow.on { opacity: .55; }
+.glow canvas { width: 100%; height: 100%; display: block; }
+.hero > .glow { left: 0; top: 0; width: 1920px; height: 1080px; -webkit-mask-image: linear-gradient(rgba(0,0,0,1) 45%, rgba(0,0,0,0) 95%); }
+.hero > .glow.on { opacity: .32; }
+#details > .glow { -webkit-mask-image: linear-gradient(90deg, rgba(0,0,0,1) 30%, rgba(0,0,0,.3)); }
+#details > .glow.on { opacity: .3; }
+.v-pause > .glow.on { opacity: .5; }
+
+/* ---- the featured title: its picture fades in, then drifts slowly ---- */
+@keyframes rtv-drift { from { transform: scale(1); } to { transform: scale(1.08) translateX(-1.5%); } }
+.hero-pic, .d-bg { opacity: 0; transition: opacity .9s ease-out; }
+.hero-pic.in, .d-bg.in { opacity: 1; }
+.hero-pic.in:not(.poster) { animation: rtv-drift 28s ease-in-out infinite alternate; }
+.hero-box { animation: rtv-in .5s .1s ease-out both; }
+
+/* ---- posters: pictures fade in; the one you're on grows with a soft shadow under it ---- */
+.tbox img { opacity: 0; transition: opacity .3s ease-out; }
+.tbox img.in { opacity: 1; }
+.tbox { transition: transform .2s cubic-bezier(.2,.8,.3,1); }
+.tbox::after { content: ''; position: absolute; left: 0; top: 0; right: 0; bottom: 0; border-radius: 10px; box-shadow: inset 0 0 0 5px #fff; opacity: 0; transition: opacity .15s; z-index: 3; }
+.tile.focus .tbox { box-shadow: none; transform: scale(1.12); }
+.tile.focus .tbox::after { opacity: 1; }
+.tile .shade { position: absolute; left: 8%; right: 8%; top: 70%; height: 40%; border-radius: 50%; background: rgba(0,0,0,.85); opacity: 0; transform: scale(.7); transition: opacity .2s, transform .2s; z-index: 0; }
+.tile.focus .shade { opacity: .9; transform: scale(1.15) translateY(16%); }
+.tile .tbox { z-index: 1; }
+
+/* ---- chips and buttons spring a little ---- */
+.chip, .hbtn, .sk-k, .setting, .tab { transition: transform .15s ease-out, background-color .15s; }
+.chip.focus, .tab.focus { transform: scale(1.06); }
+
+/* ---- the card over a poster grows out of it ---- */
+.peek { transition: transform .26s cubic-bezier(.2,.8,.3,1), opacity .2s; }
+
+/* ---- a film's page ---- */
+#details.first .d-box { animation: rtv-in .45s .05s ease-out both; }
+#details.first .d-seasons, #details.first .d-eps { animation: rtv-in .45s .15s ease-out both; }
+.ep-pic { transition: transform .2s cubic-bezier(.2,.8,.3,1); }
+
+/* ---- menus slide in ---- */
+@keyframes rtv-side { from { transform: translateX(80px); opacity: 0; } to { transform: none; opacity: 1; } }
+.v-menu:not([hidden]) { animation: rtv-side .25s ease-out both; }
+#menu:not([hidden]), #ask:not([hidden]) { animation: rtv-fade .2s ease-out both; }
+
+/* ---- starting up: the logo comes in ---- */
+@keyframes rtv-logo { 0% { opacity: 0; transform: translateX(-50%) scale(.8); } 60% { opacity: 1; transform: translateX(-50%) scale(1.04); } 100% { opacity: 1; transform: translateX(-50%) scale(1); } }
+.loading-brand { animation: rtv-logo .9s ease-out both; }
+#loading .spinner, #loading p { animation: rtv-fade .6s .5s ease-out both; }
+
+/* ---- Who's watching?: the profiles come in, the chosen one zooms ---- */
+#profiles.on .prof { animation: rtv-in .45s ease-out both; }
+#profiles.on .prof:nth-child(2) { animation-delay: .06s; } #profiles.on .prof:nth-child(3) { animation-delay: .12s; }
+#profiles.on .prof:nth-child(4) { animation-delay: .18s; } #profiles.on .prof:nth-child(5) { animation-delay: .24s; }
+#profiles.on .prof:nth-child(n+6) { animation-delay: .3s; }
+#profiles.on.drawn .prof { animation: none; }
+@keyframes rtv-pick { to { transform: scale(1.5); opacity: 0; } }
+.prof.picked .prof-av { animation: rtv-pick .45s ease-in both; }
+#profiles.leaving .prof:not(.picked), #profiles.leaving .prof-title, #profiles.leaving #prof-hint { transition: opacity .3s; opacity: 0; }
+
+/* ---- calm mode: no motion at all ---- */
+body.calm *, body.calm *::after { animation: none !important; transition: none !important; }
+body.calm .hero-pic, body.calm .d-bg, body.calm .tbox img { opacity: 1; }
+body.calm .glow.on { opacity: .45; }

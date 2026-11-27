@@ -209,8 +209,10 @@ partial class Shell {
         AddPageButton("\uE7FC", "In-game menu", () => { if (sel != null) ToggleGuide(sel); });
         AddPageButton("\uE9D9", "Test versions", () => { if (sel != null) ToggleTestVersions(sel); });
         AddPageButton("", "Online play", () => { if (sel != null) OpenOnline(sel); });   // Tailscale.cs
+        AddPageButton("", "Pixel art", () => { if (sel != null) OpenPixelArt(sel); });   // draw its icon yourself (PixelArt.cs)
         right.Children.Add(gpButtonRow);
         gamePage.Children.Add(right);
+        GlowGamePage(right);   // the page's layout, in the style's look (GlowPage.cs)
         homeLayer.Children.Add(gamePage);
     }
     void AddPageButton(string glyph, string text, Action action) {
@@ -269,7 +271,7 @@ partial class Shell {
         string dummy;
         bool playOk = missing ? g.State == State.Missing && !running : g.ByStore ? g.Inst != null : File.Exists(Engine.PlayFile(g, out dummy, false)) && !g.IsBusy;
         SetPageButton(0, missing ? "" : "", g.State == State.Installing ? "Installing..." : missing ? "Install" : "Start", playOk, true);
-        SetPageButton(1, "", g.State == State.Update ? (g.Latest.Size >= 1048576 ? string.Format("Update  ({0:N0} MB)", g.Latest.Size / 1048576) : string.Format("Update  ({0:N0} KB)", g.Latest.Size / 1024)) : g.State == State.Updating ? "Updating..." : "Up to date",
+        SetPageButton(1, "", g.State == State.Update ? (g.Builds != null ? "Update" : g.Latest.Size >= 1048576 ? string.Format("Update  ({0:N0} MB)", g.Latest.Size / 1048576) : string.Format("Update  ({0:N0} KB)", g.Latest.Size / 1024)) : g.State == State.Updating ? "Updating..." : "Up to date",
             g.State == State.Update && !running, !missing);
         SetPageButton(2, "", "What's new", true, true);
         SetPageButton(3, "", "Game folder", Directory.Exists(g.Dir), true);
@@ -293,12 +295,14 @@ partial class Shell {
         bool canTest = g.Repo != null && !g.Pre && !g.ByStore && g.App == null;
         SetPageButton(12, "\uE9D9", "Test versions: " + (Engine.TestVersions(g) ? "On" : "Off"), canTest && !running, canTest);
         SetPageButton(13, "", "Online play", g.Online == "tailscale", g.Online == "tailscale");
+        SetPageButton(14, "", "Pixel art: draw its icon", g.App == null, g.App == null);
         if (g.ByStore) {
             SetPageButton(0, missing ? "\uE896" : "\uE768", missing ? "Install with " + (g.Store == "epic" ? "Epic" : g.StoreName) : "Start", playOk, true);
             SetPageButton(1, "", "", false, false);
             SetPageButton(4, "", "", false, false);
             SetPageButton(5, "\uE74D", "Uninstall", g.Inst != null, g.Inst != null);
         }
+        GlowGamePageUpdate(g);
         if (gpIdx >= gpButtons.Count || !gpButtons[gpIdx].Enabled) gpIdx = Math.Max(0, gpButtons.FindIndex(b => b.Enabled && b.Root.Visibility == Visibility.Visible));
         MarkPageButtons();
     }
@@ -313,9 +317,10 @@ partial class Shell {
         b.Glyph.Foreground = Ui.Brush(primary && enabled || gold ? ink : i == 5 ? "#e8453c" : i == 2 ? "#e8453c" : i == 3 ? "#2f8fe0" : i == 4 ? "#8a57d6" : Ui.Muted);
         b.Root.Opacity = enabled ? 1 : 0.45;
         b.Root.Cursor = enabled ? Cursors.Hand : Cursors.Arrow;
+        GlowPageButton(i, b, enabled);
     }
     void MarkPageButtons() {
-        for (int i = 0; i < gpButtons.Count; i++) gpButtons[i].Root.BorderBrush = padUsed && i == gpIdx ? Ui.Brush(Ui.Text) : Brushes.Transparent;
+        for (int i = 0; i < gpButtons.Count; i++) gpButtons[i].Root.BorderBrush = padUsed && i == gpIdx ? Ui.Brush(StyleId == "channels" ? Ui.Teal : Ui.Text) : StyleId == "channels" ? GlassRim() : Brushes.Transparent;
     }
     void OpenGamePage() {
         if (sel == null || homeLayer == null) return;

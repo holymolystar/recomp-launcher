@@ -92,7 +92,7 @@ partial class Shell {
             g.Icon = FolderFace(g.Name, inside);
             u.Home.Icon.Source = (ImageSource)g.Icon;
             foreach (var t in FindNames(u.Home.Root)) t.Text = g.Name + "  •  " + inside.Count + (inside.Count == 1 ? " game" : " games");
-            u.Home.Root.Margin = new Thickness(first && favs ? 40 : 0, 0, 9, 14);
+            if (StyleId == "console") u.Home.Root.Margin = new Thickness(first && favs ? 40 : 0, 0, 9, 14);   // the other styles keep their even grid (Styles.cs)
             first = false;
         }
     }

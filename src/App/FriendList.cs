@@ -154,9 +154,6 @@ partial class Shell {
                     Alt = () => FriendAction(() => FriendsNet.Remove(o.Id), "Cancelled."), AltLabel = "Cancel" });
             }
         }
-        // Steam friends, when a Steam key is set
-        if (!string.IsNullOrEmpty(Settings.Get("SteamApiKey")))
-            rows.Add(new ListRow { Glyph = "", C1 = "#1b2838", C2 = "#2a475e", Title = "Steam friends", Text = "Who's online on Steam", Do = () => { CloseListPage(); OpenFriends(); } });
         FillRows(frPage, rows, "No friends yet. Press Add a friend and type a friend's code, or give them yours.");
     }
     static string Minutes(TimeSpan t) { return t.TotalMinutes < 60 ? Math.Max(1, (int)t.TotalMinutes) + " min" : (int)t.TotalHours + " h " + t.Minutes + " min"; }

@@ -180,8 +180,14 @@ partial class Shell {
     int oskIdx; string oskValue, oskBefore;
     Action<string> oskLive, oskDone; Action oskCancel;
     bool OskOpen { get { return oskLayer != null && oskLayer.Visibility == Visibility.Visible; } }
-    static readonly string[] OskRows = { "1234567890", "QWERTYUIOP", "ASDFGHJKL'", "ZXCVBNM-&." };
-    void OpenOsk(string title, string start, Action<string> live, Action<string> done, Action cancel) {
+    static readonly string[] OskRows = { "1234567890", "QWERTYUIOP", "ASDFGHJKL'", "ZXCVBNM-&.", ":/@_?=#!+~" };
+    // the keyboard: Aa switches between automatic capitals (the first letter), all small and all capitals; a password
+    // shows as dots
+    bool oskSecret; int oskMax = 40, oskCase; Border oskCaseKey;
+    void OpenOsk(string title, string start, Action<string> live, Action<string> done, Action cancel) { OpenOsk(title, start, live, done, cancel, false); }
+    // exact: small letters to start with and room for long text (addresses, usernames, passwords)
+    void OpenOsk(string title, string start, Action<string> live, Action<string> done, Action cancel, bool secret, bool exact = false) {
+        oskSecret = secret; oskMax = secret || exact ? 300 : 40; oskCase = secret || exact ? 1 : 0;
         if (oskLayer == null) {
             Border card; StackPanel body;
             oskLayer = Card("Osk", 760, VerticalAlignment.Bottom, out card, out body);
@@ -197,7 +203,7 @@ partial class Shell {
                 rows.Children.Add(line);
             }
             var last = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center };
-            last.Children.Add(OskKey("Space", 260)); last.Children.Add(OskKey("⌫ Delete", 150)); last.Children.Add(OskKey("Done", 150));
+            oskCaseKey = OskKey("Aa", 90); last.Children.Add(oskCaseKey); last.Children.Add(OskKey("Space", 220)); last.Children.Add(OskKey("⌫ Delete", 150)); last.Children.Add(OskKey("Done", 150));
             rows.Children.Add(last);
             body.Children.Add(rows);
             var hints = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 12, 0, 0) };
@@ -208,10 +214,17 @@ partial class Shell {
                 if (!OskOpen || string.IsNullOrEmpty(e.Text) || char.IsControl(e.Text[0])) return;
                 OskType(e.Text); e.Handled = true;
             };
+            // Ctrl+V: a pasted link or password (one line)
+            W.PreviewKeyDown += (s, e) => {
+                if (!OskOpen || e.Key != Key.V || (Keyboard.Modifiers & ModifierKeys.Control) == 0) return;
+                try { string t = Clipboard.ContainsText() ? Clipboard.GetText() : ""; t = t.Replace("\r", "").Replace("\n", "").Trim(); if (t.Length > 0) OskType(t); } catch { }
+                e.Handled = true;
+            };
         }
         oskTitle.Text = title;
         oskValue = start ?? ""; oskBefore = oskValue;
         oskLive = live; oskDone = done; oskCancel = cancel;
+        ((TextBlock)oskCaseKey.Child).Text = oskCase == 0 ? "Aa" : oskCase == 1 ? "aa" : "AA";
         oskIdx = 10; OskShow(); MarkOsk();   // on Q
         Panel.SetZIndex(oskLayer, 9500);   // over everything, the creator and the plaza too
         ShowCard("OskLayer", "OskCard");
@@ -228,11 +241,13 @@ partial class Shell {
         if (label == "Space") OskType(" ");
         else if (label.EndsWith("Delete")) OskBack();
         else if (label == "Done") OskFinish(true);
-        else OskType(label.ToLowerInvariant().Length == 1 && char.IsLetter(label[0]) && oskValue.Length > 0 ? label.ToLowerInvariant() : label);
+        else if (label == "Aa") { oskCase = (oskCase + 1) % 3; ((TextBlock)oskCaseKey.Child).Text = oskCase == 0 ? "Aa" : oskCase == 1 ? "aa" : "AA"; Sound.Play(Sfx.Select); }
+        else if (label.Length == 1 && char.IsLetter(label[0])) OskType(oskCase == 2 || (oskCase == 0 && oskValue.Length == 0) ? label : label.ToLowerInvariant());
+        else OskType(label);
     }
-    void OskType(string s) { if (oskValue.Length >= 40) { Sound.Play(Sfx.Bump); return; } oskValue += s; Sound.Play(Sfx.Move); OskShow(); }
+    void OskType(string s) { if (oskValue.Length >= oskMax) { Sound.Play(Sfx.Bump); return; } oskValue += s; Sound.Play(Sfx.Move); OskShow(); }
     void OskBack() { if (oskValue.Length == 0) { Sound.Play(Sfx.Bump); return; } oskValue = oskValue.Substring(0, oskValue.Length - 1); Sound.Play(Sfx.Back); OskShow(); }
-    void OskShow() { oskText.Text = oskValue + "│"; if (oskLive != null) oskLive(oskValue); }
+    void OskShow() { oskText.Text = (oskSecret ? new string('•', oskValue.Length) : oskValue) + "│"; if (oskLive != null) oskLive(oskValue); }
     void MarkOsk() {
         for (int i = 0; i < oskKeys.Count; i++) {
             bool on = i == oskIdx;

@@ -277,8 +277,11 @@ partial class Shell {
     }
     void BuildSettings() {
         var rows = SetSection("Theme", "\uE790", "Pick a look. The launcher reopens with it when you save.");
+        rows.Children.Add(Heading("LAUNCHER STYLE", true));
+        rows.Children.Add(StyleRow());   // Console, Channels, Cinema (Styles.cs)
+        rows.Children.Add(Heading("THEMES IN THIS STYLE", false));
         themeGrid = new UniformGrid { Columns = 3 };
-        foreach (var th in Theme.All) themeGrid.Children.Add(ThemeSwatch(th));
+        foreach (var th in Theme.All.Where(t => t.Style == Theme.Style)) themeGrid.Children.Add(ThemeSwatch(th));
         rows.Children.Add(themeGrid);
         rows = SetSection("General", "\uE713", "What happens when a game starts, how the launcher opens, and update checks.");
         rows.Children.Add(ChoiceRow("OnPlay", "When a game starts", "Play time is counted either way. In the tray the launcher uses almost no memory, and it comes back by itself when the game closes.", 1,
@@ -375,9 +378,9 @@ partial class Shell {
         rows.Children.Add(ChoiceRow("FriendsShare", "Show what I'm playing", "Off: friends only see that you're online.", 0, new[] { "on", "off" }, new[] { "On", "Off" }));
         friendsCodeText = new TextBlock { FontSize = 13, FontFamily = Ui.Semi, Margin = new Thickness(0, 8, 0, 0), TextWrapping = TextWrapping.Wrap };
         rows.Children.Add(friendsCodeText);
-        rows = SetSection("Steam friends", "", "Optional: who's online, on the Friends button on Home.");
+        rows = SetSection("Steam achievements", "", "Optional: all of a Steam game's achievements, not only the ones Steam keeps on this PC.");
         rows.Children.Add(new TextBlock { TextWrapping = TextWrapping.Wrap, FontSize = 11.5, Foreground = Ui.Brush(Ui.Muted), Margin = new Thickness(0, 0, 0, 8),
-            Text = "Steam shares who's online with a Web API key of your own. Sign in at steamcommunity.com/dev/apikey, type any domain name (localhost is fine), agree, and copy the key here. It only reads what your profile and your friends' profiles show; keep it to yourself like a password." });
+            Text = "Steam shares all achievements with a Web API key of your own. Sign in at steamcommunity.com/dev/apikey, type any domain name (localhost is fine), agree, and copy the key here. It only reads what your profile and your friends' profiles show; keep it to yourself like a password." });
         steamKeyBox = new PasswordBox { Height = 38, FontSize = 13, Padding = new Thickness(10, 0, 10, 0), VerticalContentAlignment = VerticalAlignment.Center,
             Background = Ui.Brush("#0A0E11"), Foreground = Ui.Brush(Ui.Text), BorderBrush = Ui.Brush("#26333C"), CaretBrush = Ui.Brush(Ui.Text) };
         var keySite = MakeButton("Open Steam");
@@ -538,6 +541,7 @@ partial class Shell {
         else { l.Text = "This folder doesn't exist"; l.Foreground = Ui.Brush(Ui.Red); }
     }
     void OpenSettings(string section = null) {
+        GlowSettings();   // Glow's look, once (GlowPanels.cs)
         foreach (var r in folderRows) { r.Box.Text = Settings.Get(r.Key); CheckPathLabel(r); }
         foreach (var c in setChoices) PickChoice(c, c.Key == "OnPlay" ? OnPlayMode() : Settings.Get(c.Key).Length > 0 ? Settings.Get(c.Key) : c.Values[c.Def]);
         SetToggle(optRumble, Settings.On("PadRumble"), true);
@@ -555,7 +559,7 @@ partial class Shell {
         tokenCheck.Text = tokenBox.Password.Length > 0 ? "A token is saved." : ""; tokenCheck.Foreground = Ui.Brush(Ui.Muted);
         foreach (var g in LibGames()) SetToggle(showToggles[g.Id], !g.Hidden, true);
         autoHideWas = Settings.Get("StoreAutoHide"); renderWas = Settings.Get("Render"); monitorWas = Settings.Get("Monitor"); storesWas = Settings.Get("SteamLibrary") + "|" + Settings.Get("OtherStores");
-        PickTheme(Theme.Current.Id);
+        pickedTheme = Theme.Current.Id; PickStyle(Theme.Style);
         fb.Visibility = Visibility.Collapsed;
         ShowCard("SettingsLayer", "SettingsCard");
         ShowSetSection(section != null ? Math.Max(0, setSections.FindIndex(x => x.Name == section)) : 0);
@@ -596,14 +600,14 @@ partial class Shell {
         } catch (Exception e) { Log("Couldn't change the Startup folder: " + e.Message, Ui.Red); }
         if (autoHideWas != Settings.Get("StoreAutoHide")) LoadHidden();   // switched: the store games all hide, or all show
         else { foreach (var g in LibGames()) g.Hidden = !showToggles[g.Id].On; SaveHidden(); }
-        bool newTheme = pickedTheme != null && pickedTheme != Theme.Current.Id;
-        if (newTheme) Settings.Set("Theme", pickedTheme);
+        bool newTheme = (pickedTheme != null && pickedTheme != Theme.Current.Id) || (pickedStyle != null && pickedStyle != Theme.Style);
+        if (newTheme) { Settings.Set("Theme", pickedTheme); if (pickedStyle != null) Settings.Set("LauncherStyle", pickedStyle); }
         Settings.Save();
         // a new theme: the launcher opens again in it (the window is built in its colours); the same when the stores
         // whose games it lists changed (the library is read as it opens)
         if (newTheme || renderWas != Settings.Get("Render") || storesWas != Settings.Get("SteamLibrary") + "|" + Settings.Get("OtherStores")) {
             Settings.Set("LastGame", sel.Id); Settings.Save();
-            try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(System.Reflection.Assembly.GetExecutingAssembly().Location, "-Select " + sel.Id) { WorkingDirectory = Paths.Root }); } catch { }
+            try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(System.Reflection.Assembly.GetExecutingAssembly().Location, "-Restart -Select " + sel.Id + (isFull ? " -Full" : "")) { WorkingDirectory = Paths.Root }); } catch { }
             W.Close();
             return;
         }
@@ -643,6 +647,8 @@ partial class Shell {
     // the stops of the section shown, then the buttons at the bottom
     List<FrameworkElement> SetStops() {
         var all = new List<FrameworkElement>();
+        if (padDiagramBox != null) all.Add(padDiagramBox);
+        foreach (FrameworkElement b in styleGrid.Children) all.Add(b);
         foreach (FrameworkElement b in themeGrid.Children) all.Add(b);
         foreach (var c in setChoices) all.AddRange(c.Buttons);
         foreach (var t in new[] { optFull, optStartup, optAuto }) all.Add(t.Root);
@@ -652,7 +658,9 @@ partial class Shell {
         foreach (FrameworkElement b in libStores.Children) all.Add(b);
         foreach (FrameworkElement b in showButtons.Children) if (b is Button) all.Add(b);
         foreach (FrameworkElement c in showGrid.Children) if (c.Visibility == Visibility.Visible) all.Add(c);
-        foreach (var r in folderRows) all.Add(r.Btn);
+        foreach (var r in folderRows) { all.Add(r.Box); all.Add(r.Btn); }
+        // the boxes to type in: A opens the on-screen keyboard (Controller.cs)
+        foreach (Control box in new Control[] { tokenBox, steamKeyBox, discordBox, weatherBox, libSearch }) if (box != null) all.Add(box);
         var panel = setSections[setSection].Panel;
         var s = all.Where(el => el.IsDescendantOf(panel)).ToList();
         var def = N<Button>("BtnSetDefaults");
@@ -660,7 +668,15 @@ partial class Shell {
         s.Add(N<Button>("BtnSetCancel")); s.Add(N<Button>("BtnSetSave"));
         return s;
     }
-    Button tokenSite; TextBlock friendsCodeText, friendsStatus;
+    Button tokenSite; TextBlock friendsCodeText, friendsStatus; Border padDiagramBox;
+    // a box in Settings typed with the controller: the on-screen keyboard, titled with the line above the box
+    void SettingsType(FrameworkElement el) {
+        var pb = el as PasswordBox; var tb = el as TextBox;
+        string title = pb == steamKeyBox ? "Steam Web API key" : pb == tokenBox ? "GitHub token" : tb == discordBox ? "Discord application ID" : tb == weatherBox ? "Your town (for the weather)"
+            : tb == libSearch ? "Find a game" : "Folder";
+        string start = pb != null ? pb.Password : tb.Text;
+        OpenOsk(title, start, null, text => { if (pb != null) pb.Password = text ?? ""; else tb.Text = text ?? ""; }, null, pb != null);
+    }
 
     // ---------- the sections (LB / RB on a controller) ----------
     class SetSec { public string Name, Desc; public StackPanel Panel; public Border Tab; }
@@ -686,7 +702,7 @@ partial class Shell {
             var sec = setSections[k]; bool on = k == setSection;
             sec.Panel.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
             sec.Tab.Background = on ? Ui.Brush(Ui.Teal) : Ui.Brush("#00000000");
-            foreach (TextBlock t in ((StackPanel)sec.Tab.Child).Children) t.Foreground = on ? Ui.Brush(Theme.Current.Light ? "#ffffff" : "#0A0E11") : Ui.Brush(Ui.Text);
+            foreach (var t in ((StackPanel)sec.Tab.Child).Children.OfType<TextBlock>()) t.Foreground = on ? Ui.Brush(Theme.Current.Light ? "#ffffff" : "#0A0E11") : Ui.Brush(Ui.Text);
         }
         var cur = setSections[setSection];
         N<TextBlock>("SetSectionTitle").Text = cur.Name;
@@ -697,6 +713,7 @@ partial class Shell {
         N<ScrollViewer>("SetScroll").ScrollToTop();
         cur.Panel.BeginAnimation(UIElement.OpacityProperty, Anim(1, 220, 0));
         cur.Tab.BringIntoView();
+        GlowSetTabs();   // Glow's look (GlowPanels.cs)
         if (padDiagram != null) padDiagram.Show(0);
         // the layout is needed to know which stops are in the section
         W.Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() => {
@@ -736,12 +753,15 @@ partial class Shell {
         padStatus = new TextBlock { FontSize = 12.5, Foreground = Ui.Brush(Ui.Muted), TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 10) };
         rows.Children.Add(padStatus);
         // the controller, with what each button does in the launcher; buttons light up as they're pressed
-        padDiagram = new ControllerView { Callouts = true, Height = 340, Margin = new Thickness(0, 0, 0, 6), Actions = new[] {
+        padDiagram = new ControllerView { Callouts = true, Height = 520, Margin = new Thickness(0, 0, 0, 6), Actions = new[] {
             new[] { "A", "Pick, start a game" }, new[] { "B", "Back" }, new[] { "X", "Update the game" }, new[] { "Y", "Game page" },
             new[] { "LB", "Profiles (Filter in All games)" }, new[] { "RB", "Favourite (Search in All games)" },
             new[] { "Move", "Move around" }, new[] { "LS", "Sort (press the stick)" }, new[] { "RS", "All games (press), scroll" },
-            new[] { "\u2261", "Settings" }, new[] { "\u29C9", "Full screen" } } };
-        rows.Children.Add(new Border { Background = Ui.Brush("#0D1215"), CornerRadius = new CornerRadius(16), Padding = new Thickness(10, 14, 10, 14), Child = padDiagram, Margin = new Thickness(0, 0, 0, 14) });
+            new[] { "\u2261", "Settings" }, new[] { "\u29C9", "Full screen" },
+            new[] { "LT", "Letter back (All games)" }, new[] { "RT", "Letter on (All games)" }, new[] { "Home", "In-game menu" } } };
+        var diagramBox = new Border { Background = Ui.Brush("#0D1215"), CornerRadius = new CornerRadius(16), Padding = new Thickness(10, 14, 10, 14), Child = padDiagram, Margin = new Thickness(0, 0, 0, 14) };
+        rows.Children.Add(diagramBox); padDiagramBox = diagramBox;   // the first stop: the section opens on it, at the top
+        rows.Children.Add(BuildPadTest());   // sticks, triggers, every button, buzz (PadTest.cs)
         rows.Children.Add(ChoiceRow("PadPrompts", "Button names", "The names and colours in the hints. Automatic follows the controller plugged in.", 0,
             new[] { "auto", "xbox", "playstation", "nintendo" }, new[] { "Automatic", "Xbox", "PlayStation", "Nintendo" }));
         rows.Children.Add(ChoiceRow("PadConfirm", "Pick with", "Automatic: the right button on Switch controllers (as on a Switch), the bottom button on others.", 0,
@@ -841,7 +861,7 @@ partial class Shell {
             : "Play time is kept.";
         string warn = g.Dir.IndexOf(@"\Quiver\", StringComparison.OrdinalIgnoreCase) >= 0 ? "This folder belongs to Quiver: Quiver will see the game as missing."
                     : g.Id == "totk" ? "The TotK Updater and its backups stay; only the game folder goes."
-                    : g.Id == "hookshot" ? "Hookshot's built game in " + Paths.Expand(@"%USERPROFILE%\Games\Hookshot") + " stays: delete it yourself if you want the space back." : "";
+                    : g.Id == "longshot" ? "Its builds in LongshotLauncher-data go with it. Your saves in " + Paths.Expand(@"%APPDATA%\Longshot") + " stay." : "";
         var w = N<TextBlock>("UninstWarn"); w.Text = warn; w.Visibility = warn.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
         N<Button>("BtnUninstGo").IsEnabled = true;
         string dir = g.Dir;
@@ -905,6 +925,8 @@ partial class Shell {
         N<Button>("BtnRomFile").Visibility = spec.Kind == "file" || spec.Kind == "both" ? Visibility.Visible : Visibility.Collapsed;
         N<Button>("BtnRomFolder").Visibility = spec.Kind == "folder" || spec.Kind == "both" ? Visibility.Visible : Visibility.Collapsed;
         string how = spec.Handoff == "tod" ? "Your disc then goes straight to its installer."
+                   : spec.Handoff == "discs" ? "Choose Disc 1: Disc 2 is found next to it, so keep both images in one folder. Then the game is built on this PC from them (one to two hours, about 50 GB free)."
+                   : g.Id == "longshot" ? "Then the Longshot Launcher opens: Build the game there with your own copy (about 60 GB free, 15 to 30 minutes). After that, Play starts the game straight away."
                    : g.Rebuild != null ? "Then Hookshot Builder opens: choose your game there and keep its own game folder (" + Paths.Expand(@"%USERPROFILE%\Games\Hookshot") + "); Play starts the game from there."
                    : spec.Kind == "none" ? "Then the game's own setup opens and asks for your game."
                    : "Then the game's setup opens: paste the path there with Ctrl+V (it's copied for you).";
@@ -1210,7 +1232,7 @@ static class RomCheck {
             string size = string.Format("{0:N1} GB", fi.Length / 1073741824.0);
             if ((ext == ".wux" || ext == ".wud") && !File.Exists(Path.ChangeExtension(fi.FullName, ".key")))
                 return new RomResult { Ok = true, Color = Ui.Gold, Text = "\u2713  " + fi.Name + " (" + size + "). Its setup also asks for the disc key (put it next to the image as " + Path.GetFileNameWithoutExtension(fi.Name) + ".key to have it found) and the Wii U common key." };
-            return new RomResult { Ok = true, Text = "\u2713  " + fi.Name + " (" + size + ")", Color = Ui.Teal };
+            return new RomResult { Ok = true, Text = "\u2713  " + fi.Name + " (" + size + ")" + DiscTool.Note(s, fi.FullName), Color = Ui.Teal };
         }
         if (!Directory.Exists(path)) return new RomResult { Text = "That file or folder doesn't exist.", Color = Ui.Red };
         if (s.Kind == "file") return new RomResult { Text = "This game needs a disc image file: " + string.Join(", ", s.Ext) + ".", Color = Ui.Red };

@@ -13,6 +13,8 @@ static class IconX {
     // Windows 11 window corners (DWMWA_WINDOW_CORNER_PREFERENCE): 1 square, 2 rounded. Does nothing on Windows 10.
     [DllImport("dwmapi.dll")] static extern int DwmSetWindowAttribute(IntPtr h, int attr, ref int value, int size);
     public static void WindowCorners(IntPtr h, bool round) { int v = round ? 2 : 1; try { DwmSetWindowAttribute(h, 33, ref v, 4); } catch { } }
+    // Windows 11's thin grey line around a window (DWMWA_BORDER_COLOR): none (DWMWA_COLOR_NONE) or Windows' own
+    public static void WindowBorder(IntPtr h, bool show) { int v = show ? unchecked((int)0xFFFFFFFF) : unchecked((int)0xFFFFFFFE); try { DwmSetWindowAttribute(h, 34, ref v, 4); } catch { } }
 }
 
 // Per-window taskbar identity: the app id plus what pinning should start and show (docks such as Seelen UI read these)

@@ -51,6 +51,14 @@ class ControllerView : FrameworkElement {
     public string[][] Actions = new string[0][];   // (key, what it does)
 
     public void Show(int pressed) { if (pressed != Pressed) { Pressed = pressed; InvalidateVisual(); } }
+    // live (Settings > Controller): where both sticks are (-1..1) and how far the triggers are in (0..1)
+    public double LX, LY, RX, RY, LT, RT; public bool Live;
+    public void ShowState(Pad.State st) {
+        int raw = st.Buttons | (st.LT > 30 ? Pad.LT : 0) | (st.RT > 30 ? Pad.RT : 0);
+        double lx = st.LX / 32768.0, ly = -st.LY / 32768.0, rx = st.RX / 32768.0, ry = -st.RY / 32768.0, lt = st.LT / 255.0, rt = st.RT / 255.0;
+        if (raw == Pressed && Live && Math.Abs(lx - LX) + Math.Abs(ly - LY) + Math.Abs(rx - RX) + Math.Abs(ry - RY) + Math.Abs(lt - LT) + Math.Abs(rt - RT) < 0.02) return;
+        Live = true; Pressed = raw; LX = lx; LY = ly; RX = rx; RY = ry; LT = lt; RT = rt; InvalidateVisual();
+    }
 
     // the spots of the buttons on the 400 x 260 drawing
     // where the button that does a launcher key sits (A and B change places when the right button picks)
@@ -60,6 +68,8 @@ class ControllerView : FrameworkElement {
         switch (key) {
             case "A": return new Point(300, 135); case "B": return new Point(326, 109); case "X": return new Point(274, 109); case "Y": return new Point(300, 83);
             case "LB": return new Point(100, 34); case "RB": return new Point(300, 34);
+            case "LT": return new Point(100, 10); case "RT": return new Point(300, 10);
+            case "Home": return ps ? new Point(200, 150) : Kind == PadKind.Switch ? new Point(222, 140) : new Point(200, 76);
             case "Move": return ps ? new Point(100, 109) : new Point(150, 160);
             case "LS": return ps ? new Point(150, 170) : new Point(100, 109);
             case "RS": return ps ? new Point(250, 170) : new Point(250, 160);
@@ -90,6 +100,13 @@ class ControllerView : FrameworkElement {
         var body = B(Connected ? "#1C252C" : "#11181D");
         var edge = P(B(Connected ? "#33424D" : "#26333C"), 3);
         var part = B("#0E1418"); var lit = B(Ui.Teal);
+        // triggers, above the shoulders: they fill as they're pressed in
+        foreach (var s in new[] { -1, 1 }) {
+            double v = s < 0 ? LT : RT; var r = new Rect(200 + s * 100 - 38, 2, 76, 16);
+            dc.DrawRoundedRectangle(B("#0E1418"), P(B("#33424D"), 2), r, 8, 8);
+            if (v > 0.02) dc.DrawRoundedRectangle(lit, null, new Rect(r.X + 2, r.Y + 2, Math.Max(4, (r.Width - 4) * v), r.Height - 4), 6, 6);
+            Text(dc, s < 0 ? "LT" : "RT", new Point(r.X + r.Width / 2, r.Y + r.Height / 2), 9, v > 0.5 ? "#0A0E11" : "#8A9AA5", true);
+        }
         // shoulders
         foreach (var s in new[] { -1, 1 }) {
             bool on = On(s < 0 ? Pad.LB : Pad.RB);
@@ -108,8 +125,12 @@ class ControllerView : FrameworkElement {
         // sticks
         foreach (var key in new[] { "LS", "RS" }) {
             var c = Spot(key); bool on = On(key == "LS" ? Pad.LS : Pad.RS);
+            double sx = key == "LS" ? LX : RX, sy = key == "LS" ? LY : RY; bool moved = Math.Sqrt(sx * sx + sy * sy) > 0.24;
             dc.DrawEllipse(part, null, c, 30, 30);
-            dc.DrawEllipse(on ? lit : B("#26333C"), P(B("#33424D"), 2), c, 21, 21);
+            // the cap moves with the stick; lit when pushed past the dead zone or pressed in
+            var cap = new Point(c.X + sx * 10, c.Y + sy * 10);
+            dc.DrawEllipse(on ? lit : moved ? B("#203039") : B("#26333C"), P(moved ? lit : B("#33424D"), moved ? 2.5 : 2), cap, 21, 21);
+            if (on) Text(dc, key, cap, 9, "#0A0E11", true);
         }
         // d-pad
         var d = Spot("Move");
@@ -135,7 +156,8 @@ class ControllerView : FrameworkElement {
             else dc.DrawEllipse(on ? lit : B("#33424D"), null, c, 8, 8);
         }
         if (Kind == PadKind.PlayStation) dc.DrawRoundedRectangle(B("#26333C"), P(B("#33424D"), 2), new Rect(166, 54, 68, 46), 8, 8);
-        if (Kind == PadKind.Xbox) dc.DrawEllipse(B("#33424D"), null, new Point(200, 76), 13, 13);
+        if (Kind == PadKind.Xbox) dc.DrawEllipse(On(Pad.Guide) ? lit : B("#33424D"), null, new Point(200, 76), 13, 13);
+        if (Kind == PadKind.PlayStation) dc.DrawEllipse(On(Pad.Guide) ? lit : B("#33424D"), null, new Point(200, 150), 9, 9);
         if (Kind == PadKind.Switch) { dc.DrawEllipse(B("#33424D"), null, new Point(222, 140), 8, 8); dc.DrawRoundedRectangle(B("#33424D"), null, new Rect(170, 132, 15, 15), 3, 3); }
     }
 
@@ -166,7 +188,7 @@ class ControllerView : FrameworkElement {
             dc.DrawLine(pen, new Point((lineX + target.X) / 2, y), target);
             dc.DrawEllipse(B(on ? Ui.Teal : "#33424D"), null, target, 3, 3);
             // the badge, then what it does
-            string label = key == "Move" ? "✛" : key == "RSc" ? "R" : PadStyle.Label(key);
+            string label = key == "Move" ? "✛" : key == "RSc" ? "R" : key == "Home" ? "⌂" : PadStyle.Label(key);
             string col = key == "Move" ? "#8A9AA5" : PadStyle.Colour(key);
             var bx = new Point(leftSide ? lineX - 26 : lineX + 4, y);
             double bw = label.Length > 1 ? 34 : 24;
@@ -184,7 +206,8 @@ class ControllerView : FrameworkElement {
             case "A": return On(Pad.A); case "B": return On(Pad.B); case "X": return On(Pad.X); case "Y": return On(Pad.Y);
             case "LB": return On(Pad.LB); case "RB": return On(Pad.RB); case "LS": return On(Pad.LS); case "RS": return On(Pad.RS);
             case "≡": return On(Pad.Start); case "⧉": return On(Pad.Back);
-            case "Move": return On(Pad.Up | Pad.Down | Pad.Left | Pad.Right);
+            case "Move": return On(Pad.Up | Pad.Down | Pad.Left | Pad.Right) || Math.Abs(LX) > 0.24 || Math.Abs(LY) > 0.24;
+            case "LT": return LT > 0.1 || On(Pad.LT); case "RT": return RT > 0.1 || On(Pad.RT); case "Home": return On(Pad.Guide);
         }
         return false;
     }

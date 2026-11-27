@@ -1,0 +1,269 @@
+/* Recomp TV 0.2: the header, pages of rows, the card over a poster, a film's or series' page, the player,
+   "Who's watching?" and Settings. Same colours as app.css (the launcher's TV & Movies). */
+#header { position: absolute; left: 0; top: 0; right: 0; height: 110px; z-index: 8; display: flex; align-items: center; padding: 0 64px;
+  background: linear-gradient(rgba(0,0,0,.85), rgba(0,0,0,0)); }
+#header.solid { background: var(--bg); }
+#header nav { display: flex; flex: 1; }
+#header > * + * { margin-left: 50px; }
+.hprofile { display: flex; align-items: center; padding: 6px 18px 6px 6px; border-radius: 40px; border: 3px solid transparent; font-size: 26px; color: var(--dim); }
+.hprofile .avatar { width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 26px; margin-right: 14px; }
+.hprofile.current { color: var(--text); }
+.hprofile.focus { background: var(--text); color: #000; }
+#live .cols { top: 110px; }
+#live.full .cols { display: none; }
+
+/* ---- a page of rows ---- */
+#browse { background: var(--bg); overflow: hidden; }
+.bpage { position: absolute; left: 0; top: 0; right: 0; bottom: 0; overflow: hidden; }
+.b-content { position: absolute; left: 0; top: 0; right: 0; transition: transform .28s ease-out; }
+.b-empty { position: absolute; top: 300px; left: 80px; font-size: 32px; color: var(--dim); }
+.hero { position: absolute; left: 0; top: 0; width: 1920px; height: 900px; }
+.hero-pic { position: absolute; right: 0; top: 0; width: 1500px; height: 860px; background-size: cover; background-position: center top; }
+.hero-pic.poster { width: 600px; right: 120px; top: 140px; height: 640px; background-size: contain; background-repeat: no-repeat; }
+.hero-fade { position: absolute; left: 0; top: 0; width: 1920px; height: 900px;
+  background: linear-gradient(90deg, var(--bg) 22%, rgba(20,20,22,.75) 45%, rgba(20,20,22,0) 70%), linear-gradient(0deg, var(--bg) 6%, rgba(20,20,22,0) 40%); }
+.hero-box { position: absolute; left: 80px; top: 170px; width: 820px; }
+.hero-title { font-size: 76px; font-weight: 900; line-height: 1.05; max-height: 170px; overflow: hidden; text-shadow: 0 4px 24px rgba(0,0,0,.6); }
+.hero-logo { max-width: 620px; max-height: 190px; display: block; }
+.hero-meta, .d-meta, .peek-meta { font-size: 26px; color: var(--dim); margin-top: 22px; }
+.hero-meta span + span, .d-meta span + span, .peek-meta span + span { margin-left: 22px; }
+.hero-meta .rate, .d-meta .rate, .peek-meta .rate { color: var(--gold); font-weight: 700; }
+.d-meta .lang { padding: 2px 10px; border: 2px solid var(--faint); border-radius: 6px; font-size: 20px; }
+.hero-plot { font-size: 28px; line-height: 1.45; color: #ddd; margin-top: 20px; max-height: 122px; overflow: hidden; }
+.hero-btns, .d-btns { margin-top: 34px; display: flex; }
+.hbtn { font-size: 30px; font-weight: 700; padding: 18px 40px; border-radius: 10px; background: rgba(110,110,115,.55); border: 4px solid transparent; }
+.hbtn + .hbtn { margin-left: 18px; }
+.hbtn.play { background: #fff; color: #000; }
+.hbtn.focus { border-color: var(--text); transform: scale(1.06); box-shadow: 0 0 0 4px rgba(255,255,255,.25); }
+.hbtn.play.focus { border-color: var(--accent); }
+
+.brow { position: absolute; left: 0; width: 1920px; }
+.brow-title { font-size: 32px; font-weight: 700; padding-left: 80px; height: 56px; color: #e5e5e5; }
+.brow.picked .brow-title { color: #fff; }
+.strip { position: absolute; left: 80px; top: 56px; height: 400px; transition: transform .22s ease-out; }
+.brow.grid .strip { top: 0; }
+.tile { position: absolute; top: 0; }
+.tbox { position: absolute; top: 0; left: 0; border-radius: 10px; overflow: hidden; transition: transform .16s ease-out, box-shadow .16s; background: var(--raise); }
+.tbox img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; }
+.tbox img.logo { object-fit: contain; padding: 22px 30px 44px; }
+.tile.focus .tbox { transform: scale(1.1); box-shadow: 0 0 0 5px #fff, 0 18px 40px rgba(0,0,0,.7); z-index: 2; }
+.tile.focus { z-index: 3; }
+.tname { position: absolute; left: 14px; right: 14px; bottom: 18px; font-size: 24px; font-weight: 800; line-height: 1.2; max-height: 116px; overflow: hidden; }
+.tlabel { position: absolute; left: 10px; top: 10px; padding: 3px 10px; border-radius: 6px; background: rgba(0,0,0,.75); font-size: 20px; font-weight: 700; }
+.tlive { position: absolute; left: 0; right: 0; bottom: 0; padding: 6px 14px; font-size: 21px; background: rgba(0,0,0,.65); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tbar { position: absolute; left: 12px; right: 12px; bottom: 12px; height: 7px; border-radius: 4px; background: rgba(255,255,255,.3); overflow: hidden; }
+.tbar i { display: block; height: 100%; background: var(--accent); }
+.num { position: absolute; left: 0; bottom: -22px; font-size: 300px; font-weight: 900; line-height: 1; color: var(--bg); letter-spacing: -24px;
+  -webkit-text-stroke: 5px #9a9a9a; font-family: Impact, "Arial Black", sans-serif; }
+.chips .strip { top: 66px; white-space: nowrap; }
+.chip { display: inline-block; font-size: 28px; padding: 14px 32px; margin-right: 16px; border-radius: 40px; background: var(--raise); color: #ddd; border: 3px solid transparent; }
+.chip.sel { background: var(--hi); color: #fff; font-weight: 700; }
+.chip.focus { background: #fff; color: #000; }
+.cat-head { position: absolute; left: 80px; top: 150px; font-size: 44px; font-weight: 800; z-index: 1; }
+.search-bar { position: absolute; left: 80px; right: 80px; top: 140px; z-index: 2; }
+.search-bar input { font-size: 40px; padding: 20px 30px; border-radius: 16px; }
+.search-hint { font-size: 26px; color: var(--faint); margin-top: 14px; }
+
+/* ---- the card over a poster ---- */
+#peek-layer { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; z-index: 7; pointer-events: none; }
+.peek { position: absolute; width: 520px; border-radius: 14px; overflow: hidden; background: #1a1a1c; box-shadow: 0 24px 70px rgba(0,0,0,.85);
+  transition: transform .2s ease-out, opacity .16s; transform-origin: 50% 50%; }
+.peek-pic { position: relative; height: 292px; background: #222 center / cover no-repeat; }
+.peek-pic.poster { background-size: contain; background-color: #111; }
+.peek-fade { position: absolute; left: 0; right: 0; bottom: 0; height: 60%; background: linear-gradient(rgba(26,26,28,0), #1a1a1c); }
+.peek-title { position: absolute; left: 22px; right: 22px; bottom: 14px; font-size: 32px; font-weight: 900; text-shadow: 0 2px 12px #000; max-height: 84px; overflow: hidden; }
+.peek-logo { position: absolute; left: 22px; bottom: 16px; max-width: 300px; max-height: 90px; }
+.peek-yt { position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; transition: opacity .4s; overflow: hidden; }
+.peek-yt.on { opacity: 1; }
+.peek-yt iframe { position: absolute; left: -18%; top: -18%; width: 136%; height: 136%; border: 0; }
+.peek-info { padding: 18px 22px 24px; }
+.peek-btns { display: flex; align-items: center; }
+.pb { width: 54px; height: 54px; border-radius: 50%; border: 3px solid rgba(255,255,255,.6); display: flex; align-items: center; justify-content: center; font-size: 24px; margin-right: 12px; }
+.pb.main { background: #fff; color: #000; border-color: #fff; }
+.pk-hint { font-size: 19px; color: var(--faint); margin-left: 8px; white-space: nowrap; }
+.peek-ep { font-size: 24px; font-weight: 700; margin-top: 14px; }
+.peek-meta { font-size: 22px; margin-top: 14px; }
+.peek-plot { font-size: 22px; line-height: 1.4; color: #c8c8c8; margin-top: 10px; max-height: 92px; overflow: hidden; }
+
+/* ---- a film's or series' page ---- */
+#details { background: var(--bg); overflow: hidden; }
+.d-bg { position: absolute; right: 0; top: 0; width: 1500px; height: 900px; background: center top / cover no-repeat; }
+.d-bg.poster { width: 600px; right: 120px; top: 100px; height: 640px; background-size: contain; }
+.d-fade { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px;
+  background: linear-gradient(90deg, var(--bg) 25%, rgba(20,20,22,.8) 48%, rgba(20,20,22,.1) 75%), linear-gradient(0deg, var(--bg) 18%, rgba(20,20,22,0) 50%); }
+.d-box { position: absolute; left: 100px; top: 110px; width: 900px; }
+.d-title { font-size: 72px; font-weight: 900; line-height: 1.05; max-height: 160px; overflow: hidden; }
+.d-logo { max-width: 600px; max-height: 180px; display: block; }
+.d-plot { font-size: 28px; line-height: 1.45; color: #ddd; margin-top: 22px; max-height: 165px; overflow: hidden; }
+.d-people { font-size: 23px; color: var(--faint); margin-top: 18px; max-height: 66px; overflow: hidden; }
+.d-seasons { position: absolute; left: 100px; top: 700px; white-space: nowrap; }
+.d-eps { position: absolute; left: 100px; right: 0; top: 790px; height: 290px; }
+.d-eps .strip { top: 0; left: 0; }
+.ep { position: absolute; top: 0; width: 384px; }
+.ep-pic { position: relative; width: 384px; height: 216px; border-radius: 10px; background: #2a2a2c center / cover no-repeat; transition: transform .16s; }
+.ep.focus .ep-pic { box-shadow: 0 0 0 5px #fff; transform: scale(1.05); }
+.ep-seen { position: absolute; right: 10px; top: 10px; font-size: 18px; padding: 3px 10px; border-radius: 6px; background: rgba(0,0,0,.75); color: var(--ok); }
+.ep-name { font-size: 24px; font-weight: 700; margin-top: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ep-sub { font-size: 20px; color: var(--faint); margin-top: 4px; }
+.ep-plot { display: none; }
+.ep.focus .ep-plot { display: block; font-size: 19px; color: var(--dim); margin-top: 6px; max-height: 50px; overflow: hidden; }
+
+/* ---- watching a film or episode ---- */
+#vod { background: transparent; }
+.v-top, .v-bot { position: absolute; left: 0; right: 0; opacity: 0; transition: opacity .3s; }
+#vod.ui .v-top, #vod.ui .v-bot { opacity: 1; }
+.v-top { top: 0; padding: 50px 90px 80px; background: linear-gradient(rgba(0,0,0,.8), rgba(0,0,0,0)); }
+.v-title { font-size: 46px; font-weight: 800; }
+.v-sub { font-size: 30px; color: var(--dim); margin-top: 8px; }
+.v-bot { bottom: 0; padding: 100px 90px 56px; background: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,.85)); }
+.v-bar { position: relative; height: 10px; border-radius: 5px; background: rgba(255,255,255,.3); }
+.v-bar .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 5px; background: var(--accent); }
+.v-bar .seek { position: absolute; top: -9px; width: 28px; height: 28px; margin-left: -14px; border-radius: 50%; background: #fff; }
+.v-times { display: flex; align-items: center; margin-top: 22px; font-size: 28px; }
+.v-state { width: 60px; font-size: 30px; }
+.v-hint { flex: 1; text-align: center; font-size: 22px; color: var(--faint); }
+.v-status { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 32px; padding: 24px 44px; border-radius: 18px; background: rgba(0,0,0,.7); }
+.v-subs { position: absolute; left: 160px; right: 160px; bottom: 120px; text-align: center; font-size: 46px; font-weight: 600; white-space: pre-line;
+  text-shadow: 0 0 6px #000, 0 2px 4px #000, 2px 2px 0 #000, -2px -2px 0 #000; }
+#vod.ui .v-subs { bottom: 230px; }
+.v-next { position: absolute; right: 90px; bottom: 230px; width: 520px; padding: 28px 34px; border-radius: 16px; background: rgba(26,26,28,.94); box-shadow: 0 20px 50px rgba(0,0,0,.7); }
+.v-next-t { font-size: 22px; color: var(--faint); text-transform: uppercase; letter-spacing: 2px; }
+.v-next-n { font-size: 30px; font-weight: 800; margin-top: 8px; }
+.v-next-c { font-size: 30px; color: var(--accent); font-weight: 700; margin-top: 16px; }
+.v-next-k { font-size: 21px; color: var(--dim); margin-top: 14px; }
+.v-menu { position: absolute; right: 0; top: 0; bottom: 0; width: 600px; padding: 70px 50px; background: rgba(20,20,22,.96); }
+.v-menu-t { font-size: 38px; font-weight: 800; margin-bottom: 26px; }
+.v-menu-h { font-size: 22px; color: var(--faint); text-transform: uppercase; letter-spacing: 2px; margin: 26px 0 10px; }
+.v-menu-i { font-size: 30px; padding: 14px 22px; border-radius: 12px; white-space: pre; }
+.v-menu-i.on { color: var(--accent); font-weight: 700; }
+.v-menu-i.focus { background: #fff; color: #000; }
+
+/* ---- Who's watching? ---- */
+#profiles { background: var(--bg); text-align: center; }
+.prof-title { font-size: 70px; font-weight: 700; margin: 230px 0 70px; }
+#prof-grid { display: flex; justify-content: center; }
+.prof { width: 230px; margin: 0 22px; }
+.prof-av { width: 210px; height: 210px; margin: 0 auto; border-radius: 22px; display: flex; align-items: center; justify-content: center; font-size: 100px; font-weight: 800; color: #fff;
+  border: 6px solid transparent; transition: transform .15s; }
+.prof.add .prof-av { background: var(--raise); color: var(--dim); font-weight: 300; }
+.prof.focus .prof-av { border-color: #fff; transform: scale(1.08); }
+.prof-name { font-size: 32px; color: var(--dim); margin-top: 22px; }
+.prof.focus .prof-name { color: #fff; font-weight: 700; }
+#prof-hint { font-size: 24px; color: var(--faint); margin-top: 90px; }
+#prof-edit { position: absolute; left: 50%; top: 400px; width: 800px; margin-left: -400px; padding: 44px; border-radius: 22px; background: var(--panel); box-shadow: 0 30px 80px #000; text-align: left; }
+#prof-edit-t { font-size: 34px; font-weight: 700; margin-bottom: 20px; }
+
+/* ---- settings ---- */
+.settings-body { top: 160px; }
+.setting-col { flex: 1; margin-left: 70px; }
+.setting-col h2 { font-size: 40px; margin: 0 0 24px; }
+.setting-col .setting-list { margin-left: 0; }
+.setting.on .v { color: var(--ok); font-weight: 700; }
+.card-note { font-size: 20px; color: var(--faint); margin-top: 26px; }
+.loading-brand { position: absolute; left: 50%; top: 300px; transform: translateX(-50%); }
+
+/* ---- Search: letters on the left, what's found on the right ---- */
+#page-search { left: 600px; }
+#search-keys { position: absolute; left: 0; top: 0; width: 600px; height: 1080px; padding: 150px 40px 0 80px; box-sizing: border-box; z-index: 3;
+  background: linear-gradient(90deg, var(--bg) 85%, rgba(20,20,22,0)); }
+.sk-box { display: flex; align-items: center; height: 76px; padding: 0 22px; border-radius: 14px; background: var(--panel); border: 2px solid var(--line); margin-bottom: 26px; }
+.sk-icon { font-size: 36px; color: var(--dim); margin-right: 16px; }
+.sk-text { font-size: 34px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sk-text.empty { color: var(--faint); font-weight: 400; font-size: 28px; }
+.sk-text.caret:not(.empty)::after { content: ''; display: inline-block; width: 3px; height: 36px; margin-left: 4px; vertical-align: -5px; background: var(--accent); animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.sk-grid { display: flex; flex-wrap: wrap; width: 480px; }
+.sk-k { width: 72px; height: 66px; margin: 0 8px 8px 0; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 700; color: #ddd; background: var(--raise); transition: transform .1s; }
+.sk-k.wide { width: 152px; font-size: 22px; }
+.sk-k.focus { background: #fff; color: #000; transform: scale(1.08); }
+.sk-found { font-size: 24px; color: var(--faint); margin-top: 18px; min-height: 30px; }
+.sk-recent { margin-top: 10px; }
+.sk-recent-t { font-size: 20px; color: var(--faint); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
+.sk-r { font-size: 26px; color: var(--dim); padding: 9px 16px; border-radius: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sk-r.focus { background: #fff; color: #000; }
+.search-ime { position: absolute; left: -2000px; top: 0; width: 10px; }
+
+/* ---- badges on posters ---- */
+.tnew { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); padding: 3px 12px 4px; border-radius: 4px 4px 0 0; background: var(--accent); color: #fff; font-size: 17px; font-weight: 800; letter-spacing: .5px; }
+.tcol { position: absolute; left: 0; right: 0; bottom: 0; padding: 28px 12px 10px; background: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,.85)); font-size: 20px; font-weight: 700; }
+
+/* ---- the player: seeking, subtitles' look, menus, the pause screen ---- */
+.v-seektip { position: absolute; bottom: 30px; transform: translateX(-50%); white-space: nowrap; font-size: 28px; font-weight: 700; padding: 8px 16px; border-radius: 10px; background: rgba(0,0,0,.75); }
+.v-menu-n { font-size: 21px; color: var(--dim); margin: -12px 0 16px; line-height: 1.4; }
+.v-subs.size-s { font-size: 36px; } .v-subs.size-m { font-size: 46px; } .v-subs.size-l { font-size: 56px; } .v-subs.size-xl { font-size: 68px; }
+.v-subs.col-yellow { color: #ffe14d; }
+.v-subs.back-box { text-shadow: none; }
+.v-subs.back-box:not(:empty) { left: 50%; right: auto; transform: translateX(-50%); max-width: 1600px; padding: 6px 22px; border-radius: 8px; background: rgba(0,0,0,.72); }
+.v-pause { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; opacity: 0; transition: opacity .8s; z-index: 5; }
+.v-pause.on { opacity: 1; }
+.v-pause-bg { position: absolute; right: 0; top: 0; width: 1920px; height: 1080px; background: center / cover no-repeat; opacity: .35; }
+.v-pause-fade { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; background: linear-gradient(90deg, rgba(0,0,0,.92) 30%, rgba(0,0,0,.55) 65%, rgba(0,0,0,.3)); }
+.v-pause-box { position: absolute; left: 130px; top: 300px; width: 900px; }
+.v-pause-k { font-size: 26px; color: var(--dim); margin-bottom: 18px; }
+.v-pause-t { font-size: 76px; font-weight: 900; line-height: 1.05; }
+.v-pause-logo { max-width: 600px; max-height: 180px; display: block; }
+.v-pause-m { font-size: 30px; font-weight: 700; margin-top: 22px; }
+.v-pause-p { font-size: 28px; line-height: 1.45; color: #ccc; margin-top: 18px; max-height: 165px; overflow: hidden; }
+.v-pause-h { font-size: 26px; color: #fff; margin-top: 40px; }
+
+/* ---- everything fits (fmt.js): titles shrink, then end in "…"; long texts end on a whole line ---- */
+.clamp { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; max-height: none; }
+.hero-title, .d-title, .v-pause-t, .peek-title { word-wrap: break-word; }
+.hero-plot { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; max-height: none; }
+.d-plot, .v-pause-p { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; max-height: none; }
+.peek-plot { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; max-height: none; }
+.d-people, .ep.focus .ep-plot { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; max-height: none; }
+.tname { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; max-height: none; word-wrap: break-word; }
+.v-title, .v-sub, .v-next-n, .ep-sub, .prof-name, .brow-title, .cat-head, .hero-meta, .d-meta, .peek-ep { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.v-title { max-width: 1740px; }
+.v-next-n { white-space: normal; }
+.v-menu { display: flex; flex-direction: column; box-sizing: border-box; }
+.v-menu-list { flex: 1; min-height: 0; overflow: hidden; position: relative; }
+.v-menu-list.more-up { -webkit-mask-image: linear-gradient(rgba(0,0,0,0), #000 60px); }
+.v-menu-list.more-down { -webkit-mask-image: linear-gradient(#000 calc(100% - 60px), rgba(0,0,0,0)); }
+.v-menu-list.more-up.more-down { -webkit-mask-image: linear-gradient(rgba(0,0,0,0), #000 60px, #000 calc(100% - 60px), rgba(0,0,0,0)); }
+.v-menu-i { overflow: hidden; text-overflow: ellipsis; }
+.v-menu-t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: none; }
+.setting > :first-child { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.setting .v { max-width: 45%; margin-left: 24px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: none; }
+#toast { max-width: 1500px; text-align: center; border-radius: 26px; }
+
+/* ---- subtitles: rows, italics, the top, never too wide ---- */
+.v-subs { line-height: 1.25; word-wrap: break-word; }
+.v-subs > div { display: block; }
+.v-subs .i { font-style: italic; }
+.v-subs.top { bottom: auto !important; top: 70px; }
+#vod.ui .v-subs.top { top: 220px; }
+.v-subs.back-box > div { display: table; margin: 0 auto; }
+
+/* ---- Skip intro ---- */
+.v-intro { position: absolute; right: 90px; bottom: 230px; padding: 20px 38px; border-radius: 12px; font-size: 32px; font-weight: 800;
+  background: rgba(255,255,255,.92); color: #000; box-shadow: 0 12px 40px rgba(0,0,0,.6); z-index: 4; }
+#vod:not(.ui) .v-intro { bottom: 120px; }
+.v-intro[hidden] { display: none; }
+/* the buttons on a film's page stay on one line each (four of them fit beside each other) */
+.hero-btns .hbtn, .d-btns .hbtn { white-space: nowrap; flex: none; }
+.d-btns .hbtn { padding: 18px 30px; }
+.d-btns .hbtn + .hbtn { margin-left: 14px; }
+
+/* ---- the PIN pad (a profile's PIN lock) ---- */
+#pin { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; z-index: 12; background: rgba(10,10,12,.92); text-align: center; }
+#pin:not([hidden]) { animation: rtv-fade .2s ease-out both; }
+.pin-av { width: 130px; height: 130px; margin: 150px auto 0; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 66px; font-weight: 800; color: #fff; }
+.pin-t { font-size: 46px; font-weight: 800; margin-top: 30px; }
+.pin-s { font-size: 26px; color: var(--dim); margin-top: 12px; min-height: 34px; }
+.pin-s.bad { color: #ff6b6b; }
+.pin-dots { display: flex; justify-content: center; margin: 34px 0 40px; }
+.pin-dot { width: 30px; height: 30px; margin: 0 14px; border-radius: 50%; border: 3px solid #888; }
+.pin-dot.on { background: #fff; border-color: #fff; }
+.pin-dots.shake { animation: pin-shake .4s; }
+@keyframes pin-shake { 20%, 60% { transform: translateX(-18px); } 40%, 80% { transform: translateX(18px); } }
+.pin-pad { display: flex; flex-wrap: wrap; width: 396px; margin: 0 auto; }
+.pin-k { width: 116px; height: 90px; margin: 0 8px 14px; border-radius: 14px; background: var(--raise); display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 700; }
+.pin-k.small { font-size: 26px; }
+.pin-k.focus { background: #fff; color: #000; transform: scale(1.06); }
+.pin-h { font-size: 22px; color: var(--faint); margin-top: 20px; }
+.prof-lock { position: absolute; right: 12px; bottom: 10px; font-size: 30px; }
+.prof-av { position: relative; }
+/* Settings: six rows fit under the title on a 1080 screen (the last one was cut off) */
+.setting { padding: 20px 34px; margin-bottom: 10px; }

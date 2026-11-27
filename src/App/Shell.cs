@@ -117,6 +117,7 @@ partial class Shell {
     static string ViewName(View v) { return v == View.Grid ? "grid" : v == View.Compact ? "compact" : v == View.List ? "list" : v == View.Home ? "home" : "row"; }
 
     void Started() {
+        StartHangWatch();   // writes down where the launcher hangs, if it ever does (HangWatch.cs)
         StartHomeMusic();   // Home's music (HomeMusic.cs)
         StartFriendsBeat();   // tells your friends you're here (FriendList.cs)
         ListenForOtherStarts();   // a second start brings this one forward (Tray.cs)
@@ -125,6 +126,7 @@ partial class Shell {
         if (Settings.Get("Monitor") != "auto" && Settings.Get("Monitor").Length > 0) MoveToMonitor();   // Settings > Display > Monitor
         StartStrollers();    // characters strolling along Home (HomeFx.cs)
         StartWeather();      // the weather by the clock (Weather.cs)
+        TvWarmUp();          // TV & Movies' last profile, loaded ahead (TvPrefetch.cs)
         var root = N<Border>("Root");
         if (bootLayer == null) {   // with the start-up screen the window is whole from the start
             root.BeginAnimation(UIElement.OpacityProperty, Anim(1, 350, 0));
@@ -165,6 +167,9 @@ partial class Shell {
         if (args.OpenSettings) OpenSettings();
         if (args.OpenNotes) OpenNotes("notes");
         if (args.PadScript != null) PlayPadScript(args.PadScript);
+        // TV reminders keep running while the launcher is open
+        W.Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(() => { try { TvStartReminders(); } catch { } }));
+        if (args.Tv != null) W.Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(() => { OpenTv(); if (args.Tv != "profiles") { TvProfileAct(0, false); TvShowPage(args.Tv); } }));
         if (args.Online != null && Catalog.Find(args.Online) != null) W.Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(() => OpenOnline(Catalog.Find(args.Online))));
         // the start-up screen's animation, a moment after the set-up above has let go of the window (Boot.cs)
         if (bootLayer != null) { var bt = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) }; bt.Tick += (s2, e2) => { bt.Stop(); StartBoot(); }; bt.Start(); }
@@ -208,11 +213,12 @@ partial class Shell {
         }));
     }
     void ApplyIcon(Game g) {
+        W.Dispatcher.BeginInvoke(new Action(() => StyleIconChanged(g)));   // the channel page and Cinema (Styles.cs)
         var u = (GameUi)g.Ui; var src = (ImageSource)g.Icon;
         u.Icon.Source = src; u.Icon.Margin = new Thickness(g.IconIsArt ? 0 : 26);
         if (u.CIcon != null) { u.CIcon.Source = src; u.CIcon.Margin = new Thickness(g.IconIsArt ? 0 : 12); }
         if (u.LIcon != null) u.LIcon.Source = src;
-        if (u.Home != null) { u.Home.Icon.Source = src; u.Home.Icon.Margin = new Thickness(g.IconIsArt ? 0 : HomeTileSize * 0.24); }
+        if (u.Home != null) { u.Home.Icon.Source = src; u.Home.Icon.Margin = new Thickness(g.IconIsArt ? 0 : Math.Min(HomeTileW, HomeTileH) * 0.24); }
         if (u.HomeSmall != null) { u.HomeSmall.Icon.Source = src; u.HomeSmall.Icon.Margin = new Thickness(g.IconIsArt ? 0 : SmallTileSize * 0.24); }
         if (u.HomeRow != null) { u.HomeRow.Icon.Source = src; u.HomeRow.Icon.Margin = new Thickness(g.IconIsArt ? 0 : 8); }
         if (g == sel) UpdateGamePage();
@@ -437,7 +443,7 @@ partial class Shell {
             N<TextBlock>("HeroNote").Visibility = Visibility.Collapsed;
         }
         bool canUpdate = g.State == State.Update && !running;
-        string upText = g.State == State.Update ? (g.Latest.Size > 0 ? (g.Latest.Size >= 1048576 ? string.Format("Update  ({0:N0} MB)", g.Latest.Size / 1048576) : string.Format("Update  ({0:N0} KB)", g.Latest.Size / 1024)) : "Update") : g.State == State.Updating ? "Updating..." : "Up to date";
+        string upText = g.State == State.Update ? (g.Latest.Size > 0 && g.Builds == null ? (g.Latest.Size >= 1048576 ? string.Format("Update  ({0:N0} MB)", g.Latest.Size / 1048576) : string.Format("Update  ({0:N0} KB)", g.Latest.Size / 1024)) : "Update") : g.State == State.Updating ? "Updating..." : "Up to date";
         bool showUpdate = !installMode;
         bool showUninst = g.Inst != null && !installMode && g.State != State.Uninstalling;
         bool folderOk = Directory.Exists(g.Dir);
@@ -839,13 +845,13 @@ partial class Shell {
             W.WindowState = WindowState.Normal; W.ResizeMode = ResizeMode.NoResize;
             W.Left = tl.X; W.Top = tl.Y; W.Width = br.X - tl.X; W.Height = br.Y - tl.Y;
             W.Topmost = W.IsActive;
-            IconX.WindowCorners(hwnd, false);
+            IconX.WindowCorners(hwnd, false); IconX.WindowBorder(hwnd, false);   // full screen: nothing around the edge
             N<TextBlock>("FullIcon").Text = ""; N<Button>("BtnFull").ToolTip = "Leave full screen (F11)";
         } else {
             W.Topmost = false; W.WindowState = WindowState.Normal;
             if (normalRect.Width > 0) { W.Left = normalRect.X; W.Top = normalRect.Y; W.Width = normalRect.Width; W.Height = normalRect.Height; }
             W.ResizeMode = ResizeMode.CanResize;
-            IconX.WindowCorners(hwnd, true);
+            IconX.WindowCorners(hwnd, true); IconX.WindowBorder(hwnd, true);
             N<TextBlock>("FullIcon").Text = ""; N<Button>("BtnFull").ToolTip = "Full screen (F11)";
         }
         QueueScroll(); QueueRing();
@@ -1002,7 +1008,7 @@ partial class Shell {
         {
             int ui; if (!int.TryParse(Settings.Get("UiScale"), out ui) || ui < 50) ui = 100;   // Settings > Display > Interface size
             double k = Math.Max(1.0, root.ActualHeight / 800.0) * (TvMode ? 1.25 : 1) * ui / 100.0;
-            foreach (var n in new[] { "Main", "NotesLayer", "SettingsLayer", "RomLayer", "UninstLayer", "ProfileLayer", "PlayersLayer", "CreatorLayer", "ColLayer", "OskLayer" }) {
+            foreach (var n in new[] { "Main", "NotesLayer", "SettingsLayer", "RomLayer", "UninstLayer", "ProfileLayer", "PlayersLayer", "CreatorLayer", "PixelLayer", "FlipLayer", "ColLayer", "OskLayer" }) {
                 var el = W.FindName(n) as FrameworkElement;
                 if (el != null) el.LayoutTransform = new ScaleTransform(k, k);
             }
@@ -1012,7 +1018,7 @@ partial class Shell {
         }
     }
     bool AnyDialog() {
-        return ListPageOpen || OskOpen || ColOpen || FriendsOpen || AchievementsOpen || BrowserCardOpen || BtOpen || PowerOpen || PlazaOpen || ControllersOpen || BoardOpen || AlbumOpen || NewsOpen || CreatorOpen || PlayersOpen || ProfileOpen || N<Grid>("SettingsLayer").Visibility == Visibility.Visible || N<Grid>("RomLayer").Visibility == Visibility.Visible ||
+        return ListPageOpen || TvOpen || OskOpen || ColOpen || FriendsOpen || AchievementsOpen || BrowserCardOpen || BtOpen || PowerOpen || PlazaOpen || ControllersOpen || BoardOpen || AlbumOpen || NewsOpen || CreatorOpen || PixelOpen || FlipOpen || PlayersOpen || ProfileOpen || N<Grid>("SettingsLayer").Visibility == Visibility.Visible || N<Grid>("RomLayer").Visibility == Visibility.Visible ||
                N<Grid>("UninstLayer").Visibility == Visibility.Visible;
     }
     void OnKey(object s, KeyEventArgs e) {
@@ -1025,6 +1031,8 @@ partial class Shell {
             if (lb != 0) { ListPagePad(lb); e.Handled = true; }
             return;
         }
+        if (TvOpen) { if (TvKey(k)) e.Handled = true; return; }   // TV & Movies (TvApp.cs)
+        if (ChanPrevOpen && view == View.Home) { if (ChanPrevKey(k)) e.Handled = true; return; }
         if (NewsOpen) {
             int nb = k == Key.Up ? Pad.Up : k == Key.Down ? Pad.Down : k == Key.Enter || k == Key.Space ? Pad.A : k == Key.Escape || k == Key.Back ? Pad.B : 0;
             if (nb != 0) { NewsPad(nb); e.Handled = true; }
@@ -1065,6 +1073,8 @@ partial class Shell {
             return;
         }
         if (CreatorOpen) { if (!(Keyboard.FocusedElement is TextBox) && CreatorKey(k)) e.Handled = true; return; }
+        if (PixelOpen) { if (PixelKey(k)) e.Handled = true; return; }
+        if (FlipOpen && !ListPageOpen) { if (FlipKey(k)) e.Handled = true; return; }
         if (N<Grid>("UninstLayer").Visibility == Visibility.Visible) { if (k == Key.Escape) { CloseUninstall(); e.Handled = true; } return; }
         if (FbVisible()) { if (FbKey(k)) e.Handled = true; return; }
         if (N<Grid>("RomLayer").Visibility == Visibility.Visible) {

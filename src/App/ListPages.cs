@@ -71,6 +71,9 @@ partial class Shell {
     }
     // the rows: an empty list shows its note instead
     void FillRows(ListPage p, List<ListRow> items, string empty) {
+        // the page's own button (Add a friend, ...) is also its first row: the d-pad and A reach it like the rest
+        if (p.OnExtra != null && p.Extra != null && p.Extra.IsEnabled && !string.IsNullOrEmpty(p.ExtraLabel))
+            items.Insert(0, new ListRow { Glyph = "", C1 = "#3FB8A0", C2 = "#D9B45A", Title = p.ExtraLabel, Bold = true, Do = p.OnExtra });
         p.Items = items; p.List.Children.Clear(); p.Rows.Clear();
         p.Idx = Math.Max(0, Math.Min(p.Idx, items.Count - 1));
         for (int i = 0; i < items.Count; i++) {

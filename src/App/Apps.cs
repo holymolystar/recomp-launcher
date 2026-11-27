@@ -32,6 +32,7 @@ partial class Shell {
         Catalog.SeriesRank["apps"] = 99;   // after every game
         var apps = new[] {
             new object[] { "app-characters", "Characters", "", "#e8453c", "#f2a33a", (Action)OpenPlaza },
+            new object[] { "app-tv", "TV & Movies", "", "#b81d24", "#ff5a4f", (Action)OpenTv },   // TvApp.cs
             new object[] { "app-mail", "Mail", "", "#e85a9b", "#f6a6c8", (Action)OpenMail },
             new object[] { "app-news", "News", "", "#2f8fe0", "#57cbde", (Action)OpenNews },
             new object[] { "app-board", "Board", "", "#f4a312", "#f2d24b", (Action)OpenBoard },

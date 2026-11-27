@@ -3,7 +3,9 @@
 // music apps that answer the media keys work too (their song name only shows for Spotify).
 // In the menu: LB previous, X play / pause, RB next (or click the buttons).
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
@@ -34,6 +36,53 @@ static class Music {
             } else { paused = true; song = lastSong; artist = lastArtist; }
             return true;
         } catch { return false; }
+    }
+    // the song playing now in any music app this knows (Spotify first): false when none of them is open. Each shows
+    // the song in its window title ("Artist - Song" before its own name); when it shows only its name, it's stopped.
+    static readonly string[][] Others = {
+        // process, what follows the song in its title, the app's name
+        new[] { "vlc", " - VLC media player", "VLC" }, new[] { "foobar2000", "[foobar2000]", "foobar2000" }, new[] { "MusicBee", " - MusicBee", "MusicBee" },
+        new[] { "AIMP", "", "AIMP" }, new[] { "iTunes", "", "iTunes" }, new[] { "AppleMusic", "", "Apple Music" }, new[] { "Deezer", "", "Deezer" }, new[] { "TIDAL", "", "TIDAL" } };
+    public static bool NowPlaying(out string song, out string artist, out string app, out bool paused) {
+        app = null;
+        if (Spotify(out song, out artist, out paused)) { app = "Spotify"; return true; }
+        foreach (var o in Others) {
+            string t;
+            try { t = Process.GetProcessesByName(o[0]).Select(p => { try { return p.MainWindowTitle; } catch { return ""; } }).FirstOrDefault(x => !string.IsNullOrEmpty(x)); } catch { t = null; }
+            if (t == null) continue;
+            app = o[2]; song = null; artist = null; paused = false;
+            if (o[1].Length == 0 || !t.TrimEnd().EndsWith(o[1].Trim(), StringComparison.OrdinalIgnoreCase)) return true;   // open, but no song in its title
+            t = t.TrimEnd(); t = t.Substring(0, t.Length - o[1].Trim().Length).TrimEnd(' ', '-');
+            int dash = t.IndexOf(" - ", StringComparison.Ordinal);
+            if (dash > 0) { artist = t.Substring(0, dash); song = t.Substring(dash + 3); } else song = t;
+            return true;
+        }
+        return false;
+    }
+    // the music apps on this PC, with how to open each: [name, program or link]
+    public static List<string[]> Players() {
+        var l = new List<string[]>();
+        Func<string, string> ex = p => Environment.ExpandEnvironmentVariables(p);
+        try {
+            if (File.Exists(ex(@"%APPDATA%\Spotify\Spotify.exe"))) l.Add(new[] { "Spotify", ex(@"%APPDATA%\Spotify\Spotify.exe") });
+            else if (Microsoft.Win32.Registry.ClassesRoot.OpenSubKey("spotify") != null) l.Add(new[] { "Spotify", "spotify:" });
+        } catch { }
+        var known = new[] {
+            new[] { "VLC", @"%ProgramFiles%\VideoLAN\VLC\vlc.exe", @"%ProgramFiles(x86)%\VideoLAN\VLC\vlc.exe" },
+            new[] { "foobar2000", @"%ProgramFiles%\foobar2000\foobar2000.exe", @"%ProgramFiles(x86)%\foobar2000\foobar2000.exe" },
+            new[] { "MusicBee", @"%ProgramFiles(x86)%\MusicBee\MusicBee.exe", @"%ProgramFiles%\MusicBee\MusicBee.exe" },
+            new[] { "AIMP", @"%ProgramFiles%\AIMP\AIMP.exe", @"%ProgramFiles(x86)%\AIMP\AIMP.exe" },
+            new[] { "iTunes", @"%ProgramFiles%\iTunes\iTunes.exe", @"%ProgramFiles(x86)%\iTunes\iTunes.exe" },
+            new[] { "Deezer", @"%LOCALAPPDATA%\Programs\deezer-desktop\Deezer.exe", "" },
+            new[] { "TIDAL", @"%LOCALAPPDATA%\TIDAL\TIDAL.exe", "" } };
+        foreach (var k in known) {
+            string hit = k.Skip(1).Where(p => p.Length > 0).Select(ex).FirstOrDefault(File.Exists);
+            if (hit != null) l.Add(new[] { k[0], hit });
+        }
+        return l;
+    }
+    public static void Open(string what) {
+        try { Process.Start(new ProcessStartInfo(what) { UseShellExecute = true }); } catch { }
     }
 }
 

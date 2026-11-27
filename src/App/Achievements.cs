@@ -1,6 +1,6 @@
 // A Steam game's achievements, from the game page (Achievements button). Steam keeps a part of the list on this PC
 // (userdata\<you>\config\librarycache\<id>.json: up to 12 unlocked and 12 still locked, with their icons and how many
-// players have them); with a Steam Web API key (Settings > Steam friends) the launcher asks Steam for all of them.
+// players have them); with a Steam Web API key (Settings > Steam achievements) the launcher asks Steam for all of them.
 // Unlocked ones come first (newest first), then the locked ones (the most common first).
 using System;
 using System.Collections.Generic;
@@ -113,7 +113,7 @@ partial class Shell {
         int total, got;
         var local = SteamAchievements.Local(g, out total, out got);
         string key = Settings.Get("SteamApiKey").Trim();
-        FillAchievements(local, total, got, key.Length == 0 ? "Steam keeps up to 12 unlocked and 12 locked ones on this PC. With a Steam Web API key (Settings > Steam friends) you see all of them." : "Asking Steam for all of them...");
+        FillAchievements(local, total, got, key.Length == 0 ? "Steam keeps up to 12 unlocked and 12 locked ones on this PC. With a Steam Web API key (Settings > Steam achievements) you see all of them." : "Asking Steam for all of them...");
         Sound.Play(Sfx.Open);
         ShowCard("AcLayer", "AcCard");
         if (key.Length == 0) return;

@@ -37,6 +37,11 @@ if (Test-Path $fs) { Copy-Item $fs $stage }
 foreach ($d in 'tools') {
     Copy-Item (Join-Path $root $d) (Join-Path $stage $d) -Recurse
 }
+# DolphinTool is downloaded by the launcher itself when it's needed (DiscTool.cs): never shipped
+$dt = Join-Path $stage 'tools\dolphin'
+if (Test-Path $dt) { Remove-Item $dt -Recurse -Force }
+$mp = Join-Path $stage 'tools\mpv'   # the TV app's player, downloaded when it's needed (Mpv.cs)
+if (Test-Path $mp) { Remove-Item $mp -Recurse -Force }
 $worker = Join-Path $UpdaterDir 'update-worker.ps1'
 if (-not (Test-Path $worker)) { throw "Missing the TotK Updater's worker: $worker (pass -UpdaterDir)" }
 New-Item -ItemType Directory (Join-Path $stage 'totk-updater') | Out-Null
@@ -44,7 +49,7 @@ Copy-Item $worker (Join-Path $stage 'totk-updater')
 
 # Last check: nothing personal slipped in
 $bad = Get-ChildItem $stage -Recurse -File | Where-Object {
-    $_.Name -in 'settings.json', 'cache.json', 'playtime.json', 'roms.json', 'prod.keys', 'title.keys' -or
+    $_.Name -in 'settings.json', 'cache.json', 'playtime.json', 'roms.json', 'tv.json', 'tv-prefs.json', 'tv-player.json', 'tv-safe.json', 'prod.keys', 'title.keys' -or
     $_.FullName -match '\\(logs|backups|dumps)\\' -or
     (($_.Extension -in '.json', '.ps1', '.ini', '.txt') -and (Select-String -Path $_.FullName -Pattern 'github_pat_|ghp_' -Quiet))
 }

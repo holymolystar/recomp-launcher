@@ -82,10 +82,12 @@ class RomSpec {
     public string Filter, Handoff, TitleId, CopyAs;
     public string[] CopyIn = new string[0];
     public bool HasNsp, NspUpdate; public string NspHint, NspUpdateId;
+    public string Disc;   // "iso": an RVZ, WIA or GCZ is converted to ISO first; "extract": the disc is unpacked into the game folder's "game" (DiscTool.cs)
 }
 
 class Release {
     public string Tag, Notes, Date, Url, Sha, Problem, Checked;
+    public string ToolTag;   // a game its builder makes (Builds): the builder's own newest release (Longshot Launcher)
     public double Size;
     // the releases before this one, newest first (tag, date and notes only), for the notes of every version skipped
     public List<Release> Older = new List<Release>();
@@ -96,6 +98,7 @@ class Release {
         if (Size > 0) d["Size"] = Size;
         if (Sha != null) d["Sha"] = Sha;
         if (Problem != null) d["Problem"] = Problem;
+        if (ToolTag != null) d["ToolTag"] = ToolTag;
         if (Older.Count > 0) d["Older"] = Older.Select(o => (object)new Dictionary<string, object> { { "Tag", o.Tag }, { "Date", o.Date }, { "Notes", o.Notes } }).ToList();
         return d;
     }
@@ -103,7 +106,8 @@ class Release {
         if (d == null || Json.Str(d, "Tag") == null) return null;
         var r = new Release {
             Tag = Json.Str(d, "Tag"), Notes = Json.Str(d, "Notes"), Date = Json.Str(d, "Date"), Url = Json.Str(d, "Url"),
-            Sha = Json.Str(d, "Sha"), Problem = Json.Str(d, "Problem"), Checked = Json.Str(d, "Checked"), Size = Json.Num(d, "Size")
+            Sha = Json.Str(d, "Sha"), Problem = Json.Str(d, "Problem"), Checked = Json.Str(d, "Checked"), Size = Json.Num(d, "Size"),
+            ToolTag = Json.Str(d, "ToolTag")
         };
         object older;
         if (d.TryGetValue("Older", out older) && older is System.Collections.IEnumerable)
@@ -119,6 +123,7 @@ class Installed {
     public string Tag;             // the release tag the launcher installed (recomp-launcher.json), if known
     public DateTime When;          // when the launcher installed it
     public string Sub = "";
+    public string ToolVersion;    // a game its builder makes: the builder's own version ("1.2.0")
     // "v1.2.0", but a named release ("low-vram") as it is
     public string Label { get { return Version.Length > 0 && char.IsDigit(Version[0]) ? "v" + Version : Version == "?" ? "installed" : Version; } }
 }
@@ -128,6 +133,9 @@ enum State { Missing, Checking, Current, Update, Problem, Offline, Unknown, Inst
 class Game {
     public string Id, Name, Short, Source, Exe, Proc, SettingsKey, Launch, Repo, Asset, NotAsset, Accent, Accent2;
     public string Backup, Keep, Replace, FirstRun, SetupArg, Rebuild, Needs, DefaultDir, Series, SettingsLabel, CheckFile, Saves;
+    public string PlayArgs, PlayIf;   // Play passes PlayArgs once a file in PlayIf exists ("a;b", wildcards): Longshot's --play once a build is made
+    public string BuildVersion;   // where the built game's version is: "file|regex;..." (Engine.BuiltVersion)
+    public string Builds;      // the game's own release page when Repo is only its builder (Longshot: the Longshot Launcher builds the game; the game's version is what's checked)
     public string Online;      // "tailscale": plays online over Tailscale (the game page's Online play, Tailscale.cs)
     public bool Pre, NoSha, Console;
     public bool OwnGuide;                         // the game uses the Xbox / PS / Home button itself (the in-game menu then opens with View + Menu only)
@@ -138,6 +146,7 @@ class Game {
     public string Store, StoreId, StoreNs, StoreItem, StoreExe, StoreArgs, StoreUninstall, StoreArt, StoreHero;
     public string Platform;
     public string Helpers;     // the port's own setup or launcher programs (process names, ";", * at the end for a prefix): the controller is a mouse there (PadMouse.cs)
+    public bool Watch;         // a daily letter about how the project is coming along (Mail.cs MailWatch; games.json "Watch")
     public string Ready;       // files that show the game has what it needs from you ("a;b", wildcards; NeedsFiles.cs)    // the console it was first made for (games.json; Folders.cs)
     public Action App;         // the launcher's own page shown as a tile on Home (Apps.cs): starting it opens the page
     public bool FromLibrary;   // found in a store library (Steam.cs, Stores.cs), not listed in games.json
@@ -179,10 +188,10 @@ static class Catalog {
                 Repo = Json.Str(d, "Repo"), Asset = Json.Str(d, "Asset"), NotAsset = Json.Str(d, "NotAsset"),
                 Accent = (Json.Str(d, "Accent") ?? "#3fb8a0").ToLowerInvariant(), Accent2 = (Json.Str(d, "Accent2") ?? "#d9b45a").ToLowerInvariant(),   // lower case: never recoloured by a theme
                 Backup = Json.Str(d, "Backup"), Keep = Json.Str(d, "Keep"), Replace = Json.Str(d, "Replace"), FirstRun = Json.Str(d, "FirstRun"),
-                SetupArg = Json.Str(d, "SetupArg"), Rebuild = Json.Str(d, "Rebuild"), Online = Json.Str(d, "Online"), Needs = Json.Str(d, "Needs") ?? "",
+                SetupArg = Json.Str(d, "SetupArg"), PlayArgs = Json.Str(d, "PlayArgs"), PlayIf = Json.Str(d, "PlayIf"), Rebuild = Json.Str(d, "Rebuild"), Online = Json.Str(d, "Online"), Builds = Json.Str(d, "Builds"), BuildVersion = Json.Str(d, "BuildVersion"), Needs = Json.Str(d, "Needs") ?? "",
                 DefaultDir = Json.Str(d, "DefaultDir"), Series = Json.Str(d, "Series") ?? "nintendo",
                 SettingsLabel = Json.Str(d, "SettingsLabel"), CheckFile = Json.Str(d, "CheckFile"), Saves = Json.Str(d, "Saves"),
-                OwnGuide = Json.Bool(d, "OwnGuide"), Pre = Json.Bool(d, "Pre"), NoSha = Json.Bool(d, "NoSha"), Console = Json.Bool(d, "Console"),
+                OwnGuide = Json.Bool(d, "OwnGuide"), Pre = Json.Bool(d, "Pre"), Watch = Json.Bool(d, "Watch"), NoSha = Json.Bool(d, "NoSha"), Console = Json.Bool(d, "Console"),
                 Setup = Json.Str(d, "Setup"), Platform = Json.Str(d, "Platform"), Helpers = Json.Str(d, "Helpers"), Ready = Json.Str(d, "Ready"), Steam = Json.Str(d, "Steam"), Languages = Json.Strings(d, "Languages")
             };
             if (g.SettingsLabel == null) g.SettingsLabel = g.Name;
@@ -200,7 +209,7 @@ static class Catalog {
                         g.Rom.FolderNeeds.Add(set is string ? new[] { (string)set } : ((IEnumerable)set).Cast<object>().Select(x => (string)x).ToArray());
                 g.Rom.Filter = Json.Str(rs, "Filter"); g.Rom.Handoff = Json.Str(rs, "Handoff");
                 g.Rom.TitleId = Json.Str(rs, "TitleId"); g.Rom.CopyAs = Json.Str(rs, "CopyAs");
-                g.Rom.CopyIn = Json.Strings(rs, "CopyIn");
+                g.Rom.CopyIn = Json.Strings(rs, "CopyIn"); g.Rom.Disc = Json.Str(rs, "Disc");
                 var nsp = Json.Obj(rs, "Nsp");
                 if (nsp != null) { g.Rom.HasNsp = true; g.Rom.NspUpdate = Json.Bool(nsp, "Update"); g.Rom.NspHint = Json.Str(nsp, "Hint"); g.Rom.NspUpdateId = Json.Str(nsp, "UpdateId"); }
             }

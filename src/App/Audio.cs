@@ -57,6 +57,90 @@ static class Audio {
     public static bool Muted { get { try { bool m; Volume().GetMute(out m); return m; } catch { return false; } } }
     public static void SetMuted(bool m) { try { var g = Guid.Empty; Volume().SetMute(m, ref g); } catch { } }
 
+    // The launcher's own volume: its slider in Windows' volume mixer (everything it plays, the TV's picture and sound
+    // included, as mpv plays inside it), leaving the PC's volume and other apps alone.
+    [ComImport, Guid("BFA971F1-4D5E-40BB-935E-967039BFBEE4"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    interface IAudioSessionManager {
+        int GetAudioSessionControl(IntPtr sessionGuid, int flags, out IntPtr control);
+        int GetSimpleAudioVolume(IntPtr sessionGuid, int crossProcess, out ISimpleAudioVolume volume);
+    }
+    [ComImport, Guid("87CE5498-68D6-44E5-9215-6DA47EF883D8"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    interface ISimpleAudioVolume {
+        int SetMasterVolume(float level, ref Guid ctx); int GetMasterVolume(out float level);
+        int SetMute([MarshalAs(UnmanagedType.Bool)] bool mute, ref Guid ctx); int GetMute([MarshalAs(UnmanagedType.Bool)] out bool mute);
+    }
+    static ISimpleAudioVolume AppVolume() {
+        var en = (IMMDeviceEnumerator)new MMDeviceEnumerator();
+        IMMDevice dev; Marshal.ThrowExceptionForHR(en.GetDefaultAudioEndpoint(0, 1, out dev));
+        var iid = typeof(IAudioSessionManager).GUID; object o;
+        Marshal.ThrowExceptionForHR(dev.Activate(ref iid, 23, IntPtr.Zero, out o));
+        ISimpleAudioVolume v; Marshal.ThrowExceptionForHR(((IAudioSessionManager)o).GetSimpleAudioVolume(IntPtr.Zero, 0, out v));
+        return v;
+    }
+    // the launcher's volume (0-100), or -1 when there's no output
+    public static int AppLevel { get { try { float v; AppVolume().GetMasterVolume(out v); return (int)Math.Round(v * 100); } catch { return -1; } } }
+    public static void SetAppLevel(int percent) {
+        try { var g = Guid.Empty; var v = AppVolume(); v.SetMute(false, ref g); v.SetMasterVolume(Math.Max(0, Math.Min(100, percent)) / 100f, ref g); } catch { }
+        MatchHelpers();
+    }
+
+    // The launcher's browser parts (WebView2: the trailers in TV & Movies, the browser) play their sound from Edge
+    // processes of their own, which Windows' mixer lists apart. Those of this launcher (started by it, not anyone
+    // else's Edge) are kept at the launcher's volume, so a trailer is exactly as loud as the rest.
+    [ComImport, Guid("77AA99A0-1BD6-484F-8BC7-2C654C9A9B6F"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    interface IAudioSessionManager2 {
+        int GetAudioSessionControl(IntPtr sessionGuid, int flags, out IntPtr control);
+        int GetSimpleAudioVolume(IntPtr sessionGuid, int crossProcess, out IntPtr volume);
+        int GetSessionEnumerator(out IAudioSessionEnumerator e);
+    }
+    [ComImport, Guid("E2F5BB11-0570-40CA-ACDD-3AA01277DEE8"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    interface IAudioSessionEnumerator { int GetCount(out int n); int GetSession(int i, out IAudioSessionControl2 s); }
+    [ComImport, Guid("bfb7ff88-7239-4fc9-8fa2-07c950be9c6d"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    interface IAudioSessionControl2 {
+        int GetState(out int s); int GetDisplayName(out IntPtr n); int SetDisplayName(string n, ref Guid ctx); int GetIconPath(out IntPtr p); int SetIconPath(string p, ref Guid ctx);
+        int GetGroupingParam(out Guid g); int SetGroupingParam(ref Guid g, ref Guid ctx); int RegisterAudioSessionNotification(IntPtr n); int UnregisterAudioSessionNotification(IntPtr n);
+        int GetSessionIdentifier(out IntPtr id); int GetSessionInstanceIdentifier(out IntPtr id); int GetProcessId(out uint pid);
+    }
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    struct ProcEntry { public int dwSize, cntUsage, th32ProcessID; public IntPtr th32DefaultHeapID; public int th32ModuleID, cntThreads, th32ParentProcessID, pcPriClassBase, dwFlags; [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)] public string szExeFile; }
+    [DllImport("kernel32.dll", SetLastError = true)] static extern IntPtr CreateToolhelp32Snapshot(uint flags, uint pid);
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)] static extern bool Process32FirstW(IntPtr snap, ref ProcEntry e);
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)] static extern bool Process32NextW(IntPtr snap, ref ProcEntry e);
+    [DllImport("kernel32.dll")] static extern bool CloseHandle(IntPtr h);
+    // the processes this launcher started, and those they started
+    static HashSet<int> OwnHelpers() {
+        var parent = new Dictionary<int, int>(); var own = new HashSet<int>();
+        IntPtr snap = CreateToolhelp32Snapshot(2 /* processes */, 0);
+        if (snap == IntPtr.Zero || snap == new IntPtr(-1)) return own;
+        try {
+            var e = new ProcEntry { dwSize = Marshal.SizeOf(typeof(ProcEntry)) };
+            for (bool ok = Process32FirstW(snap, ref e); ok; ok = Process32NextW(snap, ref e)) parent[e.th32ProcessID] = e.th32ParentProcessID;
+        } finally { CloseHandle(snap); }
+        int me = System.Diagnostics.Process.GetCurrentProcess().Id;
+        foreach (var pid in parent.Keys) {
+            int p = pid; for (int depth = 0; depth < 6 && parent.TryGetValue(p, out p) && p != 0; depth++) if (p == me) { own.Add(pid); break; }
+        }
+        return own;
+    }
+    public static void MatchHelpers() {
+        try {
+            float level; var g = Guid.Empty; var mine = AppVolume(); mine.GetMasterVolume(out level);
+            var own = OwnHelpers(); if (own.Count == 0) return;
+            var en = (IMMDeviceEnumerator)new MMDeviceEnumerator();
+            IMMDevice dev; Marshal.ThrowExceptionForHR(en.GetDefaultAudioEndpoint(0, 1, out dev));
+            var iid = typeof(IAudioSessionManager2).GUID; object o;
+            Marshal.ThrowExceptionForHR(dev.Activate(ref iid, 23, IntPtr.Zero, out o));
+            IAudioSessionEnumerator list; Marshal.ThrowExceptionForHR(((IAudioSessionManager2)o).GetSessionEnumerator(out list));
+            int n; list.GetCount(out n);
+            for (int i = 0; i < n; i++) {
+                IAudioSessionControl2 s; if (list.GetSession(i, out s) != 0 || s == null) continue;
+                uint pid; if (s.GetProcessId(out pid) != 0 || !own.Contains((int)pid)) continue;
+                var v = s as ISimpleAudioVolume; if (v == null) continue;
+                v.SetMute(false, ref g); v.SetMasterVolume(level, ref g);
+            }
+        } catch { }
+    }
+
     public class Output { public string Id, Name; }
     // the outputs that are plugged in and on, and which one plays now
     public static List<Output> Outputs(out string current) {

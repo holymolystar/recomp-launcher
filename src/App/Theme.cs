@@ -12,15 +12,21 @@ using System.Windows.Media;
 namespace RecompLauncher {
 
 class ThemeDef {
-    public string Id, Name, Desc, Bg, Ink, Accent, Accent2;
+    public string Id, Name, Desc, Bg, Ink, Accent, Accent2, Style = "console";   // the launcher style it belongs to (Styles.cs)
     public bool Light { get { var c = Theme.Parse(Bg.TrimStart('#')); return 0.2126 * c.R + 0.7152 * c.G + 0.0722 * c.B > 128; } }
     public ThemeDef(string id, string name, string desc, string bg, string ink, string accent, string accent2) {
         Id = id; Name = name; Desc = desc; Bg = bg; Ink = ink; Accent = accent; Accent2 = accent2;
     }
+    public ThemeDef(string style, string id, string name, string desc, string bg, string ink, string accent, string accent2) : this(id, name, desc, bg, ink, accent, accent2) { Style = style; }
 }
 
 static class Theme {
     public static readonly ThemeDef[] All = {
+        // Glow (the standard style): deep night blue with a violet and a blue glow
+        new ThemeDef("glow", "glow-night", "Glow Night", "Deep night blue, a violet and a blue glow", "#0B0B18", "#F3F1FF", "#8B7BFF", "#4FA8FF"),
+        new ThemeDef("glow", "glow-berry", "Glow Berry", "Plum night with pink and violet", "#130A1C", "#FFF0FA", "#FF6EC7", "#9B7BFF"),
+        new ThemeDef("glow", "glow-ocean", "Glow Ocean", "Deep sea blue with cyan and mint", "#06111C", "#ECF8FF", "#3FC8FF", "#5EF2C2"),
+        new ThemeDef("glow", "glow-light", "Glow Light", "Soft white with violet and blue", "#EEEFF7", "#1D1B2C", "#6D5CFF", "#2F8FFF"),
         new ThemeDef("midnight", "Midnight", "The original: deep blue-grey, teal and gold", "#090C0F", "#F2EFE6", "#3FB8A0", "#D9B45A"),
         new ThemeDef("neon", "Neon", "Synthwave purple with cyan and magenta", "#0A0614", "#F4EEFF", "#00E5FF", "#FF3DCB"),
         new ThemeDef("aurora", "Aurora", "Northern lights green and violet", "#03110E", "#EAFFF6", "#4DF5B0", "#B08CFF"),
@@ -31,7 +37,17 @@ static class Theme {
         new ThemeDef("white", "Basic White", "Plain white and black, nothing else: easy to read", "#FAFAFA", "#141414", "#00A2E0", "#141414"),
         new ThemeDef("black", "Basic Black", "Plain black and white, nothing else: easy to read", "#101010", "#F5F5F5", "#00C3F0", "#F5F5F5"),
         new ThemeDef("abyss", "Abyss", "Pure black for OLED screens, ice blue", "#000000", "#F5F5F5", "#6EC1FF", "#E6E6E6"),
+        // Channels
+        new ThemeDef("channels", "ch-white", "Channel White", "Bright white and silver, soft blue and leaf green", "#EDEFF2", "#3C4146", "#34BEED", "#7CC242"),
+        new ThemeDef("channels", "ch-sky", "Channel Sky", "Pale sky blue with sunshine yellow", "#E3F1FA", "#22445C", "#2E9BDA", "#F5A623"),
+        new ThemeDef("channels", "ch-night", "Channel Night", "Dark slate with soft blue, for the evening", "#1B1F24", "#E9EDF0", "#34BEED", "#7CC242"),
+        // Cinema
+        new ThemeDef("cinema", "cin-dark", "Cinema Dark", "Deep black glass with a white glow", "#0B0B0E", "#F5F5F7", "#F5F5F7", "#0A84FF"),
+        new ThemeDef("cinema", "cin-blue", "Cinema Blue", "Night blue with ice blue and violet", "#07111E", "#EAF4FF", "#64D2FF", "#BF5AF2"),
+        new ThemeDef("cinema", "cin-light", "Cinema Light", "Light frosted grey with blue", "#F2F2F7", "#1C1C1E", "#0A84FF", "#FF375F"),
     };
+    // the launcher style (Settings: LauncherStyle): console, channels or cinema
+    public static string Style = "glow";
     public static ThemeDef Current = All[0];
 
     // the base palette's neutral shades and accent families
@@ -42,7 +58,7 @@ static class Theme {
     static readonly Dictionary<string, string> map = new Dictionary<string, string>();
 
     public static void Use(string id) {
-        Current = All.FirstOrDefault(t => t.Id == id) ?? All[0];
+        Current = All.FirstOrDefault(t => t.Id == id && t.Style == Style) ?? All.First(t => t.Style == Style);
         map.Clear();
         if (Current.Id == "midnight") return;
         Color b0 = Parse("090C0F"), w0 = Parse("F2EFE6"), bg = Parse(Current.Bg.TrimStart('#')), ink = Parse(Current.Ink.TrimStart('#'));

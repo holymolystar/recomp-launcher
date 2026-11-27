@@ -42,7 +42,10 @@ partial class Shell {
         layer.LayoutTransform = N<Grid>("Main").LayoutTransform;
         N<Grid>("Clipped").Children.Add(layer);
         // the window shows whole at once (its usual fade-in would fade the logo in from a blank window)
+        // and at its full size: the 97% it starts at is only for the fade-in, which this skips (else a dark edge stays)
         var root = N<Border>("Root"); root.Opacity = 1;
+        var rs = root.RenderTransform as ScaleTransform;
+        if (rs != null && !rs.IsFrozen) { rs.ScaleX = 1; rs.ScaleY = 1; } else root.RenderTransform = new ScaleTransform(1, 1);
     }
     // once the launcher is set up: the pulse, the ring, the name and the chime, then away
     void StartBoot() {
